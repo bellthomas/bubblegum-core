@@ -10,6 +10,7 @@ import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Set;
 
 public class BubblegumNode {
     private SocialIdentity socialIdentity;
@@ -52,6 +53,9 @@ public class BubblegumNode {
         this.routingTable.insert(new RouterNode(node));
     }
 
+    public Set<BubblegumNode> getNodesClosestToKey(NodeID node, int numToGet) {
+        return this.routingTable.getNodesClosestToKey(node, numToGet);
+    }
 
     public NodeID getIdentifier() {
         return this.identifier;

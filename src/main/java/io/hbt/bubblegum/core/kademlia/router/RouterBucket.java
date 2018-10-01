@@ -1,9 +1,9 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
 import java.util.Comparator;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Optional;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public class RouterBucket {
@@ -20,7 +20,7 @@ public class RouterBucket {
         this.replacements = new ConcurrentSkipListSet<>();
     }
 
-    public void add(RouterNode node) {
+    public synchronized void add(RouterNode node) {
         if(this.activeBucket.contains(node)) {
             RouterNode existingNode = this.removeFromActiveTable(node);
             existingNode.hasResponded();
@@ -32,8 +32,8 @@ public class RouterBucket {
                 Comparator<RouterNode> failedResponsesComparator = Comparator.comparing(RouterNode::getFailedResponses);
                 RouterNode mostStale = this.activeBucket.stream().max(failedResponsesComparator).get();
 
-                if(mostStale == null) {
-                    this.replacements.add(node); // method?
+                if(mostStale == null || mostStale.getFailedResponses() == 0) {
+                    this.addToReplacements(node);
                 }
                 else {
                     this.activeBucket.remove(mostStale);
@@ -56,14 +56,26 @@ public class RouterBucket {
         else {
             return null;
         }
+    }
 
-//        for(RouterNode activeNode : this.activeBucket) {
-//            if(activeNode.equals(node)) {
-//                this.activeBucket.remove(activeNode);
-//                return activeNode;
-//            }
-//        }
-//        return null;
+    public void addToReplacements(RouterNode node) {
+        if(this.replacements.contains(node)) {
+            this.replacements.remove(node);
+            node.hasResponded();
+            this.replacements.add(node);
+        }
+        else if(this.replacements.size() >= RouterBucket.BUCKET_SIZE) {
+            this.replacements.pollLast();
+            this.replacements.add(node);
+        }
+        else {
+            this.replacements.add(node);
+        }
+    }
+
+    public Set<RouterNode> getNodes() {
+        if(this.activeBucket.isEmpty()) return new HashSet<>();
+        else return this.activeBucket.clone();
     }
 
     @Override

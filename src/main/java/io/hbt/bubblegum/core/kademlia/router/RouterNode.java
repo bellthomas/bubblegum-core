@@ -2,8 +2,6 @@ package io.hbt.bubblegum.core.kademlia.router;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
-import java.util.Comparator;
-
 public class RouterNode implements Comparable<RouterNode> {
     private final BubblegumNode node;
     private long latestResponse;
@@ -11,13 +9,13 @@ public class RouterNode implements Comparable<RouterNode> {
 
     public RouterNode(BubblegumNode node) {
         this.node = node;
-        this.latestResponse = System.currentTimeMillis();
+        this.latestResponse = System.nanoTime(); // TODO nano?
         this.failedResponses = 0;
     }
 
     public void hasResponded() {
         this.failedResponses = 0;
-        this.latestResponse = System.currentTimeMillis();
+        this.latestResponse = System.nanoTime(); // TODO nano?
     }
 
     public void hasFailedToRespond() {

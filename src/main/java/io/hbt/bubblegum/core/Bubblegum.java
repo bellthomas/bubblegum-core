@@ -6,8 +6,11 @@ import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
+import javax.xml.soap.Node;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Set;
 
 public class Bubblegum {
 
@@ -30,7 +33,7 @@ public class Bubblegum {
 
         BubblegumNode me = BubblegumNode.construct(this.socialIdentity, this.ipAddress);
 
-        int numberOfNodes = 50000;
+        int numberOfNodes = 5000;
         BubblegumNode[] nodes = new BubblegumNode[numberOfNodes];
         for(int i = 0; i < nodes.length; i++) {
             nodes[i] = BubblegumNode.construct(this.socialIdentity, this.ipAddress);
@@ -38,11 +41,16 @@ public class Bubblegum {
             if(i % 1000 == 0) System.out.println(i);
         }
 
-        me.printBuckets();
+        NodeID search = new NodeID();
+        BigInteger b = new BigInteger(1, search.getKey());
 
-//        BubblegumNode node1 = BubblegumNode.construct(this.socialIdentity, this.ipAddress);
-//        BubblegumNode node2 = BubblegumNode.construct(this.socialIdentity, this.ipAddress, "FDEC9F6A63BE7A02DB92CCF9663D15A24662F403", 2000);
-//        node1.bootstrap(node2);
+        Set<BubblegumNode> r = me.getNodesClosestToKey(search, 5);
+        for(BubblegumNode n : r) {
+            System.out.println("Distance [" + search.toString() + " -> " + n.getIdentifier().toString() + "]: ");
+            System.out.println(new BigInteger(1, search.xorDistance(n.getIdentifier())).abs());
+            System.out.println();
+        }
+
         System.out.println("");
     }
 

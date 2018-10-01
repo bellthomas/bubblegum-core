@@ -3,6 +3,13 @@ package io.hbt.bubblegum.core.kademlia.router;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 
+import java.math.BigInteger;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
 public class RoutingTable {
 
     private final BubblegumNode self;
@@ -15,7 +22,7 @@ public class RoutingTable {
     }
 
     public void insert(RouterNode node) {
-//        System.out.println("inserting into routiung table: " + node.toString());
+//        System.out.println("inserting into routing table: " + node.toString());
         this.getBucketForNode(node.getNode().getIdentifier()).add(node);
     }
 
@@ -24,6 +31,27 @@ public class RoutingTable {
 //        System.out.println("index: " + index);
         if(index < 0) return this.buckets[0];
         else return this.buckets[index];
+    }
+
+    public Set<BubblegumNode> getNodesClosestToKey(NodeID node, int nodesToGet) {
+        TreeSet<BubblegumNode> nodeDistanceTree = new TreeSet<>(node.getKeyDistanceComparator());
+        HashSet<BubblegumNode> results = new HashSet<>();
+
+        for(RouterBucket bucket : this.buckets) {
+            nodeDistanceTree.addAll(bucket.getNodes().stream().map(n -> n.getNode()).collect(Collectors.toSet()));
+        }
+
+        Iterator<BubblegumNode> distanceTreeIterator = nodeDistanceTree.iterator();
+        int i = 0;
+        while(distanceTreeIterator.hasNext() & i < nodesToGet) {
+            BubblegumNode n = distanceTreeIterator.next();
+            // System.out.println(new BigInteger(1, node.xorDistance(n.getIdentifier())));
+
+            results.add(n);
+            i++;
+        }
+
+        return results;
     }
 
     public void printBuckets() {
