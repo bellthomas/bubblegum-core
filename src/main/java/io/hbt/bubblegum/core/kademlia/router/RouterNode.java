@@ -1,14 +1,23 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
-import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.NodeID;
 
+import java.net.InetAddress;
+
+/**
+ * this is for other nodes, not us
+ */
 public class RouterNode implements Comparable<RouterNode> {
-    private final BubblegumNode node;
+    private final NodeID node;
+    private InetAddress ipAddress;
+    private int port;
     private long latestResponse;
     private int failedResponses;
 
-    public RouterNode(BubblegumNode node) {
+    public RouterNode(NodeID node, InetAddress address, int port) {
         this.node = node;
+        this.ipAddress = address;
+        this.port = port;
         this.latestResponse = System.nanoTime(); // TODO nano?
         this.failedResponses = 0;
     }
@@ -22,7 +31,7 @@ public class RouterNode implements Comparable<RouterNode> {
         this.failedResponses++;
     }
 
-    public BubblegumNode getNode() {
+    public NodeID getNode() {
         return this.node;
     }
 
@@ -32,6 +41,14 @@ public class RouterNode implements Comparable<RouterNode> {
 
     public int getFailedResponses() {
         return this.failedResponses;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public InetAddress getIPAddress() {
+        return ipAddress;
     }
 
     @Override

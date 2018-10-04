@@ -1,0 +1,12 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+import "BgKademliaConnectionMessage.proto";
+
+message KademliaMessage {
+    string exchangeID = 1;
+    oneof message {
+        KademliaConnectionMessage connectionMessage = 2;
+        string padding = 3;
+    }
+}

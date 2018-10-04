@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia;
 
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
+import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -8,7 +9,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class NodeID {
-    public static final int KEY_BIT_LENGTH = 160;
+    public static final int KEY_BIT_LENGTH = 64;
     public static final int KEY_BYTE_LENGTH = KEY_BIT_LENGTH >> 3;
     public final byte[] key;
 
@@ -110,7 +111,7 @@ public class NodeID {
         return Arrays.hashCode(this.key);
     }
 
-    public Comparator<BubblegumNode> getKeyDistanceComparator() {
+    public Comparator<RouterNode> getKeyDistanceComparator() {
        return (o1, o2) -> {
 //           BigInteger a1 = new BigInteger(1, o1.getIdentifier().getKey());
 //           BigInteger a2 = new BigInteger(1, o2.getIdentifier().getKey());
@@ -118,8 +119,8 @@ public class NodeID {
 //           a2 = a2.xor(new BigInteger(1, key));
 //           return a1.abs().compareTo(a2.abs());
 
-           byte[] o1Distance = this.xorDistance(o1.getIdentifier());
-           byte[] o2Distance = this.xorDistance(o2.getIdentifier());
+           byte[] o1Distance = this.xorDistance(o1.getNode());
+           byte[] o2Distance = this.xorDistance(o2.getNode());
            return new BigInteger(1, o1Distance).abs().compareTo(new BigInteger(1, o2Distance).abs());
        };
     }

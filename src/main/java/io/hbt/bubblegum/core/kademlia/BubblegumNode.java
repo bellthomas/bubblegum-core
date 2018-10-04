@@ -1,32 +1,38 @@
 package io.hbt.bubblegum.core.kademlia;
 
-import io.hbt.bubblegum.core.Bubblegum;
-import io.hbt.bubblegum.core.exceptions.AddressInitialisationException;
+import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
-import io.hbt.bubblegum.core.kademlia.NodeID;
+import io.hbt.bubblegum.core.kademlia.activities.ConnectionActivity;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Set;
 
+/**
+ * This is local node
+ * One per social network a part of
+ */
 public class BubblegumNode {
     private SocialIdentity socialIdentity;
     private NodeID identifier;
-    private InetAddress ipAddress;
-    private int port; // -1 signifies it will be assign randomly on server start
     private RoutingTable routingTable;
+    private KademliaServer server;
 
     private BubblegumNode(SocialIdentity socialIdentity, InetAddress address, NodeID id, int port) {
         this.socialIdentity = socialIdentity;
-        this.port = port;
         this.identifier = id;
-        this.ipAddress = address;
         this.routingTable = new RoutingTable(this);
 
-//        System.out.println("Constructed BubblegumNode: " + this.identifier.toString());
+        try {
+            // This is the node for a particular network
+            this.server = new KademliaServer(this, port);
+        } catch (BubblegumException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Constructed BubblegumNode: " + this.identifier.toString());
     }
 
     public static BubblegumNode construct(SocialIdentity socialIdentity, InetAddress address) {
@@ -48,26 +54,44 @@ public class BubblegumNode {
         }
     }
 
-    public void bootstrap(BubblegumNode node) {
-//        System.out.println("bootstrapping onto " + node.toString());
-        this.routingTable.insert(new RouterNode(node));
-    }
-
-    public Set<BubblegumNode> getNodesClosestToKey(NodeID node, int numToGet) {
-        return this.routingTable.getNodesClosestToKey(node, numToGet);
-    }
 
     public NodeID getIdentifier() {
         return this.identifier;
+    }
+
+    @Override
+    public String toString() {
+        return identifier.toString();
+    }
+
+    public boolean bootstrap(InetAddress address, int port) {
+        // grpc call here, sync?
+
+        System.out.println("["+this.server.getPort()+"] Starting bootstrapping process...  ("+address.getHostAddress()+":"+port+")");
+        RouterNode to = new RouterNode(new NodeID(), address, port);
+        ConnectionActivity connection = new ConnectionActivity(this.server, to, this, this.routingTable);
+        connection.run();
+
+        if(connection.getComplete()) {
+            // Was a success, now bootstrapped. getNodes from bootstrapped node
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public Set<RouterNode> getNodesClosestToKey(NodeID node, int numToGet) {
+        return this.routingTable.getNodesClosestToKey(node, numToGet);
     }
 
     public void printBuckets() {
         this.routingTable.printBuckets();
     }
 
-    @Override
-    public String toString() {
-        return identifier.toString();
+    public RoutingTable getRoutingTable() {
+        return routingTable;
     }
 
     @Override
