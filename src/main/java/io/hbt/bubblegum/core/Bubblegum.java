@@ -1,17 +1,12 @@
 package io.hbt.bubblegum.core;
 
 import io.hbt.bubblegum.core.exceptions.AddressInitialisationException;
-import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
-import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
-import javax.xml.soap.Node;
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Set;
 
 public class Bubblegum {
 
@@ -23,7 +18,20 @@ public class Bubblegum {
             this.initialiseIPAddress();
             this.initialiseSocialIdentity();
 
-            this.run();
+
+            NodeID n = new NodeID();
+
+            for(int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) {
+                System.out.println(n + " --- " + n.getKeyBitsString());
+                NodeID generated = n.generateIDWithSharedPrefixLength(i);
+                System.out.println(generated.toString() + " --- " + generated.getKeyBitsString());
+
+                System.out.println(i + " - " + n.sharedPrefixLength(generated));
+                System.out.println();
+            }
+
+
+//            this.run();
 
         } catch (AddressInitialisationException e) {
             System.out.println("Failed to start network");

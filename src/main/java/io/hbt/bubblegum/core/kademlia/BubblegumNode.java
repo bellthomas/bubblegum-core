@@ -68,7 +68,6 @@ public class BubblegumNode {
     }
 
     public boolean bootstrap(InetAddress address, int port) {
-        // grpc call here, sync?
 
         System.out.println("["+this.server.getPort()+"] Starting bootstrapping process...  ("+address.getHostAddress()+":"+port+")");
         RouterNode to = new RouterNode(new NodeID(), address, port);
@@ -84,21 +83,11 @@ public class BubblegumNode {
             if(findNodes.getComplete()) {
                 Set<KademliaNode> foundNodes = findNodes.getResults();
                 for(KademliaNode node : foundNodes) {
-                    try {
-                        RouterNode routerNode = new RouterNode(
-                                new NodeID(node.getHash()),
-                                InetAddress.getByName(node.getIpAddress()),
-                                node.getPort()
-                        );
-
+                    RouterNode routerNode = RouterNode.fromKademliaNode(node);
+                    if(routerNode != null) {
                         System.out.println();
                         PingActivity nodePing = new PingActivity(this.server, this, routerNode, this.getRoutingTable());
                         nodePing.run();
-
-                    } catch (MalformedKeyException e) {
-                        e.printStackTrace();
-                    } catch (UnknownHostException e) {
-                        e.printStackTrace();
                     }
                 }
                 return true;

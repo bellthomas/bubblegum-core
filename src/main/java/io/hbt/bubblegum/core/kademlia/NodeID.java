@@ -7,11 +7,13 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Random;
 
 public class NodeID {
     public static final int KEY_BIT_LENGTH = 64;
     public static final int KEY_BYTE_LENGTH = KEY_BIT_LENGTH >> 3;
-    public final byte[] key;
+    
+    private final byte[] key;
 
     public NodeID() {
         this.key = NodeID.generateRandomKey();
@@ -21,6 +23,10 @@ public class NodeID {
         byte[] parsedKey = NodeID.keyFromHex(id);
         if(parsedKey == null) throw new MalformedKeyException();
         else this.key = parsedKey;
+    }
+
+    private NodeID(byte[] newKey) {
+        this.key = newKey;
     }
 
     public byte[] getKey() {
@@ -91,6 +97,34 @@ public class NodeID {
             }
         }
         return (byteIndex << 3) + bitIndex;
+    }
+
+    public NodeID generateIDWithSharedPrefixLength(int length) {
+
+        if(length >= this.key.length << 3) return new NodeID(this.key.clone());
+
+        int sharedBytes = length >> 3;
+        int sharedBits = length % 8;
+
+        byte[] newID = new byte[this.key.length];
+        new Random().nextBytes(newID);
+
+        // Copy shared whole bytes
+        for(int i = 0; i < sharedBytes; i++) newID[i] = this.key[i];
+
+        // Calculate the byte with the bit split
+        byte mask = (byte)(0xFF << (8 - sharedBits));
+        newID[sharedBytes] = (byte)((this.key[sharedBytes] & mask) + ~(this.key[sharedBytes] | mask));
+
+        return new NodeID(newID);
+    }
+
+    public String getKeyBitsString() {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : this.key) {
+            sb.append(Integer.toBinaryString(b & 255 | 256).substring(1) + " ");
+        }
+        return sb.toString();
     }
 
     @Override

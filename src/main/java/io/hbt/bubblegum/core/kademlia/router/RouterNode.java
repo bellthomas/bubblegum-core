@@ -1,8 +1,11 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
+import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.NodeID;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * this is for other nodes, not us
@@ -20,6 +23,21 @@ public class RouterNode implements Comparable<RouterNode> {
         this.port = port;
         this.latestResponse = System.nanoTime(); // TODO nano?
         this.failedResponses = 0;
+    }
+
+    public static RouterNode fromKademliaNode(KademliaNode node) {
+        try {
+            NodeID id = new NodeID(node.getHash());
+            InetAddress address = InetAddress.getByName(node.getIpAddress());
+
+            return new RouterNode(id, address, node.getPort());
+        } catch (MalformedKeyException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public void hasResponded() {
