@@ -1,0 +1,9 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+import "BgKademliaFindNodeRequest.proto";
+import "BgKademliaNode.proto";
+
+message KademliaFindNodeResponse {
+    KademliaFindNodeRequest request = 1;
+    repeated KademliaNode results = 2;
+}

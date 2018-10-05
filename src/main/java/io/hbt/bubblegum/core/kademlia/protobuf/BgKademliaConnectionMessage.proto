@@ -1,8 +1,0 @@
-syntax = "proto3";
-package io.hbt.bubblegum.core.kademlia.protobuf;
-
-message KademliaConnectionMessage {
-    string originHash = 1;
-    string originIP = 2;
-    int32 originPort = 3;
-}

@@ -33,6 +33,10 @@ public class RoutingTable {
     }
 
     public Set<RouterNode> getNodesClosestToKey(NodeID node, int nodesToGet) {
+        return this.getNodesClosestToKeyWithExclusions(node, nodesToGet, new HashSet<>());
+    }
+
+    public Set<RouterNode> getNodesClosestToKeyWithExclusions(NodeID node, int nodesToGet, Set<String> exclusions) {
         TreeSet<RouterNode> nodeDistanceTree = new TreeSet<>(node.getKeyDistanceComparator());
         HashSet<RouterNode> results = new HashSet<>();
 
@@ -45,9 +49,10 @@ public class RoutingTable {
         while(distanceTreeIterator.hasNext() & i < nodesToGet) {
             RouterNode n = distanceTreeIterator.next();
             // System.out.println(new BigInteger(1, node.xorDistance(n.getIdentifier())));
-
-            results.add(n);
-            i++;
+            if(!exclusions.contains(n.getNode().toString())) {
+                results.add(n);
+                i++;
+            }
         }
 
         return results;

@@ -2,7 +2,8 @@ package io.hbt.bubblegum.core.kademlia;
 
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
-import io.hbt.bubblegum.core.kademlia.activities.ConnectionActivity;
+import io.hbt.bubblegum.core.kademlia.activities.FindNodeActivity;
+import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
@@ -69,12 +70,14 @@ public class BubblegumNode {
 
         System.out.println("["+this.server.getPort()+"] Starting bootstrapping process...  ("+address.getHostAddress()+":"+port+")");
         RouterNode to = new RouterNode(new NodeID(), address, port);
-        ConnectionActivity connection = new ConnectionActivity(this.server, to, this, this.routingTable);
+        PingActivity connection = new PingActivity(this.server, this, to, this.getRoutingTable());
         connection.run();
+        System.out.println();
 
         if(connection.getComplete()) {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
-
+            FindNodeActivity findNodes = new FindNodeActivity(this.server, this, to, this.getRoutingTable(), this.identifier.toString());
+            findNodes.run();
             return true;
         }
         else {

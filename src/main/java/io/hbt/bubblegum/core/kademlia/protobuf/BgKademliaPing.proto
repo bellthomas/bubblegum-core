@@ -1,0 +1,6 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+message KademliaPing {
+    // Deliberately blank
+}

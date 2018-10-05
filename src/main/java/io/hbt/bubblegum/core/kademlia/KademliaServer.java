@@ -5,9 +5,9 @@ import com.google.protobuf.MessageLite;
 import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
-import io.hbt.bubblegum.core.kademlia.activities.ConnectionActivity;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaConnectionMessage.KademliaConnectionMessage;
+import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.io.IOException;
@@ -72,30 +72,34 @@ public class KademliaServer {
                     KademliaMessage message = KademliaMessage.parseFrom(data);
 
                     if(this.responses.containsKey(message.getExchangeID())) {
-                        this.print("I have a callback for this");
+                        this.print("Callback found for " + message.getExchangeID());
                         Consumer<KademliaMessage> callback = this.responses.remove(message.getExchangeID());
                         if(callback != null) new Thread(() -> callback.accept(message)).start();
                     }
 
-                    else if(message.hasConnectionMessage()) {
-                        this.print("Connection Message Received");
-                        KademliaConnectionMessage connectionMessage = message.getConnectionMessage();
+                    else if(message.hasPingMessage()) {
+                        this.print("Ping Message Received");
 
                         try {
                             RouterNode sender = new RouterNode(
-                                    new NodeID(connectionMessage.getOriginHash()),
-                                    InetAddress.getByName(connectionMessage.getOriginIP()),
-                                    connectionMessage.getOriginPort()
+                                    new NodeID(message.getOriginHash()),
+                                    InetAddress.getByName(message.getOriginIP()),
+                                    message.getOriginPort()
                             );
+                            this.localNode.getRoutingTable().insert(sender);
                             this.print("Connection Message Sender: " + sender.getNode().toString());
 
-                            ConnectionActivity connectionReply = new ConnectionActivity(this, sender, this.localNode, this.localNode.getRoutingTable());
-                            connectionReply.setResponse(message.getExchangeID());
-                            new Thread(() -> connectionReply.run()).start();
+                            PingActivity pingReply = new PingActivity(this, this.localNode, sender, this.localNode.getRoutingTable());
+                            pingReply.setResponse(message.getExchangeID());
+                            new Thread(() -> pingReply.run()).start();
 
                         } catch (MalformedKeyException e) {
                             e.printStackTrace();
                         }
+                    }
+
+                    else if(message.hasFindNodeRequest()) {
+
                     }
                 }
                 catch (InvalidProtocolBufferException ipbe) {
