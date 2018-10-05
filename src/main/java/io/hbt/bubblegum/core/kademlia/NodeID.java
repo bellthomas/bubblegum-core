@@ -12,7 +12,7 @@ import java.util.Random;
 public class NodeID {
     public static final int KEY_BIT_LENGTH = 64;
     public static final int KEY_BYTE_LENGTH = KEY_BIT_LENGTH >> 3;
-    
+
     private final byte[] key;
 
     public NodeID() {
