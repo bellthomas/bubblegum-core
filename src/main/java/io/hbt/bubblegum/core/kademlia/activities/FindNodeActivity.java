@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 public class FindNodeActivity extends NetworkActivity {
 
     private final String search;
+    private final Set<KademliaNode> results = new HashSet<>();
     private KademliaFindNodeRequest request;
     private String requestingHash;
 
@@ -83,6 +84,7 @@ public class FindNodeActivity extends NetworkActivity {
                     System.out.println("- " + node.getHash() + " @ " + node.getIpAddress() + ":" + node.getPort());
                 }
 
+                this.results.addAll(response.getResultsList());
                 this.complete = true;
 
                 // TODO handle response
@@ -94,5 +96,9 @@ public class FindNodeActivity extends NetworkActivity {
 
         this.server.sendDatagram(this.to, message.build(), callback);
         this.timeoutOnComplete();
+    }
+
+    public Set<KademliaNode> getResults() {
+        return this.results;
     }
 }

@@ -4,11 +4,13 @@ import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.FindNodeActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Set;
 
 /**
@@ -78,7 +80,32 @@ public class BubblegumNode {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
             FindNodeActivity findNodes = new FindNodeActivity(this.server, this, to, this.getRoutingTable(), this.identifier.toString());
             findNodes.run();
-            return true;
+
+            if(findNodes.getComplete()) {
+                Set<KademliaNode> foundNodes = findNodes.getResults();
+                for(KademliaNode node : foundNodes) {
+                    try {
+                        RouterNode routerNode = new RouterNode(
+                                new NodeID(node.getHash()),
+                                InetAddress.getByName(node.getIpAddress()),
+                                node.getPort()
+                        );
+
+                        System.out.println();
+                        PingActivity nodePing = new PingActivity(this.server, this, routerNode, this.getRoutingTable());
+                        nodePing.run();
+
+                    } catch (MalformedKeyException e) {
+                        e.printStackTrace();
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return true;
+            }
+            else {
+                return false;
+            }
         }
         else {
             return false;
