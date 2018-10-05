@@ -37,6 +37,16 @@ public abstract class NetworkActivity implements Runnable {
         return this.complete;
     }
 
+    protected void timeoutOnComplete() {
+        int i = 0;
+        while(i < NetworkActivity.TIMEOUT && !this.complete) {
+//            this.print("Wait Iteration " + i);
+            try { Thread.sleep(1000); }
+            catch (InterruptedException e) { e.printStackTrace(); }
+            i++;
+        }
+    }
+
     protected void print(String msg) {
         System.out.println("["+this.server.getPort()+"] " + msg);
     }

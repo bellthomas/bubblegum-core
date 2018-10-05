@@ -32,13 +32,20 @@ public class Bubblegum {
 
     private void run() {
 
-        BubblegumNode me = BubblegumNode.construct(this.socialIdentity, this.ipAddress, 44345);
-        BubblegumNode me2 = BubblegumNode.construct(this.socialIdentity, this.ipAddress, 56346);
+        int numberOfNodes = 20;
+        BubblegumNode[] nodes = new BubblegumNode[numberOfNodes];
+        for(int i = 0; i < numberOfNodes; i++) nodes[i] = BubblegumNode.construct(this.socialIdentity, this.ipAddress, 44000 + i);
         System.out.println();
-        try {
-            me2.bootstrap(InetAddress.getLocalHost(), 44345);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+
+        // Bootstrap all nodes to node 0
+        for(int i = 1; i < numberOfNodes; i++) {
+            System.out.println("--------------------------");
+            System.out.println("Node " + i);
+            System.out.println();
+            nodes[i].bootstrap(this.ipAddress, 44000);
+            System.out.println("--------------------------");
+            System.out.println();
+            System.out.println();
         }
 
 //        int numberOfNodes = 5000;

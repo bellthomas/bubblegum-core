@@ -59,14 +59,7 @@ public class PingActivity extends NetworkActivity {
         });
 
         this.server.sendDatagram(this.to, message.build(), response);
-
-        int i = 0;
-        while(i < NetworkActivity.TIMEOUT && !this.complete) {
-//            this.print("Wait Iteration " + i);
-            try { Thread.sleep(1000); }
-            catch (InterruptedException e) { e.printStackTrace(); }
-            i++;
-        }
+        this.timeoutOnComplete();
     }
 
 }

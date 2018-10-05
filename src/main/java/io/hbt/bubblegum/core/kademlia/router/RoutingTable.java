@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
+import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 
@@ -7,7 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 public class RoutingTable {
 
@@ -34,6 +34,14 @@ public class RoutingTable {
 
     public Set<RouterNode> getNodesClosestToKey(NodeID node, int nodesToGet) {
         return this.getNodesClosestToKeyWithExclusions(node, nodesToGet, new HashSet<>());
+    }
+
+    public Set<RouterNode> getNodesClosestToKeyWithExclusions(String node, int nodesToGet, Set<String> exclusions) {
+        try {
+            return this.getNodesClosestToKeyWithExclusions(new NodeID(node), nodesToGet, exclusions);
+        } catch (MalformedKeyException e) {
+            return new HashSet<>();
+        }
     }
 
     public Set<RouterNode> getNodesClosestToKeyWithExclusions(NodeID node, int nodesToGet, Set<String> exclusions) {

@@ -5,6 +5,7 @@ import com.google.protobuf.MessageLite;
 import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
+import io.hbt.bubblegum.core.kademlia.activities.FindNodeActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing;
@@ -99,7 +100,29 @@ public class KademliaServer {
                     }
 
                     else if(message.hasFindNodeRequest()) {
+                        this.print("FindNode Request Received: " + message.getFindNodeRequest().getSearchHash());
 
+                        try {
+                            RouterNode sender = new RouterNode(
+                                    new NodeID(message.getOriginHash()),
+                                    InetAddress.getByName(message.getOriginIP()),
+                                    message.getOriginPort()
+                            );
+                            // TODO insert?
+
+                            FindNodeActivity findNodeReply = new FindNodeActivity(
+                                    this,
+                                    this.localNode,
+                                    sender,
+                                    this.localNode.getRoutingTable(),
+                                    message.getFindNodeRequest().getSearchHash()
+                            );
+                            findNodeReply.setResponse(message.getExchangeID(), message.getFindNodeRequest(), message.getOriginHash());
+                            new Thread(() -> findNodeReply.run()).start();
+
+                        } catch (MalformedKeyException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
                 catch (InvalidProtocolBufferException ipbe) {
@@ -130,11 +153,11 @@ public class KademliaServer {
     }
 
     public InetAddress getLocal() {
-        return localAddress;
+        return this.localAddress;
     }
 
     public int getPort() {
-        return port;
+        return this.port;
     }
 
     private void print(String msg) {
