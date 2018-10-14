@@ -1,5 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
+import io.hbt.bubblegum.core.kademlia.NodeID;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
@@ -76,6 +78,16 @@ public class RouterBucket {
     public Set<RouterNode> getNodes() {
         if(this.activeBucket.isEmpty()) return new HashSet<>();
         else return this.activeBucket.clone();
+    }
+
+    public RouterNode getRouterNodeWithID(NodeID id) {
+        for(RouterNode node : this.activeBucket) if(node.getNode().equals(id)) return node;
+        for(RouterNode node : this.replacements) if(node.getNode().equals(id)) return node;
+        return null;
+    }
+
+    public int getBucketSize() {
+        return this.activeBucket.size();
     }
 
     @Override

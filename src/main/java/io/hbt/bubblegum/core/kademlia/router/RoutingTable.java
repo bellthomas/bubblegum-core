@@ -3,11 +3,9 @@ package io.hbt.bubblegum.core.kademlia.router;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
+import io.hbt.bubblegum.core.kademlia.activities.FindNodeActivity;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public class RoutingTable {
 
@@ -45,12 +43,8 @@ public class RoutingTable {
     }
 
     public Set<RouterNode> getNodesClosestToKeyWithExclusions(NodeID node, int nodesToGet, Set<String> exclusions) {
-        TreeSet<RouterNode> nodeDistanceTree = new TreeSet<>(node.getKeyDistanceComparator());
+        TreeSet<RouterNode> nodeDistanceTree = this.getAllNodesSorted(node.getKeyDistanceComparator());
         HashSet<RouterNode> results = new HashSet<>();
-
-        for(RouterBucket bucket : this.buckets) {
-            nodeDistanceTree.addAll(bucket.getNodes());
-        }
 
         Iterator<RouterNode> distanceTreeIterator = nodeDistanceTree.iterator();
         int i = 0;
@@ -66,9 +60,44 @@ public class RoutingTable {
         return results;
     }
 
+    public int getGreatestNonEmptyBucket() {
+        int index = this.buckets.length - 1;
+        while(this.buckets[index].getBucketSize() == 0 && index > 0) index--;
+        return index;
+    }
+
+    public void refreshBuckets() {
+        this.self.log("Refreshing Buckets...");
+        int maximumNonEmptyBucket = this.self.getRoutingTable().getGreatestNonEmptyBucket();
+        NodeID searchKey;
+        for(int i = 0; i < maximumNonEmptyBucket; i++) {
+            searchKey = this.self.getIdentifier().generateIDWithSharedPrefixLength(i);
+            Set<RouterNode> nodesToSearch = this.self.getRoutingTable().getNodesClosestToKey(searchKey, 5);
+            for(RouterNode node : nodesToSearch) {
+                FindNodeActivity findNodeActivity = new FindNodeActivity(this.self.getServer(), this.self, node, this.self.getRoutingTable(), searchKey.toString());
+                this.self.getExecutionContext().addActivity(this.self.getIdentifier().toString(), findNodeActivity);
+            }
+        }
+    }
+
     public void printBuckets() {
         for(RouterBucket bucket : this.buckets) {
-            System.out.println(bucket.toString());
+            this.self.log(bucket.toString());
         }
+    }
+
+    public TreeSet<RouterNode> getAllNodesSorted(Comparator<RouterNode> comparator) {
+        TreeSet<RouterNode> nodeDistanceTree = new TreeSet<>(comparator);
+
+        for(RouterBucket bucket : this.buckets) {
+            nodeDistanceTree.addAll(bucket.getNodes());
+        }
+
+        return nodeDistanceTree;
+    }
+
+    public RouterNode getRouterNodeForID(NodeID id) {
+        RouterBucket bucket = this.getBucketForNode(id);
+        return bucket.getRouterNodeWithID(id);
     }
 }

@@ -1,8 +1,10 @@
 package io.hbt.bubblegum.core;
 
+import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
 import io.hbt.bubblegum.core.exceptions.AddressInitialisationException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
+import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
@@ -19,19 +21,19 @@ public class Bubblegum {
             this.initialiseSocialIdentity();
 
 
-            NodeID n = new NodeID();
+//            NodeID n = new NodeID();
+//
+//            for(int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) {
+//                System.out.println(n + " --- " + n.getKeyBitsString());
+//                NodeID generated = n.generateIDWithSharedPrefixLength(i);
+//                System.out.println(generated.toString() + " --- " + generated.getKeyBitsString());
+//
+//                System.out.println(i + " - " + n.sharedPrefixLength(generated));
+//                System.out.println();
+//            }
 
-            for(int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) {
-                System.out.println(n + " --- " + n.getKeyBitsString());
-                NodeID generated = n.generateIDWithSharedPrefixLength(i);
-                System.out.println(generated.toString() + " --- " + generated.getKeyBitsString());
 
-                System.out.println(i + " - " + n.sharedPrefixLength(generated));
-                System.out.println();
-            }
-
-
-//            this.run();
+            this.run();
 
         } catch (AddressInitialisationException e) {
             System.out.println("Failed to start network");
@@ -40,42 +42,32 @@ public class Bubblegum {
 
     private void run() {
 
-        int numberOfNodes = 20;
+        int numberOfNodes = 10;
+        ActivityExecutionContext context = new ActivityExecutionContext(numberOfNodes);
+        LoggingManager loggingManager = LoggingManager.getInstance();
+
         BubblegumNode[] nodes = new BubblegumNode[numberOfNodes];
-        for(int i = 0; i < numberOfNodes; i++) nodes[i] = BubblegumNode.construct(this.socialIdentity, this.ipAddress, 44000 + i);
+        for(int i = 0; i < numberOfNodes; i++) {
+            nodes[i] = BubblegumNode.construct(this.socialIdentity, context, loggingManager.getLogger(i), this.ipAddress, 44000 + i);
+        }
         System.out.println();
 
         // Bootstrap all nodes to node 0
         for(int i = 1; i < numberOfNodes; i++) {
-            System.out.println("--------------------------");
-            System.out.println("Node " + i);
-            System.out.println();
             nodes[i].bootstrap(this.ipAddress, 44000);
-            System.out.println("--------------------------");
-            System.out.println();
-            System.out.println();
         }
 
-//        int numberOfNodes = 5000;
-//        BubblegumNode[] nodes = new BubblegumNode[numberOfNodes];
-//        for(int i = 0; i < nodes.length; i++) {
-//            nodes[i] = BubblegumNode.construct(this.socialIdentity, this.ipAddress);
-////            me.bootstrap(nodes[i]);
-//            if(i % 1000 == 0) System.out.println(i);
-//        }
-//
-//        NodeID search = new NodeID();
-//        BigInteger b = new BigInteger(1, search.getKey());
-//
-//        Set<RouterNode> r = me.getNodesClosestToKey(search, 5);
-//        for(RouterNode n : r) {
-//            System.out.println("Distance [" + search.toString() + " -> " + n.getNode().toString() + "]: ");
-//            System.out.println(new BigInteger(1, search.xorDistance(n.getNode())).abs());
-//            System.out.println();
-//        }
+        System.out.println("Initial network built.");
 
-        System.out.println("Bootstrapping completed.");
-        System.out.println();
+        BubblegumNode newcomer = BubblegumNode.construct(this.socialIdentity, context, loggingManager.getLogger(numberOfNodes), this.ipAddress, 44000 + numberOfNodes);
+        try {
+            Thread.sleep(1000);
+            loggingManager.getLogger(numberOfNodes).logMessage("Starting bootstrap");
+            newcomer.bootstrap(this.ipAddress, 44005);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         while(true) {
 
         }

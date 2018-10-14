@@ -16,7 +16,7 @@ public abstract class NetworkActivity implements Runnable {
     protected boolean isResponse;
     protected boolean complete;
 
-    protected final static int TIMEOUT = 10; // seconds
+    protected final static int TIMEOUT = 100; // seconds * 10
 
     public NetworkActivity(KademliaServer server, BubblegumNode self, RouterNode to, RoutingTable routingTable) {
         this.server = server;
@@ -41,13 +41,13 @@ public abstract class NetworkActivity implements Runnable {
         int i = 0;
         while(i < NetworkActivity.TIMEOUT && !this.complete) {
 //            this.print("Wait Iteration " + i);
-            try { Thread.sleep(1000); }
+            try { Thread.sleep(100); }
             catch (InterruptedException e) { e.printStackTrace(); }
             i++;
         }
     }
 
     protected void print(String msg) {
-        System.out.println("["+this.server.getPort()+"] " + msg);
+        this.localNode.log(msg);
     }
 }

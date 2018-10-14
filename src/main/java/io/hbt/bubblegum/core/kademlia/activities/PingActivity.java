@@ -6,6 +6,7 @@ import io.hbt.bubblegum.core.kademlia.KademliaServer;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing;
+import io.hbt.bubblegum.core.kademlia.router.RouterBucket;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 
@@ -21,11 +22,24 @@ public class PingActivity extends NetworkActivity {
 
     @Override
     public void run() {
+
+        // Get real RouterNode if we have one
+        RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
+        if(destination == null) destination = this.to;
+
+        // dest and to with different ip/port?
+
         if(this.isResponse) {
-            this.print("Replying to ping from " + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
+            this.print("Replying to PING from " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
         }
         else {
-            this.print("Starting ping to " + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
+
+            if(System.nanoTime() - destination.getLatestResponse() < 600000000000L) {
+                this.print("Node fresh, PING not required for " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
+                this.complete = true;
+                return;
+            }
+            this.print("Starting PING to " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
         }
 
         KademliaMessage.Builder message = KademliaMessage.newBuilder();
@@ -40,7 +54,14 @@ public class PingActivity extends NetworkActivity {
 
             // TODO verify ip/port
             try {
-                RouterNode responder = new RouterNode(
+//                RouterNode responder = new RouterNode(
+//                        new NodeID(kademliaMessage.getOriginHash()),
+//                        InetAddress.getByName(kademliaMessage.getOriginIP()),
+//                        kademliaMessage.getOriginPort()
+//                );
+
+                RouterNode responder = this.routingTable.getRouterNodeForID(new NodeID(kademliaMessage.getOriginHash()));
+                if(responder == null) responder = new RouterNode(
                         new NodeID(kademliaMessage.getOriginHash()),
                         InetAddress.getByName(kademliaMessage.getOriginIP()),
                         kademliaMessage.getOriginPort()
@@ -49,7 +70,7 @@ public class PingActivity extends NetworkActivity {
                 this.routingTable.insert(responder);
                 this.complete = true;
 
-                this.print("Ping response from " + responder.getNode().toString());
+                this.print("PING response from " + responder.getNode().toString());
             } catch (MalformedKeyException e) {
                 e.printStackTrace();
             } catch (UnknownHostException e) {
@@ -58,7 +79,7 @@ public class PingActivity extends NetworkActivity {
 
         });
 
-        this.server.sendDatagram(this.to, message.build(), response);
+        this.server.sendDatagram(destination, message.build(), response);
         this.timeoutOnComplete();
     }
 

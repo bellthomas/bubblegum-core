@@ -2,7 +2,6 @@ package io.hbt.bubblegum.core.kademlia.activities;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.KademliaServer;
-import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindNodeRequest.KademliaFindNodeRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindNodeResponse.KademliaFindNodeResponse;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
@@ -79,18 +78,27 @@ public class FindNodeActivity extends NetworkActivity {
         Consumer<KademliaMessage> callback = this.isResponse ? null : (kademliaMessage) -> {
             if(kademliaMessage.hasFindNodeResponse()) {
                 KademliaFindNodeResponse response = kademliaMessage.getFindNodeResponse();
-                System.out.println(kademliaMessage.getOriginHash() + " returned " + response.getResultsCount() + " results:");
+                StringBuilder logMessage = new StringBuilder();
+                logMessage.append(kademliaMessage.getOriginHash() + " returned " + response.getResultsCount() + " results:\n");
                 for(KademliaNode node : response.getResultsList()) {
-                    System.out.println("- " + node.getHash() + " @ " + node.getIpAddress() + ":" + node.getPort());
+                    logMessage.append("- " + node.getHash() + " @ " + node.getIpAddress() + ":" + node.getPort() + "\n");
+
+                    // Only ping if not found or stale
+                    RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
+                    if(destination == null || System.currentTimeMillis() - destination.getLatestResponse() > 600000000000L) {
+                        PingActivity nodePing = new PingActivity(this.server, this.localNode, RouterNode.fromKademliaNode(node), this.routingTable);
+                        this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier().toString(), nodePing);
+                    }
                 }
 
+                this.print(logMessage.toString());
                 this.results.addAll(response.getResultsList());
                 this.complete = true;
 
                 // TODO handle response
             }
             else {
-                System.out.println("Invalid");
+                this.print("Invalid");
             }
         };
 

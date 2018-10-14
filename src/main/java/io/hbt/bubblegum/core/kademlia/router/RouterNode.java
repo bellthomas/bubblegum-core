@@ -21,7 +21,7 @@ public class RouterNode implements Comparable<RouterNode> {
         this.node = node;
         this.ipAddress = address;
         this.port = port;
-        this.latestResponse = System.nanoTime(); // TODO nano?
+        this.latestResponse = 0; // TODO nano?
         this.failedResponses = 0;
     }
 

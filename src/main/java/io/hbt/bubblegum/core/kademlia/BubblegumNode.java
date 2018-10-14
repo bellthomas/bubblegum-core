@@ -1,16 +1,14 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import io.hbt.bubblegum.core.auxiliary.logging.Logger;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
-import io.hbt.bubblegum.core.kademlia.activities.FindNodeActivity;
-import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
+import io.hbt.bubblegum.core.kademlia.activities.*;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Set;
 
 /**
@@ -22,11 +20,15 @@ public class BubblegumNode {
     private NodeID identifier;
     private RoutingTable routingTable;
     private KademliaServer server;
+    private ActivityExecutionContext executionContext;
+    private Logger logger;
 
-    private BubblegumNode(SocialIdentity socialIdentity, InetAddress address, NodeID id, int port) {
+    private BubblegumNode(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address, NodeID id, int port) {
         this.socialIdentity = socialIdentity;
         this.identifier = id;
         this.routingTable = new RoutingTable(this);
+        this.executionContext = context;
+        this.logger = logger;
 
         try {
             // This is the node for a particular network
@@ -35,25 +37,25 @@ public class BubblegumNode {
             e.printStackTrace();
         }
 
-        System.out.println("Constructed BubblegumNode: " + this.identifier.toString());
+        this.log("Constructed BubblegumNode: " + this.identifier.toString());
     }
 
-    public static BubblegumNode construct(SocialIdentity socialIdentity, InetAddress address) {
-        return new BubblegumNode(socialIdentity, address, new NodeID(), -1);
+    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address) {
+        return new BubblegumNode(socialIdentity, context, logger, address, new NodeID(), -1);
     }
 
-    public static BubblegumNode construct(SocialIdentity socialIdentity, InetAddress address, int port) {
-        return new BubblegumNode(socialIdentity, address, new NodeID(), port);
+    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address, int port) {
+        return new BubblegumNode(socialIdentity, context, logger, address, new NodeID(), port);
     }
 
-    public static BubblegumNode construct(SocialIdentity socialIdentity, InetAddress address, String id, int port) {
+    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address, String id, int port) {
         NodeID nodeID = new NodeID();
         try {
             nodeID = new NodeID(id);
         } catch (MalformedKeyException e) {
-            System.out.println("Malformed Key (" + id + "), generated a new one (" + nodeID.toString() + ")");
+            logger.logMessage("Malformed Key (" + id + "), generated a new one (" + nodeID.toString() + ")");
         } finally {
-            return new BubblegumNode(socialIdentity, address, nodeID, port);
+            return new BubblegumNode(socialIdentity, context, logger, address, nodeID, port);
         }
     }
 
@@ -69,36 +71,19 @@ public class BubblegumNode {
 
     public boolean bootstrap(InetAddress address, int port) {
 
-        System.out.println("["+this.server.getPort()+"] Starting bootstrapping process...  ("+address.getHostAddress()+":"+port+")");
         RouterNode to = new RouterNode(new NodeID(), address, port);
-        PingActivity connection = new PingActivity(this.server, this, to, this.getRoutingTable());
-        connection.run();
-        System.out.println();
+        BootstrapActivity boostrapActivity = new BootstrapActivity(this.server, this, to, this.getRoutingTable());
+        boostrapActivity.run(); // sync
 
-        if(connection.getComplete()) {
-            // Was a success, now bootstrapped. getNodes from bootstrapped node
-            FindNodeActivity findNodes = new FindNodeActivity(this.server, this, to, this.getRoutingTable(), this.identifier.toString());
-            findNodes.run();
+//        this.log("Bootstrap Level 1 Completed");
+//
+//        Set<RouterNode> closest = this.routingTable.getNodesClosestToKey(this.getIdentifier(), 8);
+//        for(RouterNode node : closest) {
+//            this.executionContext.addActivity(this.identifier.toString(), new BootstrapActivity(this.server, this, node, this.getRoutingTable()));
+//        }
 
-            if(findNodes.getComplete()) {
-                Set<KademliaNode> foundNodes = findNodes.getResults();
-                for(KademliaNode node : foundNodes) {
-                    RouterNode routerNode = RouterNode.fromKademliaNode(node);
-                    if(routerNode != null) {
-                        System.out.println();
-                        PingActivity nodePing = new PingActivity(this.server, this, routerNode, this.getRoutingTable());
-                        nodePing.run();
-                    }
-                }
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-        else {
-            return false;
-        }
+        return boostrapActivity.getComplete(); // only success of first level calls
+
     }
 
     public Set<RouterNode> getNodesClosestToKey(NodeID node, int numToGet) {
@@ -111,6 +96,18 @@ public class BubblegumNode {
 
     public RoutingTable getRoutingTable() {
         return routingTable;
+    }
+
+    public ActivityExecutionContext getExecutionContext() {
+        return this.executionContext;
+    }
+
+    public KademliaServer getServer() {
+        return this.server;
+    }
+
+    public void log(String message) {
+        this.logger.logMessage(message);
     }
 
     @Override
