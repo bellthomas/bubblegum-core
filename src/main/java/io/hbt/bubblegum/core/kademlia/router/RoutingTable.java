@@ -3,7 +3,7 @@ package io.hbt.bubblegum.core.kademlia.router;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
-import io.hbt.bubblegum.core.kademlia.activities.FindNodeActivity;
+import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 
 import java.util.*;
 
@@ -74,8 +74,8 @@ public class RoutingTable {
             searchKey = this.self.getIdentifier().generateIDWithSharedPrefixLength(i);
             Set<RouterNode> nodesToSearch = this.self.getRoutingTable().getNodesClosestToKey(searchKey, 5);
             for(RouterNode node : nodesToSearch) {
-                FindNodeActivity findNodeActivity = new FindNodeActivity(this.self.getServer(), this.self, node, this.self.getRoutingTable(), searchKey.toString());
-                this.self.getExecutionContext().addActivity(this.self.getIdentifier().toString(), findNodeActivity);
+                FindActivity findActivity = new FindActivity(this.self.getServer(), this.self, node, this.self.getRoutingTable(), searchKey.toString());
+                this.self.getExecutionContext().addActivity(this.self.getIdentifier().toString(), findActivity);
             }
         }
     }

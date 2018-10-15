@@ -2,8 +2,9 @@ syntax = "proto3";
 package io.hbt.bubblegum.core.kademlia.protobuf;
 
 import "BgKademliaPing.proto";
-import "BgKademliaFindNodeRequest.proto";
+import "BgKademliaFindRequest.proto";
 import "BgKademliaFindNodeResponse.proto";
+import "BgKademliaFindValueResponse.proto";
 
 message KademliaMessage {
     string exchangeID = 1;
@@ -13,7 +14,8 @@ message KademliaMessage {
 
     oneof message {
         KademliaPing pingMessage = 5;
-        KademliaFindNodeRequest findNodeRequest = 6;
+        KademliaFindRequest findNodeRequest = 6;
         KademliaFindNodeResponse findNodeResponse = 7;
+        KademliaFindValueResponse findValueResponse = 8;
     }
 }

@@ -4,9 +4,7 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.KademliaServer;
 import io.hbt.bubblegum.core.kademlia.NodeID;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing;
-import io.hbt.bubblegum.core.kademlia.router.RouterBucket;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 

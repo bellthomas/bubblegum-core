@@ -2,7 +2,7 @@ package io.hbt.bubblegum.core.kademlia.activities;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.KademliaServer;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 
@@ -24,12 +24,12 @@ public class BootstrapActivity extends NetworkActivity {
 
         if(ping.getComplete()) {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
-            FindNodeActivity findNodes = new FindNodeActivity(this.server, this.localNode, this.to, this.routingTable, this.localNode.getIdentifier().toString());
+            FindActivity findNodes = new FindActivity(this.server, this.localNode, this.to, this.routingTable, this.localNode.getIdentifier().toString());
             findNodes.run();
 
             if(findNodes.getComplete()) {
-                Set<BgKademliaNode.KademliaNode> foundNodes = findNodes.getResults();
-                for(BgKademliaNode.KademliaNode node : foundNodes) {
+                Set<KademliaNode> foundNodes = findNodes.getResults();
+                for(KademliaNode node : foundNodes) {
                     RouterNode routerNode = RouterNode.fromKademliaNode(node);
                     if(routerNode != null) {
                         RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());

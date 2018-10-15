@@ -5,7 +5,7 @@ import com.google.protobuf.MessageLite;
 import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
-import io.hbt.bubblegum.core.kademlia.activities.FindNodeActivity;
+import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
@@ -102,7 +102,8 @@ public class KademliaServer {
                     }
 
                     else if(message.hasFindNodeRequest()) {
-                        this.print("FIND_NODE Request Received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getFindNodeRequest().getSearchHash());
+                        boolean returnValue = message.getFindNodeRequest().getReturnValue();
+                        this.print((returnValue ? "FIND_VALUE" : "FIND_NODE") + " Request Received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getFindNodeRequest().getSearchHash());
 
                         try {
                             RouterNode sender = new RouterNode(
@@ -112,12 +113,13 @@ public class KademliaServer {
                             );
                             // TODO insert?
 
-                            FindNodeActivity findNodeReply = new FindNodeActivity(
+                            FindActivity findNodeReply = new FindActivity(
                                     this,
                                     this.localNode,
                                     sender,
                                     this.localNode.getRoutingTable(),
-                                    message.getFindNodeRequest().getSearchHash()
+                                    message.getFindNodeRequest().getSearchHash(),
+                                    returnValue
                             );
                             findNodeReply.setResponse(message.getExchangeID(), message.getFindNodeRequest(), message.getOriginHash());
                             this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getIdentifier().toString(), findNodeReply);

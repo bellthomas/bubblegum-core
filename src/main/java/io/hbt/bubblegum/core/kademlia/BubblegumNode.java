@@ -6,6 +6,7 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.*;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
+import io.hbt.bubblegum.core.social.Database;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
@@ -21,6 +22,7 @@ public class BubblegumNode {
     private RoutingTable routingTable;
     private KademliaServer server;
     private ActivityExecutionContext executionContext;
+    private Database db;
     private Logger logger;
 
     private BubblegumNode(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address, NodeID id, int port) {
@@ -29,6 +31,7 @@ public class BubblegumNode {
         this.routingTable = new RoutingTable(this);
         this.executionContext = context;
         this.logger = logger;
+        this.db = new Database();
 
         try {
             // This is the node for a particular network
@@ -108,6 +111,14 @@ public class BubblegumNode {
 
     public void log(String message) {
         this.logger.logMessage(message);
+    }
+
+    public boolean databaseHasKey(String key) {
+        return this.db.hasKey(key);
+    }
+
+    public byte[] databaseRetrieveValue(String key) {
+        return this.db.valueForKey(key);
     }
 
     @Override

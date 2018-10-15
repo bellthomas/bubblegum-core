@@ -1,7 +1,8 @@
 syntax = "proto3";
 package io.hbt.bubblegum.core.kademlia.protobuf;
 
-message KademliaFindNodeRequest {
+message KademliaFindRequest {
     string searchHash = 1;
     int32 numberRequested = 2;
+    bool returnValue = 3;
 }
