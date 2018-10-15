@@ -63,7 +63,7 @@ public class Bubblegum {
         try {
             Thread.sleep(1000);
             loggingManager.getLogger(numberOfNodes).logMessage("Starting bootstrap");
-            newcomer.bootstrap(this.ipAddress, 44005);
+            newcomer.bootstrap(this.ipAddress, 44002);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

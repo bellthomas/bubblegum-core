@@ -42,7 +42,7 @@ public class RouterNode implements Comparable<RouterNode> {
 
     public void hasResponded() {
         this.failedResponses = 0;
-        this.latestResponse = System.nanoTime(); // TODO nano?
+        this.latestResponse = System.currentTimeMillis();
     }
 
     public void hasFailedToRespond() {
@@ -67,6 +67,10 @@ public class RouterNode implements Comparable<RouterNode> {
 
     public InetAddress getIPAddress() {
         return ipAddress;
+    }
+
+    public boolean isFresh() {
+        return (System.currentTimeMillis() - this.getLatestResponse() < 60000);
     }
 
     @Override

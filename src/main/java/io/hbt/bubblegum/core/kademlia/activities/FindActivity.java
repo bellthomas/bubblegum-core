@@ -27,8 +27,8 @@ public class FindActivity extends NetworkActivity {
 
     private final static int RESULTS_REQUESTED = 8;
 
-    public FindActivity(KademliaServer server, BubblegumNode self, RouterNode to, RoutingTable routingTable, String search, boolean returnValue) {
-        super(server, self, to, routingTable);
+    public FindActivity(BubblegumNode self, RouterNode to, String search, boolean returnValue) {
+        super(self, to);
         this.search = search;
         this.returnValue = returnValue;
     }
@@ -107,8 +107,8 @@ public class FindActivity extends NetworkActivity {
 
                     // Only ping if not found or stale
                     RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
-                    if(destination == null || System.currentTimeMillis() - destination.getLatestResponse() > 600000000000L) {
-                        PingActivity nodePing = new PingActivity(this.server, this.localNode, RouterNode.fromKademliaNode(node), this.routingTable);
+                    if(destination == null || !destination.isFresh()) {
+                        PingActivity nodePing = new PingActivity(this.localNode, RouterNode.fromKademliaNode(node));
                         this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier().toString(), nodePing);
                     }
                 }
@@ -124,6 +124,7 @@ public class FindActivity extends NetworkActivity {
                 byte[] value = findValueResponse.getValue().toByteArray();
                 this.value = value;
                 this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + value.length + " bytes");
+                this.complete = true;
             }
             else {
                 this.print("Invalid");
@@ -131,7 +132,7 @@ public class FindActivity extends NetworkActivity {
         };
 
         this.server.sendDatagram(this.to, message.build(), callback);
-        this.timeoutOnComplete();
+        if(!this.isResponse) this.timeoutOnComplete();
     }
 
     public Set<KademliaNode> getFindNodeResults() {

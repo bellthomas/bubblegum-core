@@ -17,12 +17,17 @@ public final class BgKademliaPing {
   public interface KademliaPingOrBuilder extends
       // @@protoc_insertion_point(interface_extends:io.hbt.bubblegum.core.kademlia.protobuf.KademliaPing)
       com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Deliberately blank
+     * </pre>
+     *
+     * <code>bool reply = 1;</code>
+     */
+    boolean getReply();
   }
   /**
-   * <pre>
-   * Deliberately blank
-   * </pre>
-   *
    * Protobuf type {@code io.hbt.bubblegum.core.kademlia.protobuf.KademliaPing}
    */
   public  static final class KademliaPing extends
@@ -35,6 +40,7 @@ public final class BgKademliaPing {
       super(builder);
     }
     private KademliaPing() {
+      reply_ = false;
     }
 
     @java.lang.Override
@@ -50,6 +56,7 @@ public final class BgKademliaPing {
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
+      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -60,6 +67,11 @@ public final class BgKademliaPing {
             case 0:
               done = true;
               break;
+            case 8: {
+
+              reply_ = input.readBool();
+              break;
+            }
             default: {
               if (!parseUnknownFieldProto3(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -92,6 +104,19 @@ public final class BgKademliaPing {
               io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing.class, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing.Builder.class);
     }
 
+    public static final int REPLY_FIELD_NUMBER = 1;
+    private boolean reply_;
+    /**
+     * <pre>
+     * Deliberately blank
+     * </pre>
+     *
+     * <code>bool reply = 1;</code>
+     */
+    public boolean getReply() {
+      return reply_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -106,6 +131,9 @@ public final class BgKademliaPing {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (reply_ != false) {
+        output.writeBool(1, reply_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -115,6 +143,10 @@ public final class BgKademliaPing {
       if (size != -1) return size;
 
       size = 0;
+      if (reply_ != false) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(1, reply_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -131,6 +163,8 @@ public final class BgKademliaPing {
       io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing other = (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing) obj;
 
       boolean result = true;
+      result = result && (getReply()
+          == other.getReply());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -142,6 +176,9 @@ public final class BgKademliaPing {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + REPLY_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+          getReply());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -238,10 +275,6 @@ public final class BgKademliaPing {
       return builder;
     }
     /**
-     * <pre>
-     * Deliberately blank
-     * </pre>
-     *
      * Protobuf type {@code io.hbt.bubblegum.core.kademlia.protobuf.KademliaPing}
      */
     public static final class Builder extends
@@ -279,6 +312,8 @@ public final class BgKademliaPing {
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        reply_ = false;
+
         return this;
       }
 
@@ -305,6 +340,7 @@ public final class BgKademliaPing {
       @java.lang.Override
       public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing buildPartial() {
         io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing result = new io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing(this);
+        result.reply_ = reply_;
         onBuilt();
         return result;
       }
@@ -353,6 +389,9 @@ public final class BgKademliaPing {
 
       public Builder mergeFrom(io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing other) {
         if (other == io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing.getDefaultInstance()) return this;
+        if (other.getReply() != false) {
+          setReply(other.getReply());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -379,6 +418,44 @@ public final class BgKademliaPing {
             mergeFrom(parsedMessage);
           }
         }
+        return this;
+      }
+
+      private boolean reply_ ;
+      /**
+       * <pre>
+       * Deliberately blank
+       * </pre>
+       *
+       * <code>bool reply = 1;</code>
+       */
+      public boolean getReply() {
+        return reply_;
+      }
+      /**
+       * <pre>
+       * Deliberately blank
+       * </pre>
+       *
+       * <code>bool reply = 1;</code>
+       */
+      public Builder setReply(boolean value) {
+        
+        reply_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Deliberately blank
+       * </pre>
+       *
+       * <code>bool reply = 1;</code>
+       */
+      public Builder clearReply() {
+        
+        reply_ = false;
+        onChanged();
         return this;
       }
       @java.lang.Override
@@ -449,8 +526,8 @@ public final class BgKademliaPing {
   static {
     java.lang.String[] descriptorData = {
       "\n\024BgKademliaPing.proto\022\'io.hbt.bubblegum" +
-      ".core.kademlia.protobuf\"\016\n\014KademliaPingb" +
-      "\006proto3"
+      ".core.kademlia.protobuf\"\035\n\014KademliaPing\022" +
+      "\r\n\005reply\030\001 \001(\010b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -469,7 +546,7 @@ public final class BgKademliaPing {
     internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaPing_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaPing_descriptor,
-        new java.lang.String[] { });
+        new java.lang.String[] { "Reply", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

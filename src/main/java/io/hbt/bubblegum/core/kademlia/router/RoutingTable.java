@@ -74,7 +74,7 @@ public class RoutingTable {
             searchKey = this.self.getIdentifier().generateIDWithSharedPrefixLength(i);
             Set<RouterNode> nodesToSearch = this.self.getRoutingTable().getNodesClosestToKey(searchKey, 5);
             for(RouterNode node : nodesToSearch) {
-                FindActivity findActivity = new FindActivity(this.self.getServer(), this.self, node, this.self.getRoutingTable(), searchKey.toString());
+                FindActivity findActivity = new FindActivity(this.self, node, searchKey.toString(), false);
                 this.self.getExecutionContext().addActivity(this.self.getIdentifier().toString(), findActivity);
             }
         }

@@ -75,7 +75,7 @@ public class BubblegumNode {
     public boolean bootstrap(InetAddress address, int port) {
 
         RouterNode to = new RouterNode(new NodeID(), address, port);
-        BootstrapActivity boostrapActivity = new BootstrapActivity(this.server, this, to, this.getRoutingTable());
+        BootstrapActivity boostrapActivity = new BootstrapActivity(this, to);
         boostrapActivity.run(); // sync
 
 //        this.log("Bootstrap Level 1 Completed");

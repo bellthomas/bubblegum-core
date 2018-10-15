@@ -6,6 +6,8 @@ public class ActivityExecutionContext {
     private final ActivityExecutionManager callbackManager;
     private final ActivityExecutionManager pingManager;
 
+//    protected final static int MAX_THREADS_PER_MANAGER = 600;
+
     public ActivityExecutionContext(int numProcesses) {
         this.activityManager = new ActivityExecutionManager(numProcesses, 5);
         this.callbackManager = new ActivityExecutionManager(numProcesses, 10);
