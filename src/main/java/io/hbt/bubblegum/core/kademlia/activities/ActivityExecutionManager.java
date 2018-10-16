@@ -67,8 +67,8 @@ public class ActivityExecutionManager {
 
     // TODO synchronise per ID?
     public void addActivity(String owner, Runnable r) {
-        if(!this.parallelismMatrix.containsKey(owner)) this.parallelismMatrix.put(owner, 0);
         synchronized (this.parallelismMatrix) {
+            if(!this.parallelismMatrix.containsKey(owner)) this.parallelismMatrix.put(owner, 0);
             int current = this.parallelismMatrix.get(owner);
             if(current >= this.parallelism) {
                 if(!this.backlog.containsKey(owner)) this.backlog.put(owner, new ConcurrentLinkedQueue<>());

@@ -46,6 +46,7 @@ public abstract class NetworkActivity extends SystemActivity {
                 this.print("Timeout: RPC to " + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
                 RouterNode responder = this.routingTable.getRouterNodeForID(this.to.getNode());
                 if (responder != null) responder.hasFailedToRespond();
+                this.onFail();
             }
         }
     }

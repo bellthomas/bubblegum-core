@@ -4,7 +4,10 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 public class RoutingTable {
@@ -100,4 +103,24 @@ public class RoutingTable {
         RouterBucket bucket = this.getBucketForNode(id);
         return bucket.getRouterNodeWithID(id);
     }
+
+    public RouterNode fromKademliaNode(BgKademliaNode.KademliaNode node) {
+        try {
+            NodeID id = new NodeID(node.getHash());
+            RouterNode result = this.getRouterNodeForID(id);
+            if(result == null) {
+                InetAddress address = InetAddress.getByName(node.getIpAddress());
+                result = new RouterNode(id, address, node.getPort());
+            }
+            return result;
+
+        } catch (MalformedKeyException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
 }

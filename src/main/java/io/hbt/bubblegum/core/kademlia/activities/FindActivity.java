@@ -1,8 +1,10 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import com.google.protobuf.ByteString;
+import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.KademliaServer;
+import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindNodeResponse.KademliaFindNodeResponse;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse;
@@ -11,6 +13,8 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -108,14 +112,15 @@ public class FindActivity extends NetworkActivity {
                     // Only ping if not found or stale
                     RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
                     if(destination == null || !destination.isFresh()) {
-                        PingActivity nodePing = new PingActivity(this.localNode, RouterNode.fromKademliaNode(node));
+                        PingActivity nodePing = new PingActivity(this.localNode, this.localNode.getRoutingTable().fromKademliaNode(node));
                         this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier().toString(), nodePing);
                     }
                 }
 
                 this.print(logMessage.toString());
                 this.resultNodes.addAll(response.getResultsList());
-                this.complete = true;
+                this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
+                this.onSuccess();
 
                 // TODO handle response
             }
@@ -124,15 +129,37 @@ public class FindActivity extends NetworkActivity {
                 byte[] value = findValueResponse.getValue().toByteArray();
                 this.value = value;
                 this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + value.length + " bytes");
-                this.complete = true;
+                this.onSuccess();
             }
             else {
                 this.print("Invalid");
+                this.onFail();
             }
         };
 
         this.server.sendDatagram(this.to, message.build(), callback);
         if(!this.isResponse) this.timeoutOnComplete();
+        else this.onSuccess();
+    }
+
+    private void insertSenderNode(String hash, String ip, int port) {
+        try {
+            RouterNode sender = this.routingTable.getRouterNodeForID(new NodeID(hash));
+            if(sender == null) {
+                sender = new RouterNode(
+                    new NodeID(hash),
+                    InetAddress.getByName(ip),
+                    port
+                );
+            }
+
+            this.routingTable.insert(sender);
+
+        } catch (MalformedKeyException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
     }
 
     public Set<KademliaNode> getFindNodeResults() {
@@ -141,5 +168,9 @@ public class FindActivity extends NetworkActivity {
 
     public byte[] getFindValueResult() {
         return this.value;
+    }
+
+    public RouterNode getDestination() {
+        return this.to;
     }
 }

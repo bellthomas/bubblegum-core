@@ -23,36 +23,43 @@ public class BootstrapActivity extends NetworkActivity {
 
         if(ping.getComplete()) {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
-            FindActivity findNodes = new FindActivity(this.localNode, this.to, this.localNode.getIdentifier().toString(), false);
-            findNodes.run();
 
-            if(findNodes.getComplete()) {
-                Set<KademliaNode> foundNodes = findNodes.getFindNodeResults();
-                for(KademliaNode node : foundNodes) {
-                    RouterNode routerNode = RouterNode.fromKademliaNode(node);
-                    if(routerNode != null) {
-                        RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
-                        if(destination == null || !destination.isFresh()) {
-                            PingActivity nodePing = new PingActivity(this.localNode, routerNode);
-                            this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier().toString(), nodePing);
-                        }
-                    }
-                }
+            LookupNodeActivity lookupActivity = new LookupNodeActivity(this.localNode, this.localNode.getIdentifier());
+            lookupActivity.run();
 
-                this.localNode.getExecutionContext().addDelayedActivity(
-                        this.localNode.getIdentifier().toString(),
-                        () -> this.localNode.getRoutingTable().refreshBuckets(),
-                        10000
-                );
+            this.complete = true;
+            this.success = (lookupActivity.getComplete() && lookupActivity.getSuccess());
 
-                this.complete = true;
-            }
-
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            FindActivity findNodes = new FindActivity(this.localNode, this.to, this.localNode.getIdentifier().toString(), false);
+//            findNodes.run();
+//
+//            if(findNodes.getComplete()) {
+//                Set<KademliaNode> foundNodes = findNodes.getFindNodeResults();
+//                for(KademliaNode node : foundNodes) {
+//                    RouterNode routerNode = this.localNode.getRoutingTable().fromKademliaNode(node);
+//                    if(routerNode != null) {
+//                        RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
+//                        if(destination == null || !destination.isFresh()) {
+//                            PingActivity nodePing = new PingActivity(this.localNode, routerNode);
+//                            this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier().toString(), nodePing);
+//                        }
+//                    }
+//                }
+//
+//                this.localNode.getExecutionContext().addDelayedActivity(
+//                        this.localNode.getIdentifier().toString(),
+//                        () -> this.localNode.getRoutingTable().refreshBuckets(),
+//                        10000
+//                );
+//
+//                this.complete = true;
+//            }
+//
+//            try {
+//                Thread.sleep(3000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
 
         }
 

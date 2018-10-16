@@ -25,21 +25,6 @@ public class RouterNode implements Comparable<RouterNode> {
         this.failedResponses = 0;
     }
 
-    public static RouterNode fromKademliaNode(KademliaNode node) {
-        try {
-            NodeID id = new NodeID(node.getHash());
-            InetAddress address = InetAddress.getByName(node.getIpAddress());
-
-            return new RouterNode(id, address, node.getPort());
-        } catch (MalformedKeyException e) {
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
     public void hasResponded() {
         this.failedResponses = 0;
         this.latestResponse = System.currentTimeMillis();

@@ -7,7 +7,7 @@ public abstract class SystemActivity implements Runnable {
     protected final static int TIMEOUT = 50; // 5 seconds
 
     protected final BubblegumNode localNode;
-    protected boolean complete;
+    protected boolean complete, success;
 
     public SystemActivity(BubblegumNode self) {
         this.localNode = self;
@@ -19,10 +19,6 @@ public abstract class SystemActivity implements Runnable {
         this.localNode.log(msg);
     }
 
-    public boolean getComplete() {
-        return this.complete;
-    }
-
     protected void timeoutOnComplete() {
         int i = 0;
         while(i < NetworkActivity.TIMEOUT && !this.complete) {
@@ -31,4 +27,23 @@ public abstract class SystemActivity implements Runnable {
             i++;
         }
     }
+
+    protected void onSuccess() {
+        this.complete = true;
+        this.success = true;
+    }
+
+    protected void onFail() {
+        this.complete = true;
+        this.success = false;
+    }
+
+    public boolean getComplete() {
+        return this.complete;
+    }
+
+    public boolean getSuccess() {
+        return this.success;
+    }
+
 }
