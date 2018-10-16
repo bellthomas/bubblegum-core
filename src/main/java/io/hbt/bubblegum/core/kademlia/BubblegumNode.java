@@ -32,6 +32,7 @@ public class BubblegumNode {
         this.executionContext = context;
         this.logger = logger;
         this.db = new Database();
+        this.db.add(id.toString()); // responds only to self
 
         try {
             // This is the node for a particular network

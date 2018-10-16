@@ -8,6 +8,9 @@ import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import java.io.IOException;
 import java.net.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class KademliaServer {
@@ -17,7 +20,7 @@ public class KademliaServer {
     private final DatagramSocket listeningSocket;
 
     private final ConcurrentBlockingQueue<DatagramPacket> kademliaHandlers;
-    private final int numWorkers = 3;
+    private final int numWorkers = 2;
     private static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // 64KB
 
     private final ConcurrentHashMap<String, Consumer<KademliaMessage>> responses = new ConcurrentHashMap<>();
@@ -25,6 +28,9 @@ public class KademliaServer {
     private boolean alive = false;
     private Thread listenerThread;
     private DatagramSocket sendingSocket;
+
+    private long packetsSent = 0;
+    private long packetsReceived = 0;
 
     public KademliaServer(BubblegumNode local, int port) throws BubblegumException {
         this.localNode = local;
@@ -52,6 +58,14 @@ public class KademliaServer {
         catch (UnknownHostException e) {
             e.printStackTrace();
         }
+
+        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
+        executor.scheduleAtFixedRate(
+                () -> this.print("Stats  ~  Sent: " + this.packetsSent + ",  Received: " + this.packetsReceived),
+                5,
+                5,
+                TimeUnit.SECONDS
+        );
     }
 
     private void listen() {
@@ -61,6 +75,7 @@ public class KademliaServer {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 this.listeningSocket.receive(packet);
                 this.kademliaHandlers.put(packet);
+                this.packetsReceived++;
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -88,6 +103,7 @@ public class KademliaServer {
                     this.sendingSocket = new DatagramSocket();
                 }
                 this.sendingSocket.send(packet);
+                this.packetsSent++;
 
             } catch (SocketException e) {
                 e.printStackTrace();

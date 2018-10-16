@@ -22,7 +22,7 @@ public abstract class SystemActivity implements Runnable {
     protected void timeoutOnComplete() {
         int i = 0;
         while(i < NetworkActivity.TIMEOUT && !this.complete) {
-            try { Thread.sleep(100); }
+            try { Thread.sleep(50); }
             catch (InterruptedException e) { e.printStackTrace(); }
             i++;
         }

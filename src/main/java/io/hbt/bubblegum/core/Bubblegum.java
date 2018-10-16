@@ -5,14 +5,13 @@ import io.hbt.bubblegum.core.exceptions.AddressInitialisationException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
-import io.hbt.bubblegum.core.kademlia.activities.LookupNodeActivity;
-import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
-import io.hbt.bubblegum.core.kademlia.router.RouterNode;
+import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 public class Bubblegum {
 
@@ -97,7 +96,7 @@ public class Bubblegum {
 
     private void run() {
 
-        int numberOfNodes = 50;
+        int numberOfNodes = 200;
         ActivityExecutionContext context = new ActivityExecutionContext(numberOfNodes);
         LoggingManager loggingManager = LoggingManager.getInstance();
 
@@ -113,25 +112,31 @@ public class Bubblegum {
             nodes[i].bootstrap(this.ipAddress, 44000);
         }
 
-        System.out.println("Initial network built.");
+        System.out.println("Initial network built.\n");
 
         BubblegumNode newcomer = BubblegumNode.construct(this.socialIdentity, context, loggingManager.getLogger(numberOfNodes), this.ipAddress, 44000 + numberOfNodes);
         try {
-            Thread.sleep(30000);
+            Thread.sleep(1000);
             loggingManager.getLogger(numberOfNodes).logMessage("Starting bootstrap");
-//            newcomer.bootstrap(this.ipAddress, 44000);
+            newcomer.bootstrap(this.ipAddress, 44000);
 
-            RouterNode init = new RouterNode(nodes[0].getIdentifier(), nodes[0].getServer().getLocal(), nodes[0].getServer().getPort());
-            PingActivity ping = new PingActivity(newcomer, init);
-            ping.run();
+            System.out.println("Starting value lookup:");
+            LookupActivity getval = new LookupActivity(newcomer, nodes[0].getIdentifier(), 5, true);
+            getval.run();
 
-            if(ping.getComplete()) {
-                LookupNodeActivity lna = new LookupNodeActivity(newcomer, newcomer.getIdentifier());
-                lna.run();
+            if(getval.getComplete() && getval.getSuccess()) {
+                System.out.println("Success.");
+                if(getval.getResult() != null && getval.getResult().length > 0) {
+                    System.out.println(Arrays.toString(getval.getResult()));
+                }
+                else {
+                    System.out.println("No result...");
+                }
             }
             else {
-                System.out.println("ping failed");
+                System.out.println("Failed.");
             }
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

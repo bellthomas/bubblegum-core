@@ -1,10 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
-
-import java.util.Set;
 
 public class BootstrapActivity extends NetworkActivity {
 
@@ -24,7 +21,7 @@ public class BootstrapActivity extends NetworkActivity {
         if(ping.getComplete()) {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
 
-            LookupNodeActivity lookupActivity = new LookupNodeActivity(this.localNode, this.localNode.getIdentifier());
+            LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getIdentifier(), 5, false);
             lookupActivity.run();
 
             this.complete = true;
