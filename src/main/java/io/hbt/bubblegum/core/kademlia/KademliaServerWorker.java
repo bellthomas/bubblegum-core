@@ -6,6 +6,7 @@ import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
+import io.hbt.bubblegum.core.kademlia.activities.PrimitiveStoreActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
@@ -90,6 +91,27 @@ class KademliaServerWorker extends Thread {
                             );
                             findNodeReply.setResponse(message.getExchangeID(), message.getFindNodeRequest(), message.getOriginHash());
                             this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getIdentifier().toString(), findNodeReply);
+
+                        } catch (MalformedKeyException e) {
+                            e.printStackTrace();
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    else if(message.hasStoreRequest()) {
+                        this.print("STORE received[" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getStoreRequest().getKey());
+                        try {
+                            RouterNode sender = new RouterNode(
+                                    new NodeID(message.getOriginHash()),
+                                    InetAddress.getByName(message.getOriginIP()),
+                                    message.getOriginPort()
+                            );
+                            // TODO insert?
+
+                            PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(this.localNode, sender, message.getStoreRequest().getKey(), message.getStoreRequest().getValue().toByteArray());
+                            storeActivity.setResponse(message.getExchangeID());
+                            this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getIdentifier().toString(), storeActivity);
 
                         } catch (MalformedKeyException e) {
                             e.printStackTrace();

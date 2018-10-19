@@ -99,6 +99,16 @@ public class RoutingTable {
         return nodeDistanceTree;
     }
 
+    public RouterNode getRouterNodeForID(String id) {
+        try {
+            NodeID nodeID = new NodeID(id);
+            return this.getRouterNodeForID(nodeID);
+        } catch (MalformedKeyException e) {
+            return null;
+        }
+
+    }
+
     public RouterNode getRouterNodeForID(NodeID id) {
         RouterBucket bucket = this.getBucketForNode(id);
         return bucket.getRouterNodeWithID(id);
@@ -115,12 +125,10 @@ public class RoutingTable {
             return result;
 
         } catch (MalformedKeyException e) {
-            e.printStackTrace();
+            return null;
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            return null;
         }
-
-        return null;
     }
 
 }

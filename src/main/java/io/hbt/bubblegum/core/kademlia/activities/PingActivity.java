@@ -39,8 +39,7 @@ public class PingActivity extends NetworkActivity {
             this.print("["+this.exchangeID+"] Replying to PING from " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
         }
         else if(destination.isFresh()) {
-            this.print("Node fresh, PING not required for " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
-            this.complete = true;
+            this.onSuccess("Node fresh, PING not required for " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
             return;
         }
         else {
@@ -69,9 +68,8 @@ public class PingActivity extends NetworkActivity {
 
                 responder.hasResponded();
                 this.routingTable.insert(responder);
-                this.complete = true;
+                this.onSuccess("PING response from " + responder.getNode().toString());
 
-                this.print("PING response from " + responder.getNode().toString());
             } catch (MalformedKeyException e) {
                 e.printStackTrace();
             } catch (UnknownHostException e) {

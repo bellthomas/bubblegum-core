@@ -33,9 +33,19 @@ public abstract class SystemActivity implements Runnable {
         this.success = true;
     }
 
+    protected void onSuccess(String message) {
+        this.print(message);
+        this.onSuccess();
+    }
+
     protected void onFail() {
         this.complete = true;
         this.success = false;
+    }
+
+    protected void onFail(String message) {
+        this.print(message);
+        this.onFail();
     }
 
     public boolean getComplete() {

@@ -5,6 +5,8 @@ import "BgKademliaPing.proto";
 import "BgKademliaFindRequest.proto";
 import "BgKademliaFindNodeResponse.proto";
 import "BgKademliaFindValueResponse.proto";
+import "BgKademliaStoreRequest.proto";
+import "BgKademliaStoreResponse.proto";
 
 message KademliaMessage {
     string exchangeID = 1;
@@ -17,5 +19,7 @@ message KademliaMessage {
         KademliaFindRequest findNodeRequest = 6;
         KademliaFindNodeResponse findNodeResponse = 7;
         KademliaFindValueResponse findValueResponse = 8;
+        KademliaStoreRequest storeRequest = 9;
+        KademliaStoreResponse storeResponse = 10;
     }
 }

@@ -31,8 +31,8 @@ public class BubblegumNode {
         this.routingTable = new RoutingTable(this);
         this.executionContext = context;
         this.logger = logger;
-        this.db = new Database();
-        this.db.add(id.toString()); // responds only to self
+        this.db = new Database(this);
+        this.db.add(id.toString(), new byte[] {0x01}); // responds only to self
 
         try {
             // This is the node for a particular network
@@ -108,6 +108,10 @@ public class BubblegumNode {
 
     public KademliaServer getServer() {
         return this.server;
+    }
+
+    public Database getDatabase() {
+        return this.db;
     }
 
     public void log(String message) {

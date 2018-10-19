@@ -106,7 +106,8 @@ public class KademliaServer {
                 this.packetsSent++;
 
             } catch (SocketException e) {
-                e.printStackTrace();
+                System.out.println("[Socket Failure] " + e.getMessage());
+//                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }

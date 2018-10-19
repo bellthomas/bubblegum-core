@@ -8,7 +8,6 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class LookupActivity extends SystemActivity {
 
@@ -44,8 +43,7 @@ public class LookupActivity extends SystemActivity {
         }
 
         if(shortlist.isEmpty()) {
-            this.print("No nodes to search");
-            this.onFail();
+            this.onFail("No nodes to search");
             return;
         }
         closestNode = shortlist.first();
@@ -68,9 +66,7 @@ public class LookupActivity extends SystemActivity {
                         if(this.getValue && value != null) {
                             // got our result
                             this.result = value;
-                            this.print("Finished!");
-                            this.print("Value: " + value.toString());
-                            this.onSuccess();
+                            this.onSuccess("Finished!\nValue: " + Arrays.toString(value));
                             finished = true;
                             return;
                         }
@@ -115,8 +111,7 @@ public class LookupActivity extends SystemActivity {
                         if(!finalClosestNodes.isEmpty()) this.closestNodes.add(finalClosestNodes.pollFirst());
                     }
 
-                    this.print("Finished!");
-                    this.print("Closest Node: " + closestNode.getNode().toString());
+                    this.onSuccess("Finished!\nClosest Node: " + closestNode.getNode().toString());
                     finished = true;
                 }
                 else {
@@ -147,10 +142,10 @@ public class LookupActivity extends SystemActivity {
     }
 
     public byte[] getResult() {
-        return result;
+        return this.result;
     }
 
     public Set<RouterNode> getClosestNodes() {
-        return closestNodes;
+        return this.closestNodes;
     }
 }

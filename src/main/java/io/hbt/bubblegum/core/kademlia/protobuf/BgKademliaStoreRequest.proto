@@ -1,0 +1,7 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+message KademliaStoreRequest {
+    string key = 1;
+    bytes value = 2;
+}
