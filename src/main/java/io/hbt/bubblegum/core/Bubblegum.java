@@ -50,7 +50,7 @@ public class Bubblegum {
 
     private void run() {
 
-        int numberOfNodes = 50;
+        int numberOfNodes = 200;
         ActivityExecutionContext context = new ActivityExecutionContext(numberOfNodes);
         LoggingManager loggingManager = LoggingManager.getInstance();
 
@@ -60,7 +60,7 @@ public class Bubblegum {
         }
         System.out.println();
 
-        // Bootstrap all nodes to node 0
+//         Bootstrap all nodes to node 0
         for(int i = 1; i < numberOfNodes; i++) {
             System.out.println(i);
             nodes[i].bootstrap(this.ipAddress, 44000);
@@ -111,11 +111,13 @@ public class Bubblegum {
 
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } catch (MalformedKeyException e) {
+        }
+        catch (MalformedKeyException e) {
             e.printStackTrace();
         }
 
         NodeID closest = null;
+
         for(BubblegumNode bn : nodes) {
             if(closest == null) closest = bn.getIdentifier();
             else {
