@@ -5,8 +5,9 @@ import java.util.HashMap;
 
 public class LoggingManager {
     private static LoggingManager instance;
-    private HashMap<Integer, Logger> loggers;
+    private HashMap<String, Logger> loggers;
     protected final String logFolder = "logs/";
+
     private LoggingManager() {
         this.loggers = new HashMap<>();
         for(File file: new File(logFolder).listFiles()) {
@@ -19,7 +20,7 @@ public class LoggingManager {
         return LoggingManager.instance;
     }
 
-    public synchronized Logger getLogger(int id) {
+    public synchronized Logger getLogger(String id) {
         if(!this.loggers.containsKey(id)) this.loggers.put(id, new Logger(id));
         return this.loggers.get(id);
     }

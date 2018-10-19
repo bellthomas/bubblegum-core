@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 
 public class KademliaServer {
     private final BubblegumNode localNode;
-    private final int port;
+    private int port;
     private InetAddress localAddress;
     private final DatagramSocket listeningSocket;
 
@@ -41,6 +41,7 @@ public class KademliaServer {
         try {
             this.sendingSocket = new DatagramSocket();
             this.listeningSocket = new DatagramSocket(this.port);
+            this.port = this.listeningSocket.getPort();
             this.alive = true;
             this.listenerThread = new Thread(() -> this.listen());
             this.listenerThread.setDaemon(true);

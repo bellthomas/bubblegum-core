@@ -25,7 +25,7 @@ public class BubblegumNode {
     private Database db;
     private Logger logger;
 
-    private BubblegumNode(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address, NodeID id, int port) {
+    private BubblegumNode(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, NodeID id, int port) {
         this.socialIdentity = socialIdentity;
         this.identifier = id;
         this.routingTable = new RoutingTable(this);
@@ -44,22 +44,22 @@ public class BubblegumNode {
         this.log("Constructed BubblegumNode: " + this.identifier.toString());
     }
 
-    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address) {
-        return new BubblegumNode(socialIdentity, context, logger, address, new NodeID(), -1);
+    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger) {
+        return new BubblegumNode(socialIdentity, context, logger, new NodeID(), 0);
     }
 
-    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address, int port) {
-        return new BubblegumNode(socialIdentity, context, logger, address, new NodeID(), port);
+    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, int port) {
+        return new BubblegumNode(socialIdentity, context, logger, new NodeID(), port);
     }
 
-    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, InetAddress address, String id, int port) {
+    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, String id, int port) {
         NodeID nodeID = new NodeID();
         try {
             nodeID = new NodeID(id);
         } catch (MalformedKeyException e) {
             logger.logMessage("Malformed Key (" + id + "), generated a new one (" + nodeID.toString() + ")");
         } finally {
-            return new BubblegumNode(socialIdentity, context, logger, address, nodeID, port);
+            return new BubblegumNode(socialIdentity, context, logger, nodeID, port);
         }
     }
 

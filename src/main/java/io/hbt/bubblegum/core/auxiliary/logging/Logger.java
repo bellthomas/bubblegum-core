@@ -6,12 +6,11 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 
 public class Logger {
-    private int id;
+    private String id;
     private File f;
-    protected Logger(int id) {
+    protected Logger(String id) {
         this.id = id;
         this.f = new File("logs/" + id + ".log");
         this.f.getParentFile().mkdirs();
