@@ -13,8 +13,11 @@ import java.util.function.Consumer;
 
 public class PingActivity extends NetworkActivity {
 
+    private String networkID;
+
     public PingActivity(BubblegumNode self, RouterNode to) {
         super(self, to);
+        this.networkID = self.getNetworkIdentifier();
     }
 
     @Override
@@ -54,6 +57,7 @@ public class PingActivity extends NetworkActivity {
         message.setOriginPort(this.server.getPort());
         message.setExchangeID(this.exchangeID);
         connectionMessage.setReply(this.isResponse);
+        if(this.isResponse) connectionMessage.setNetworkID(this.localNode.getNetworkIdentifier());
         message.setPingMessage(connectionMessage.build());
 
         Consumer<KademliaMessage> response = this.isResponse ? null : (kademliaMessage -> {
@@ -65,6 +69,10 @@ public class PingActivity extends NetworkActivity {
                         InetAddress.getByName(kademliaMessage.getOriginIP()),
                         kademliaMessage.getOriginPort()
                 );
+
+                // Get the returned network identifier
+                String newNetworkID = kademliaMessage.getPingMessage().getNetworkID();
+                if(newNetworkID != null && newNetworkID.length() > 0) this.networkID = newNetworkID;
 
                 responder.hasResponded();
                 this.routingTable.insert(responder);
@@ -86,6 +94,10 @@ public class PingActivity extends NetworkActivity {
 
         this.server.sendDatagram(destination, message.build(), response);
         if(!this.isResponse) this.timeoutOnComplete();
+    }
+
+    public String getNetworkID() {
+        return this.networkID;
     }
 
 }

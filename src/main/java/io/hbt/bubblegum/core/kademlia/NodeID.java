@@ -4,6 +4,8 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -125,6 +127,20 @@ public class NodeID {
             sb.append(Integer.toBinaryString(b & 255 | 256).substring(1) + " ");
         }
         return sb.toString();
+    }
+
+    public static NodeID hash(String input) {
+        try {
+            MessageDigest mDigest = MessageDigest.getInstance("SHA1");
+            byte[] result = mDigest.digest(input.getBytes());
+            NodeID newID = new NodeID();
+            for (int i = 0; i < Math.min(result.length, KEY_BYTE_LENGTH); i++) newID.key[i] = result[i];
+            return newID;
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override

@@ -11,12 +11,14 @@ import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * This is local node
  * One per social network a part of
  */
 public class BubblegumNode {
+    private String networkIdentifier;
     private SocialIdentity socialIdentity;
     private NodeID identifier;
     private RoutingTable routingTable;
@@ -26,6 +28,7 @@ public class BubblegumNode {
     private Logger logger;
 
     private BubblegumNode(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, NodeID id, int port) {
+        this.networkIdentifier = UUID.randomUUID().toString();
         this.socialIdentity = socialIdentity;
         this.identifier = id;
         this.routingTable = new RoutingTable(this);
@@ -76,18 +79,28 @@ public class BubblegumNode {
     public boolean bootstrap(InetAddress address, int port) {
 
         RouterNode to = new RouterNode(new NodeID(), address, port);
-        BootstrapActivity boostrapActivity = new BootstrapActivity(this, to);
+        BootstrapActivity boostrapActivity = new BootstrapActivity(this, to, (networkID) -> this.networkIdentifier = networkID);
         boostrapActivity.run(); // sync
-
-//        this.log("Bootstrap Level 1 Completed");
-//
-//        Set<RouterNode> closest = this.routingTable.getNodesClosestToKey(this.getIdentifier(), 8);
-//        for(RouterNode node : closest) {
-//            this.executionContext.addActivity(this.identifier.toString(), new BootstrapActivity(this.server, this, node, this.getRoutingTable()));
-//        }
-
         return boostrapActivity.getComplete(); // only success of first level calls
 
+    }
+
+    public byte[] lookup(NodeID id) {
+        LookupActivity lookupActivity = new LookupActivity(this, id, 5, true);
+        lookupActivity.run();
+
+        if(lookupActivity.getComplete() && lookupActivity.getSuccess()) {
+            return lookupActivity.getResult();
+        }
+        else {
+            return null;
+        }
+    }
+
+    public boolean store(NodeID id, byte[] value) {
+        StoreActivity storeActivity = new StoreActivity(this, id.toString(), value);
+        storeActivity.run();
+        return (storeActivity.getComplete() && storeActivity.getSuccess());
     }
 
     public Set<RouterNode> getNodesClosestToKey(NodeID node, int numToGet) {
@@ -96,6 +109,10 @@ public class BubblegumNode {
 
     public void printBuckets() {
         this.routingTable.printBuckets();
+    }
+
+    public String getNetworkIdentifier() {
+        return this.networkIdentifier;
     }
 
     public RoutingTable getRoutingTable() {

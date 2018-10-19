@@ -4,4 +4,5 @@ package io.hbt.bubblegum.core.kademlia.protobuf;
 message KademliaPing {
     // Deliberately blank
     bool reply = 1;
+    string networkID = 2;
 }

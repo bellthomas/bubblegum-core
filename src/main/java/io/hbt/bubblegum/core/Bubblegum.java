@@ -4,39 +4,37 @@ import io.hbt.bubblegum.core.auxiliary.InternalNode;
 import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
 import io.hbt.bubblegum.core.exceptions.AddressInitialisationException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.UUID;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
-public class Bubblegum extends Thread {
+public class Bubblegum {
 
     private InetAddress ipAddress;
     private SocialIdentity socialIdentity;
     private ActivityExecutionContext executionContext;
     private HashMap<String, InternalNode> nodes;
 
+    private boolean isAlive = false;
     private boolean isShuttingDown = false;
-    private boolean isReady = false;
 
-    @Override
-    public void run() {
+    public Bubblegum() {
+
         try {
             this.initialiseIPAddress();
             this.initialiseSocialIdentity();
             this.executionContext = new ActivityExecutionContext(100);
             this.nodes = new HashMap<>();
 
-            this.buildNodes(10);
+            this.buildNodes(20);
 
-            this.isReady = true;
-            //while(!this.isShuttingDown) { /* Run perpetually */ }
-
-//            System.out.println("Shutting system down");
+            this.isAlive = true;
 
         } catch (AddressInitialisationException e) {
             System.out.println("Failed to start network");
@@ -83,23 +81,76 @@ public class Bubblegum extends Thread {
         else return null;
     }
 
-    public boolean isReady() {
-        return this.isReady;
-    }
 
     /* Entrypoint */
     public static void main(String[] args) {
         Bubblegum bb = new Bubblegum();
-        bb.start();
 
-        while(!bb.isReady()) { }
-
+        System.out.print("Bootstrapping... ");
+        Set<String> networkIDs = bb.getNodeIdentifiers();
+        ArrayList<BubblegumNode> network = new ArrayList<>();
+        BubblegumNode first = null;
+        int index = 0;
         for(String id : bb.getNodeIdentifiers()) {
             BubblegumNode node = bb.getNode(id);
-            if(node != null) {
-                System.out.println("--- " + node.getIdentifier().toString() + " ---");
+            if (node != null) {
+                network.add(node);
+                if(index == 0) first = node;
+                else {
+
+                    node.bootstrap(first.getServer().getLocal(), first.getServer().getPort());
+//                    System.out.println("-----[" + id + "]-----");
+//                    System.out.println("Network: " + node.getNetworkIdentifier());
+//                    System.out.println("Server:  " + node.getServer().getLocal().getHostAddress() + ":" + node.getServer().getPort());
+//                    System.out.println();
+                }
+                index++;
             }
         }
+        System.out.println("complete.\n");
+
+
+        HashMap<String, String> values = new HashMap<>();
+        values.put("abc", "xyz");
+        values.put("if you're happy", "and you know it");
+        values.put("clap your", "hands");
+        values.put("test", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test2", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test3", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test4", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test5", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test6", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test7", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test8", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test9", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        values.put("test10", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+
+        long startTime = System.nanoTime();
+        for(Map.Entry<String, String> entry : values.entrySet()) {
+            System.out.println("-----");
+            boolean accepted = first.store(NodeID.hash(entry.getKey()), entry.getValue().getBytes());
+            if(accepted) {
+                System.out.println("Stored [" + entry.getKey() + " -> " + entry.getValue() + "]");
+
+                byte[] result = first.lookup(NodeID.hash(entry.getKey()));
+                if(result != null) {
+                    System.out.println("Lookup (" + entry.getKey() + ") = " + new String(result));
+                }
+                else {
+                    System.out.println("Lookup failed");
+                }
+            }
+            else {
+                System.out.println("Rejected [" + entry.getKey() + " -> " + entry.getValue() + "]");
+            }
+        }
+        long endTime = System.nanoTime();
+
+        System.out.println("\n" + values.size() + " operations took " + (endTime-startTime)/1000000 + "ms");
+
+//        System.out.println("---\n---\n---\n");
+
+
 
     }
 

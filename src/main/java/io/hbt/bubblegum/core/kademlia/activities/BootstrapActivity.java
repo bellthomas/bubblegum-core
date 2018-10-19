@@ -3,10 +3,14 @@ package io.hbt.bubblegum.core.kademlia.activities;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
+import java.util.function.Consumer;
+
 public class BootstrapActivity extends NetworkActivity {
 
-    public BootstrapActivity(BubblegumNode self, RouterNode to) {
+    Consumer<String> networkIDUpdate;
+    public BootstrapActivity(BubblegumNode self, RouterNode to, Consumer<String> networkIDUpdate) {
         super(self, to);
+        this.networkIDUpdate = networkIDUpdate;
     }
 
 
@@ -16,10 +20,12 @@ public class BootstrapActivity extends NetworkActivity {
         this.print("Starting bootstrapping process...  ("+this.to.getIPAddress().getHostAddress()+":"+this.to.getPort()+")");
         PingActivity ping = new PingActivity(this.localNode, this.to);
         ping.run();
+
         this.print("Bootstrap: Finished Initial Ping");
 
         if(ping.getComplete()) {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
+            if(ping.getNetworkID() != null) this.networkIDUpdate.accept(ping.getNetworkID());
 
             LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getIdentifier(), 5, false);
             lookupActivity.run();

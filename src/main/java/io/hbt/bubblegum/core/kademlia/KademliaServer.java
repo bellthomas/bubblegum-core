@@ -41,7 +41,7 @@ public class KademliaServer {
         try {
             this.sendingSocket = new DatagramSocket();
             this.listeningSocket = new DatagramSocket(this.port);
-            this.port = this.listeningSocket.getPort();
+            this.port = this.listeningSocket.getLocalPort();
             this.alive = true;
             this.listenerThread = new Thread(() -> this.listen());
             this.listenerThread.setDaemon(true);
