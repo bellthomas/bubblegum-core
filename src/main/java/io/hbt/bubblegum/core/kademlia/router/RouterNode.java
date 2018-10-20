@@ -1,11 +1,8 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
-import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.NodeID;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 /**
  * this is for other nodes, not us
@@ -21,7 +18,7 @@ public class RouterNode implements Comparable<RouterNode> {
         this.node = node;
         this.ipAddress = address;
         this.port = port;
-        this.latestResponse = 0; // TODO nano?
+        this.latestResponse = 0;
         this.failedResponses = 0;
     }
 

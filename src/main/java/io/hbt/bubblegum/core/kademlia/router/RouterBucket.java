@@ -6,15 +6,18 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-public class RouterBucket {
-    private final int prefixLength;
-    private final ConcurrentSkipListSet<RouterNode> activeBucket;
-    private final ConcurrentSkipListSet<RouterNode> replacements;
+public final class RouterBucket {
+    protected final int prefixLength;
+    protected final ConcurrentSkipListSet<RouterNode> activeBucket;
+    protected final ConcurrentSkipListSet<RouterNode> replacements;
+
+    protected int activeNodes, replacementNodes = 0;
 
     /** Configuration **/
-    private static final int BUCKET_SIZE = 8;
+    protected static final int BUCKET_SIZE = 8;
 
     public RouterBucket(int prefix) {
         this.prefixLength = prefix;
@@ -25,11 +28,16 @@ public class RouterBucket {
     public synchronized void add(RouterNode node) {
         if(this.activeBucket.contains(node)) {
             RouterNode existingNode = this.removeFromActiveTable(node);
-            existingNode.hasResponded();
-            this.activeBucket.add(existingNode); // force resort
+            if(existingNode != null) {
+                existingNode.hasResponded();
+                this.activeBucket.add(existingNode); // force resort
+                this.activeNodes++;
+            }
         }
         else {
-            if(this.activeBucket.size() >= RouterBucket.BUCKET_SIZE) {
+            node.hasResponded();
+
+            if(this.activeNodes >= RouterBucket.BUCKET_SIZE) {
                 // check if there is a stale node in the activeBucket to replace
                 Comparator<RouterNode> failedResponsesComparator = Comparator.comparing(RouterNode::getFailedResponses);
                 RouterNode mostStale = this.activeBucket.stream().max(failedResponsesComparator).get();
@@ -39,20 +47,26 @@ public class RouterBucket {
                 }
                 else {
                     this.activeBucket.remove(mostStale);
+                    if(this.replacementNodes < RouterBucket.BUCKET_SIZE) {
+                        this.replacements.add(mostStale);
+                        this.replacementNodes++;
+                    }
                     this.activeBucket.add(node);
                 }
             }
             else {
                 this.activeBucket.add(node);
+                this.activeNodes++;
             }
         }
     }
 
-    public RouterNode removeFromActiveTable(RouterNode node) {
+    protected synchronized RouterNode removeFromActiveTable(RouterNode node) {
 
         Optional<RouterNode> activeNode = this.activeBucket.stream().filter((n) -> n.equals(node)).findFirst();
         if(activeNode.isPresent()) {
             this.activeBucket.remove(activeNode.get());
+            this.activeNodes--;
             return activeNode.get();
         }
         else {
@@ -60,18 +74,22 @@ public class RouterBucket {
         }
     }
 
-    public void addToReplacements(RouterNode node) {
-        if(this.replacements.contains(node)) {
+    protected synchronized void addToReplacements(RouterNode node) {
+        // TODO investigate why this works and contains() doesn't
+        if(this.replacements.stream().anyMatch((n) -> n.equals(node))) {
             this.replacements.remove(node);
             node.hasResponded();
             this.replacements.add(node);
         }
-        else if(this.replacements.size() >= RouterBucket.BUCKET_SIZE) {
+        else if(this.replacementNodes >= RouterBucket.BUCKET_SIZE) {
             this.replacements.pollLast();
+            node.hasResponded();
             this.replacements.add(node);
         }
         else {
+            node.hasResponded();
             this.replacements.add(node);
+            this.replacementNodes++;
         }
     }
 
@@ -87,11 +105,11 @@ public class RouterBucket {
     }
 
     public int getBucketSize() {
-        return this.activeBucket.size();
+        return this.activeNodes;
     }
 
     @Override
     public String toString() {
-        return "Depth " + this.prefixLength + ": " + this.activeBucket.size() + " active, " + this.replacements.size() + " replacements";
+        return "Depth " + this.prefixLength + ": " + this.activeNodes + " active, " + this.replacementNodes + " replacements";
     }
 }

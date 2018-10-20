@@ -10,9 +10,11 @@ import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class Bubblegum {
 
@@ -29,7 +31,7 @@ public class Bubblegum {
         try {
             this.initialiseIPAddress();
             this.initialiseSocialIdentity();
-            this.executionContext = new ActivityExecutionContext(100);
+            this.executionContext = new ActivityExecutionContext(0);
             this.nodes = new HashMap<>();
 
             this.buildNodes(20);
@@ -55,6 +57,7 @@ public class Bubblegum {
 
     private InternalNode createNode() {
         UUID identifier = UUID.randomUUID();
+        this.executionContext.newProcessInContext();
         BubblegumNode newNode = BubblegumNode.construct(
                 this.socialIdentity,
                 this.executionContext,
@@ -91,7 +94,7 @@ public class Bubblegum {
         ArrayList<BubblegumNode> network = new ArrayList<>();
         BubblegumNode first = null;
         int index = 0;
-        for(String id : bb.getNodeIdentifiers()) {
+        for(String id : networkIDs) {
             BubblegumNode node = bb.getNode(id);
             if (node != null) {
                 network.add(node);
@@ -128,11 +131,19 @@ public class Bubblegum {
         long startTime = System.nanoTime();
         for(Map.Entry<String, String> entry : values.entrySet()) {
             System.out.println("-----");
+            long storeStart = System.nanoTime();
             boolean accepted = first.store(NodeID.hash(entry.getKey()), entry.getValue().getBytes());
+            long storeEnd = System.nanoTime();
+            System.out.println("("+(storeEnd - storeStart)/1000000+"ms)");
+
             if(accepted) {
                 System.out.println("Stored [" + entry.getKey() + " -> " + entry.getValue() + "]");
 
+                long lookupStart = System.nanoTime();
                 byte[] result = first.lookup(NodeID.hash(entry.getKey()));
+                long lookupEnd = System.nanoTime();
+                System.out.println("("+(lookupEnd - lookupStart)/1000000+"ms)");
+
                 if(result != null) {
                     System.out.println("Lookup (" + entry.getKey() + ") = " + new String(result));
                 }

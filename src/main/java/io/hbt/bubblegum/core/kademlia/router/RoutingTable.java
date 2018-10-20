@@ -10,10 +10,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
-public class RoutingTable {
+public final class RoutingTable {
 
-    private final BubblegumNode self;
-    private final RouterBucket[] buckets;
+    protected final BubblegumNode self;
+    protected final RouterBucket[] buckets;
 
     public RoutingTable(BubblegumNode self) {
         this.self = self;
@@ -22,13 +22,11 @@ public class RoutingTable {
     }
 
     public void insert(RouterNode node) {
-//        System.out.println("inserting into routing table: " + node.toString());
         this.getBucketForNode(node.getNode()).add(node);
     }
 
     public RouterBucket getBucketForNode(NodeID node) {
         int index = this.self.getIdentifier().sharedPrefixLength(node) - 1;
-//        System.out.println("index: " + index);
         if(index < 0) return this.buckets[0];
         else return this.buckets[index];
     }

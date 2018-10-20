@@ -8,7 +8,7 @@ class ActivityExecutionManagerTest {
 
     @Test
     void parallelism() {
-        ActivityExecutionManager manager = new ActivityExecutionManager(3, 2);
+        ActivityExecutionManager manager = new ActivityExecutionManager(3, 2, 100);
         Runnable threeSeconds = () -> {
             try {
                 Thread.sleep(1000);

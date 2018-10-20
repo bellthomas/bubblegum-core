@@ -26,8 +26,8 @@ public class ActivityExecutionManager {
         }
     }
 
-    public final static int MAX_THREADS = 1000;
-
+    private int maximumNumberOfThreads = 1000;
+    private int numberOfProcesses = 0;
     private int workerPoolSize;
     private final ConcurrentBlockingQueue<WorkItem> queue;
     private final List<ActivityExecutionWorker> workers;
@@ -37,8 +37,10 @@ public class ActivityExecutionManager {
     private final HashMap<String, Integer> parallelismMatrix;
     private final HashMap<String, ConcurrentLinkedQueue<WorkItem>> backlog;
 
-    public ActivityExecutionManager(int numProcesses, int parallelism) {
-        this.workerPoolSize = Math.min(MAX_THREADS, numProcesses * parallelism);
+    public ActivityExecutionManager(int numProcesses, int parallelism, int maximum) {
+        this.numberOfProcesses = numProcesses;
+        this.maximumNumberOfThreads = maximum;
+        this.workerPoolSize = Math.min(maximumNumberOfThreads, numProcesses * parallelism);
         this.queue = new ConcurrentBlockingQueue<>();
         this.workers = new ArrayList<>(this.workerPoolSize);
         this.executor = new ScheduledThreadPoolExecutor(2);
@@ -55,10 +57,15 @@ public class ActivityExecutionManager {
     }
 
     public synchronized void increaseForNewProcess() {
-        for(int i = 0; i < this.parallelism; i++) {
+        this.numberOfProcesses++;
+
+        int numToCreate = (this.workerPoolSize + this.parallelism > this.maximumNumberOfThreads) ?
+                this.maximumNumberOfThreads - this.workerPoolSize : this.parallelism;
+
+        for(int i = 0; i < numToCreate; i++) {
             this.workers.add(new ActivityExecutionWorker(this, this.workerPoolSize + i, this.queue));
         }
-        this.workerPoolSize += this.parallelism;
+        this.workerPoolSize += numToCreate;
     }
 
     public synchronized void increaseForNewProcesses(int number) {
