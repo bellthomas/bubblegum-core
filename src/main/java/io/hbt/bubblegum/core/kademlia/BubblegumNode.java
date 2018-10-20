@@ -1,41 +1,61 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.logging.Logger;
+import io.hbt.bubblegum.core.databasing.Database;
+import io.hbt.bubblegum.core.databasing.MasterDatabase;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
-import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
-import io.hbt.bubblegum.core.kademlia.activities.*;
+import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
+import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
+import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
+import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
-import io.hbt.bubblegum.core.social.Database;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is local node
  * One per social network a part of
  */
 public class BubblegumNode {
-    private String networkIdentifier;
+    private String identifier, networkIdentifier;
     private SocialIdentity socialIdentity;
-    private NodeID identifier;
+    private NodeID nodeIdentifier;
     private RoutingTable routingTable;
     private KademliaServer server;
     private ActivityExecutionContext executionContext;
     private Database db;
     private Logger logger;
+    private ScheduledExecutorService internalScheduler;
 
-    private BubblegumNode(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, NodeID id, int port) {
-        this.networkIdentifier = UUID.randomUUID().toString();
+    private BubblegumNode(
+            String identifier,
+            String networkIdentifier,
+            SocialIdentity socialIdentity,
+            ActivityExecutionContext context,
+            Logger logger,
+            NodeID nid,
+            int port
+    ) {
+        this.identifier = identifier;
+        this.networkIdentifier = networkIdentifier;
         this.socialIdentity = socialIdentity;
-        this.identifier = id;
-        this.routingTable = new RoutingTable(this);
+        this.nodeIdentifier = nid;
         this.executionContext = context;
         this.logger = logger;
+
+        this.routingTable = new RoutingTable(this);
         this.db = new Database(this);
-        this.db.add(id.toString(), new byte[] {0x01}); // responds only to self
+        this.db.add(nid.toString(), new byte[] {0x01}); // responds only to self
+
+        this.setupInternalScheduling();
 
         try {
             // This is the node for a particular network
@@ -44,36 +64,45 @@ public class BubblegumNode {
             e.printStackTrace();
         }
 
-        this.log("Constructed BubblegumNode: " + this.identifier.toString());
+        this.log("Constructed BubblegumNode: " + this.nodeIdentifier.toString());
     }
 
-    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger) {
-        return new BubblegumNode(socialIdentity, context, logger, new NodeID(), 0);
+    private void setupInternalScheduling() {
+        this.internalScheduler = Executors.newSingleThreadScheduledExecutor();
+
+        // Setup Router snapshots
+        this.internalScheduler.scheduleAtFixedRate(
+            () -> {
+                this.log("[Scheduled] Saving router snapshot");
+                this.executionContext.addActivity(this.getNodeIdentifier().toString(), () -> this.saveRouterSnapshot());
+            },
+            3, 5, TimeUnit.MINUTES
+        );
+
+        // Setup bucket refreshes
+        this.internalScheduler.scheduleAtFixedRate(
+                () -> {
+                    this.log("[Scheduled] Saving router snapshot");
+                    this.executionContext.addActivity(this.getNodeIdentifier().toString(), () -> this.routingTable.refreshBuckets());
+                },
+                5, 5, TimeUnit.MINUTES
+        );
+
+        // Refresh/delete content as it expires
+
     }
 
-    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, int port) {
-        return new BubblegumNode(socialIdentity, context, logger, new NodeID(), port);
-    }
-
-    public static BubblegumNode construct(SocialIdentity socialIdentity, ActivityExecutionContext context, Logger logger, String id, int port) {
-        NodeID nodeID = new NodeID();
-        try {
-            nodeID = new NodeID(id);
-        } catch (MalformedKeyException e) {
-            logger.logMessage("Malformed Key (" + id + "), generated a new one (" + nodeID.toString() + ")");
-        } finally {
-            return new BubblegumNode(socialIdentity, context, logger, nodeID, port);
-        }
-    }
-
-
-    public NodeID getIdentifier() {
+    public String getIdentifier() {
         return this.identifier;
+    }
+
+    public NodeID getNodeIdentifier() {
+        return this.nodeIdentifier;
     }
 
     @Override
     public String toString() {
-        return identifier.toString();
+        return nodeIdentifier.toString();
     }
 
     public boolean bootstrap(InetAddress address, int port) {
@@ -81,8 +110,15 @@ public class BubblegumNode {
         RouterNode to = new RouterNode(new NodeID(), address, port);
         BootstrapActivity boostrapActivity = new BootstrapActivity(this, to, (networkID) -> this.networkIdentifier = networkID);
         boostrapActivity.run(); // sync
-        return boostrapActivity.getComplete(); // only success of first level calls
 
+        if(boostrapActivity.getSuccess()) {
+            this.saveRouterSnapshot();
+            MasterDatabase.getInstance().updateNetwork(this);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     public byte[] lookup(NodeID id) {
@@ -101,14 +137,6 @@ public class BubblegumNode {
         StoreActivity storeActivity = new StoreActivity(this, id.toString(), value);
         storeActivity.run();
         return (storeActivity.getComplete() && storeActivity.getSuccess());
-    }
-
-    public Set<RouterNode> getNodesClosestToKey(NodeID node, int numToGet) {
-        return this.routingTable.getNodesClosestToKey(node, numToGet);
-    }
-
-    public void printBuckets() {
-        this.routingTable.printBuckets();
     }
 
     public String getNetworkIdentifier() {
@@ -135,6 +163,7 @@ public class BubblegumNode {
         this.logger.logMessage(message);
     }
 
+    /* Database */
     public boolean databaseHasKey(String key) {
         return this.db.hasKey(key);
     }
@@ -143,12 +172,84 @@ public class BubblegumNode {
         return this.db.valueForKey(key);
     }
 
+    /* Router */
+    public void restoreRouterFromSnapshot() {
+
+    }
+
+    public void saveRouterSnapshot() {
+
+    }
+
     @Override
     public boolean equals(Object obj) {
         if(obj instanceof BubblegumNode) {
             if(obj == this) return true;
-            else return this.identifier.equals(((BubblegumNode)obj).getIdentifier());
+            else return this.nodeIdentifier.equals(((BubblegumNode)obj).getNodeIdentifier());
         }
         return false;
+    }
+
+
+
+    /**  BubblegumNode.Builder **/
+    public static class Builder {
+        private String identifier, networkIdentifier;
+        private SocialIdentity socialIdentity;
+        private NodeID nodeIdentifier;
+        private ActivityExecutionContext executionContext;
+        private Logger logger;
+        private int port = 0;
+
+        public Builder setIdentifier(String identifier) {
+            this.identifier = identifier;
+            return this;
+        }
+
+        public Builder setNetworkIdentifier(String networkIdentifier) {
+            this.networkIdentifier = networkIdentifier;
+            return this;
+        }
+
+        public Builder setSocialIdentity(SocialIdentity socialIdentity) {
+            this.socialIdentity = socialIdentity;
+            return this;
+        }
+
+        public Builder setNodeIdentifier(NodeID nodeIdentifier) {
+            this.nodeIdentifier = nodeIdentifier;
+            return this;
+        }
+
+        public Builder setExecutionContext(ActivityExecutionContext context) {
+            this.executionContext = context;
+            return this;
+        }
+
+        public Builder setLogger(Logger logger) {
+            this.logger = logger;
+            return this;
+        }
+
+        public Builder setPort(int port) {
+            this.port = port;
+            return this;
+        }
+
+        public BubblegumNode build() {
+            // Check required
+            if(this.socialIdentity == null || this.executionContext == null || this.logger == null) return null;
+
+            // Fill in optionals
+            if(this.identifier == null) this.identifier = UUID.randomUUID().toString();
+            if(this.networkIdentifier == null) this.networkIdentifier = UUID.randomUUID().toString();
+            if(this.nodeIdentifier == null) this.nodeIdentifier = new NodeID();
+            if(!NetworkingHelper.validPort(this.port)) this.port = 0;
+
+            return new BubblegumNode(
+                this.identifier, this.networkIdentifier, this.socialIdentity,
+                this.executionContext, this.logger, this.nodeIdentifier, this.port
+            );
+        }
     }
 }

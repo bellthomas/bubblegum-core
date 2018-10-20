@@ -52,7 +52,7 @@ public class PingActivity extends NetworkActivity {
 
         KademliaMessage.Builder message = KademliaMessage.newBuilder();
         KademliaPing.Builder connectionMessage = KademliaPing.newBuilder();
-        message.setOriginHash(this.localNode.getIdentifier().toString());
+        message.setOriginHash(this.localNode.getNodeIdentifier().toString());
         message.setOriginIP(this.server.getLocal().getHostAddress());
         message.setOriginPort(this.server.getPort());
         message.setExchangeID(this.exchangeID);

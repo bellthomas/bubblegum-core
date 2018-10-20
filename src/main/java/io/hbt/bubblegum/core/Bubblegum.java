@@ -1,8 +1,10 @@
 package io.hbt.bubblegum.core;
 
-import io.hbt.bubblegum.core.auxiliary.InternalNode;
+import io.hbt.bubblegum.core.auxiliary.NetworkDetails;
 import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
+import io.hbt.bubblegum.core.databasing.MasterDatabase;
 import io.hbt.bubblegum.core.exceptions.AddressInitialisationException;
+import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
@@ -15,13 +17,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class Bubblegum {
 
     private InetAddress ipAddress;
     private SocialIdentity socialIdentity;
     private ActivityExecutionContext executionContext;
-    private HashMap<String, InternalNode> nodes;
+    private HashMap<String, BubblegumNode> nodes;
 
     private boolean isAlive = false;
     private boolean isShuttingDown = false;
@@ -34,7 +37,8 @@ public class Bubblegum {
             this.executionContext = new ActivityExecutionContext(0);
             this.nodes = new HashMap<>();
 
-            this.buildNodes(20);
+            this.loadNodes();
+//            this.buildNodes(10);
 
             this.isAlive = true;
 
@@ -43,8 +47,39 @@ public class Bubblegum {
         }
     }
 
+    private void loadNodes() {
+        Set<NetworkDetails> networks = MasterDatabase.getInstance().loadNetworksFromDatabase();
+        for(NetworkDetails network : networks) {
+            if(this.nodes.containsKey(network.id)) continue;
+            try {
+                NodeID id = new NodeID(network.hash);
+                BubblegumNode.Builder reloadedNodeBuilder = new BubblegumNode.Builder();
+                reloadedNodeBuilder.setIdentifier(network.id);
+                reloadedNodeBuilder.setNetworkIdentifier(network.network);
+                reloadedNodeBuilder.setNodeIdentifier(id);
+                reloadedNodeBuilder.setPort(network.port);
+                reloadedNodeBuilder.setSocialIdentity(this.socialIdentity);
+                reloadedNodeBuilder.setExecutionContext(this.executionContext);
+                reloadedNodeBuilder.setLogger(LoggingManager.getLogger(network.id));
+
+                BubblegumNode reloadedNode = reloadedNodeBuilder.build();
+                this.executionContext.newProcessInContext();
+                this.nodes.put(network.id, reloadedNode);
+            }
+            catch (MalformedKeyException e) {
+                System.out.println("Failed to load network - " + network.hash);
+                continue;
+            }
+
+
+        }
+    }
+
     private void buildNodes(int numNodes) {
         for(int i = 0; i < numNodes; i++) this.createNode();
+
+        MasterDatabase mdb = MasterDatabase.getInstance();
+        mdb.updateNetworks(this.nodes.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList()));
     }
 
     private void initialiseIPAddress() throws AddressInitialisationException {
@@ -55,18 +90,18 @@ public class Bubblegum {
         }
     }
 
-    private InternalNode createNode() {
+    private BubblegumNode createNode() {
         UUID identifier = UUID.randomUUID();
         this.executionContext.newProcessInContext();
-        BubblegumNode newNode = BubblegumNode.construct(
-                this.socialIdentity,
-                this.executionContext,
-                LoggingManager.getInstance().getLogger(identifier.toString())
-        );
+        BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
+        newNodeBuilder.setIdentifier(identifier.toString());
+        newNodeBuilder.setSocialIdentity(this.socialIdentity);
+        newNodeBuilder.setExecutionContext(this.executionContext);
+        newNodeBuilder.setLogger(LoggingManager.getLogger(identifier.toString()));
 
-        InternalNode internalNode = new InternalNode(newNode, identifier.toString());
-        this.nodes.put(identifier.toString(), internalNode);
-        return internalNode;
+        BubblegumNode newNode = newNodeBuilder.build();
+        this.nodes.put(identifier.toString(), newNode);
+        return newNode;
     }
 
     private void initialiseSocialIdentity() {
@@ -80,8 +115,7 @@ public class Bubblegum {
     }
 
     public BubblegumNode getNode(String identifier) {
-        if(this.nodes.containsKey(identifier)) return this.nodes.get(identifier).getNode();
-        else return null;
+        return this.nodes.get(identifier);
     }
 
 
@@ -93,77 +127,96 @@ public class Bubblegum {
         Set<String> networkIDs = bb.getNodeIdentifiers();
         ArrayList<BubblegumNode> network = new ArrayList<>();
         BubblegumNode first = null;
+        BubblegumNode second = null;
         int index = 0;
         for(String id : networkIDs) {
             BubblegumNode node = bb.getNode(id);
             if (node != null) {
                 network.add(node);
-                if(index == 0) first = node;
-                else {
+                if(index == 1) second = node;
 
-                    node.bootstrap(first.getServer().getLocal(), first.getServer().getPort());
-//                    System.out.println("-----[" + id + "]-----");
-//                    System.out.println("Network: " + node.getNetworkIdentifier());
-//                    System.out.println("Server:  " + node.getServer().getLocal().getHostAddress() + ":" + node.getServer().getPort());
-//                    System.out.println();
-                }
+                if(index == 0) first = node;
+                else node.bootstrap(first.getServer().getLocal(), first.getServer().getPort());
                 index++;
             }
         }
-        System.out.println("complete.\n");
+
+        System.out.println("complete.");
+        System.out.println(network.size() + " nodes.\n");
 
 
-        HashMap<String, String> values = new HashMap<>();
-        values.put("abc", "xyz");
-        values.put("if you're happy", "and you know it");
-        values.put("clap your", "hands");
-        values.put("test", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test2", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test3", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test4", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test5", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test6", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test7", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test8", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test9", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
-        values.put("test10", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+        System.out.println("First:  " + first.getIdentifier());
+        System.out.println("Second: " + second.getIdentifier());
 
-        long startTime = System.nanoTime();
-        for(Map.Entry<String, String> entry : values.entrySet()) {
-            System.out.println("-----");
-            long storeStart = System.nanoTime();
-            boolean accepted = first.store(NodeID.hash(entry.getKey()), entry.getValue().getBytes());
-            long storeEnd = System.nanoTime();
-            System.out.println("("+(storeEnd - storeStart)/1000000+"ms)");
 
-            if(accepted) {
-                System.out.println("Stored [" + entry.getKey() + " -> " + entry.getValue() + "]");
+        boolean accepted = first.store(NodeID.hash("hello"), "Can you read my post?".getBytes());
 
-                long lookupStart = System.nanoTime();
-                byte[] result = first.lookup(NodeID.hash(entry.getKey()));
-                long lookupEnd = System.nanoTime();
-                System.out.println("("+(lookupEnd - lookupStart)/1000000+"ms)");
+        if(accepted) {
+            System.out.println("Stored ['hello' -> 'Can you read my post?']");
 
-                if(result != null) {
-                    System.out.println("Lookup (" + entry.getKey() + ") = " + new String(result));
-                }
-                else {
-                    System.out.println("Lookup failed");
-                }
+            byte[] result = second.lookup(NodeID.hash("hello"));
+            if(result != null) {
+                System.out.println("Lookup ('hello') = " + new String(result));
             }
             else {
-                System.out.println("Rejected [" + entry.getKey() + " -> " + entry.getValue() + "]");
+                System.out.println("Lookup failed");
             }
         }
-        long endTime = System.nanoTime();
-
-        System.out.println("\n" + values.size() + " operations took " + (endTime-startTime)/1000000 + "ms");
-
-//        System.out.println("---\n---\n---\n");
-
-
-
+        else {
+            System.out.println("Rejected ['hello' -> 'Can you read my post?']");
+        }
     }
+
+
+
+
+
+//        HashMap<String, String> values = new HashMap<>();
+//        values.put("abc", "xyz");
+//        values.put("if you're happy", "and you know it");
+//        values.put("clap your", "hands");
+//        values.put("test", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test2", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test3", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test4", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test5", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test6", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test7", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test8", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test9", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//        values.put("test10", "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, `and what is the use of a book,' thought Alice `without pictures or conversation?'");
+//
+//        long startTime = System.nanoTime();
+//        for(Map.Entry<String, String> entry : values.entrySet()) {
+//            System.out.println("-----");
+//            long storeStart = System.nanoTime();
+//            boolean accepted = first.store(NodeID.hash(entry.getKey()), entry.getValue().getBytes());
+//            long storeEnd = System.nanoTime();
+//            System.out.println("("+(storeEnd - storeStart)/1000000+"ms)");
+//
+//            if(accepted) {
+//                System.out.println("Stored [" + entry.getKey() + " -> " + entry.getValue() + "]");
+//
+//                long lookupStart = System.nanoTime();
+//                byte[] result = first.lookup(NodeID.hash(entry.getKey()));
+//                long lookupEnd = System.nanoTime();
+//                System.out.println("("+(lookupEnd - lookupStart)/1000000+"ms)");
+//
+//                if(result != null) {
+//                    System.out.println("Lookup (" + entry.getKey() + ") = " + new String(result));
+//                }
+//                else {
+//                    System.out.println("Lookup failed");
+//                }
+//            }
+//            else {
+//                System.out.println("Rejected [" + entry.getKey() + " -> " + entry.getValue() + "]");
+//            }
+//        }
+//        long endTime = System.nanoTime();
+//
+//        System.out.println("\n" + values.size() + " operations took " + (endTime-startTime)/1000000 + "ms");
+//    }
 
 }
 

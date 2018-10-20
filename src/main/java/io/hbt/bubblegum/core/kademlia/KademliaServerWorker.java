@@ -45,7 +45,7 @@ class KademliaServerWorker extends Thread {
 //                        this.print("Callback found for " + message.getExchangeID());
                         Consumer<BgKademliaMessage.KademliaMessage> callback = this.responses.remove(message.getExchangeID());
                         if(callback != null) this.localNode.getExecutionContext().addCallbackActivity(
-                                this.localNode.getIdentifier().toString(),
+                                this.localNode.getNodeIdentifier().toString(),
                                 () -> callback.accept(message)
                         );
                     }
@@ -62,7 +62,7 @@ class KademliaServerWorker extends Thread {
 
                             PingActivity pingReply = new PingActivity(this.localNode, sender);
                             pingReply.setResponse(message.getExchangeID());
-                            this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getIdentifier().toString(), pingReply);
+                            this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getNodeIdentifier().toString(), pingReply);
 
                         } catch (MalformedKeyException e) {
                             e.printStackTrace();
@@ -90,7 +90,7 @@ class KademliaServerWorker extends Thread {
                                     returnValue
                             );
                             findNodeReply.setResponse(message.getExchangeID(), message.getFindNodeRequest(), message.getOriginHash());
-                            this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getIdentifier().toString(), findNodeReply);
+                            this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getNodeIdentifier().toString(), findNodeReply);
 
                         } catch (MalformedKeyException e) {
                             e.printStackTrace();
@@ -111,7 +111,7 @@ class KademliaServerWorker extends Thread {
 
                             PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(this.localNode, sender, message.getStoreRequest().getKey(), message.getStoreRequest().getValue().toByteArray());
                             storeActivity.setResponse(message.getExchangeID());
-                            this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getIdentifier().toString(), storeActivity);
+                            this.localNode.getExecutionContext().addCallbackActivity(this.localNode.getNodeIdentifier().toString(), storeActivity);
 
                         } catch (MalformedKeyException e) {
                             e.printStackTrace();

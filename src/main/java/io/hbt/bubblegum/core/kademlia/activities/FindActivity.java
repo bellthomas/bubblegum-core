@@ -48,7 +48,7 @@ public class FindActivity extends NetworkActivity {
     public void run() {
 
         KademliaMessage.Builder message = KademliaMessage.newBuilder();
-        message.setOriginHash(this.localNode.getIdentifier().toString());
+        message.setOriginHash(this.localNode.getNodeIdentifier().toString());
         message.setOriginIP(this.server.getLocal().getHostAddress());
         message.setOriginPort(this.server.getPort());
         message.setExchangeID(this.exchangeID);
@@ -113,7 +113,7 @@ public class FindActivity extends NetworkActivity {
                     RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
                     if(destination == null || !destination.isFresh()) {
                         PingActivity nodePing = new PingActivity(this.localNode, this.localNode.getRoutingTable().fromKademliaNode(node));
-                        this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier().toString(), nodePing);
+                        this.localNode.getExecutionContext().addPingActivity(this.localNode.getNodeIdentifier().toString(), nodePing);
                     }
                 }
 

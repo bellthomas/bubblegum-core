@@ -21,7 +21,11 @@ class RoutingTableTest {
 
     @BeforeAll
     static void setup() {
-        localNode = BubblegumNode.construct(new SocialIdentity(), new ActivityExecutionContext(1), LoggingManager.getInstance().getLogger("_tests"));
+        localNode = new BubblegumNode.Builder()
+                .setSocialIdentity(new SocialIdentity())
+                .setExecutionContext(new ActivityExecutionContext(1))
+                .setLogger(LoggingManager.getLogger("_tests"))
+                .build();
         try { localAddress = InetAddress.getLocalHost(); }
         catch (UnknownHostException e) {
             assertTrue(false, "Address initialisation failed");

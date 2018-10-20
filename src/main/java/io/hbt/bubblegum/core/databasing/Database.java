@@ -1,4 +1,4 @@
-package io.hbt.bubblegum.core.social;
+package io.hbt.bubblegum.core.databasing;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
@@ -20,8 +20,8 @@ public class Database {
         {
             this.checkDatabasesDirectory();
 
-            // create a database connection
-            connection = DriverManager.getConnection("jdbc:sqlite:databases/" + this.localNode.getIdentifier().toString() + ".db");
+            // create a databasing connection
+            connection = DriverManager.getConnection("jdbc:sqlite:databases/" + this.localNode.getNodeIdentifier().toString() + ".db");
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
@@ -40,7 +40,7 @@ public class Database {
         catch(SQLException e)
         {
             // if the error message is "out of memory",
-            // it probably means no database file is found
+            // it probably means no databasing file is found
             System.err.println(e.getMessage());
         }
         finally

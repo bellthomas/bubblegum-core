@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
-import com.sun.source.tree.AssertTree;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

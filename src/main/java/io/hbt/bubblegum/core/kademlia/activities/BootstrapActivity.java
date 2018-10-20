@@ -27,7 +27,7 @@ public class BootstrapActivity extends NetworkActivity {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
             if(ping.getNetworkID() != null) this.networkIDUpdate.accept(ping.getNetworkID());
 
-            LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getIdentifier(), 5, false);
+            LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getNodeIdentifier(), 5, false);
             lookupActivity.run();
 
             this.complete = true;

@@ -11,7 +11,7 @@ public class ProtobufHelper {
 
     public static KademliaMessage.Builder constructKademliaMessage(BubblegumNode localNode, String exchangeID) {
         KademliaMessage.Builder message = KademliaMessage.newBuilder();
-        message.setOriginHash(localNode.getIdentifier().toString());
+        message.setOriginHash(localNode.getNodeIdentifier().toString());
         message.setOriginIP(localNode.getServer().getLocal().getHostAddress());
         message.setOriginPort(localNode.getServer().getPort());
         message.setExchangeID(exchangeID);

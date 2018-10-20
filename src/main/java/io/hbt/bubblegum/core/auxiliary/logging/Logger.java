@@ -1,7 +1,5 @@
 package io.hbt.bubblegum.core.auxiliary.logging;
 
-import com.sun.jmx.snmp.Timestamp;
-
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

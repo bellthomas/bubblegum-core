@@ -20,8 +20,8 @@ public class LoggingManager {
         return LoggingManager.instance;
     }
 
-    public synchronized Logger getLogger(String id) {
-        if(!this.loggers.containsKey(id)) this.loggers.put(id, new Logger(id));
-        return this.loggers.get(id);
+    public static synchronized Logger getLogger(String id) {
+        if(!LoggingManager.getInstance().loggers.containsKey(id)) LoggingManager.getInstance().loggers.put(id, new Logger(id));
+        return LoggingManager.getInstance().loggers.get(id);
     }
 }

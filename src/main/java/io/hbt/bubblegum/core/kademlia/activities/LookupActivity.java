@@ -126,7 +126,7 @@ public class LookupActivity extends SystemActivity {
                                 this.print("***** New closest - " + toAdd.getNode().toString());
                             }
                             FindActivity find = new FindActivity(this.localNode, toAdd, this.nodeToLookup.toString(), this.getValue);
-                            this.localNode.getExecutionContext().addActivity(this.localNode.getIdentifier().toString(), find);
+                            this.localNode.getExecutionContext().addActivity(this.localNode.getNodeIdentifier().toString(), find);
                             currentActivities.add(find);
                         }
                     }
