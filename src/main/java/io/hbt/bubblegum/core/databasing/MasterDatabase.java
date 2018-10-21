@@ -48,12 +48,16 @@ public class MasterDatabase {
                 if(rs.next() && rs.getInt(1) == 1) {
                     // The network already exists, update
                     int result = statement.executeUpdate(this.updateNetworkDetailsSQL(network));
-                    System.out.println(result);
+                    if(result == 1) {
+                        // success
+                    }
                 }
                 else {
                     // Network is new, create new entry
                     int result = statement.executeUpdate(this.insertNewNetworkSQL(network));
-                    System.out.println(result);
+                    if(result == 1) {
+                        // success
+                    }
                 }
             }
 
@@ -134,7 +138,6 @@ public class MasterDatabase {
         sb.append("port int NOT NULL, ");
         sb.append("PRIMARY KEY (id) ");
         sb.append(")");
-        System.out.println(sb.toString());
         return sb.toString();
     }
 
@@ -144,7 +147,6 @@ public class MasterDatabase {
         sb.append("SELECT 1 FROM networks WHERE ");
         sb.append("id='"+ network.getIdentifier()+"' LIMIT 1 ");
         sb.append(")");
-        System.out.println(sb.toString());
         return sb.toString();
     }
 

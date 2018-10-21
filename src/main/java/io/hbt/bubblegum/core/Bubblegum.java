@@ -49,6 +49,7 @@ public class Bubblegum {
 
     private void loadNodes() {
         Set<NetworkDetails> networks = MasterDatabase.getInstance().loadNetworksFromDatabase();
+        int newProcesses = 0;
         for(NetworkDetails network : networks) {
             if(this.nodes.containsKey(network.id)) continue;
             try {
@@ -63,16 +64,16 @@ public class Bubblegum {
                 reloadedNodeBuilder.setLogger(LoggingManager.getLogger(network.id));
 
                 BubblegumNode reloadedNode = reloadedNodeBuilder.build();
-                this.executionContext.newProcessInContext();
+                newProcesses++;
                 this.nodes.put(network.id, reloadedNode);
             }
             catch (MalformedKeyException e) {
                 System.out.println("Failed to load network - " + network.hash);
                 continue;
             }
-
-
         }
+
+        this.executionContext.newProcessesInContext(newProcesses);
     }
 
     private void buildNodes(int numNodes) {

@@ -64,8 +64,13 @@ public class ActivityExecutionContext {
     }
 
     public void newProcessesInContext(int numProcesses) {
-        if(this.numProcesses == 0) numProcesses--;
-        this.numProcesses += numProcesses;
+        if(this.numProcesses == 0) {
+            this.numProcesses += numProcesses;
+            numProcesses--;
+        }
+        else {
+            this.numProcesses += numProcesses;
+        }
 
         this.activityManager.increaseForNewProcesses(numProcesses);
         this.callbackManager.increaseForNewProcesses(numProcesses);
