@@ -27,7 +27,7 @@ public class KademliaServer {
 
     private boolean alive = false;
     private Thread listenerThread;
-    private DatagramSocket sendingSocket;
+//    private static DatagramSocket sendingSocket;
 
     private long packetsSent = 0;
     private long packetsReceived = 0;
@@ -39,7 +39,7 @@ public class KademliaServer {
         this.initialiseWorkers();
 
         try {
-            this.sendingSocket = new DatagramSocket();
+//            if(this.sendingSocket == null) this.sendingSocket = new DatagramSocket();
             this.listeningSocket = new DatagramSocket(this.port);
             this.port = this.listeningSocket.getLocalPort();
             this.alive = true;
@@ -94,25 +94,27 @@ public class KademliaServer {
     }
 
     public void sendDatagram(RouterNode node, KademliaMessage payload, Consumer<KademliaMessage> callback) {
-        synchronized (this.sendingSocket) {
+//        synchronized (this.sendingSocket) {
             try {
                 if (callback != null) this.responses.put(payload.getExchangeID(), callback);
 
                 DatagramPacket packet = new DatagramPacket(payload.toByteArray(), payload.toByteArray().length, node.getIPAddress(), node.getPort());
-                if (this.sendingSocket == null || !this.sendingSocket.isConnected() || this.sendingSocket.isClosed()) {
-                    this.sendingSocket.close();
-                    this.sendingSocket = new DatagramSocket();
-                }
-                this.sendingSocket.send(packet);
+//                if (this.sendingSocket == null) {
+//                    if(!this.sendingSocket.isConnected() || this.sendingSocket.isClosed()) this.sendingSocket.close();
+//                    this.sendingSocket = new DatagramSocket();
+//                }
+//                this.sendingSocket.send(packet);
+                new DatagramSocket().send(packet);
                 this.packetsSent++;
 
             } catch (SocketException e) {
                 System.out.println("[Socket Failure] " + e.getMessage());
 //                e.printStackTrace();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("[Socket Failure] " + e.getMessage());
+//                e.printStackTrace();
             }
-        }
+//        }
     }
 
     public void removeCallback(String exchangeID) {

@@ -14,7 +14,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,7 +37,7 @@ public class Bubblegum {
             this.nodes = new HashMap<>();
 
             this.loadNodes();
-//            this.buildNodes(10);
+//            this.buildNodes(100);
 
             this.isAlive = true;
 
@@ -130,6 +129,7 @@ public class Bubblegum {
         BubblegumNode first = null;
         BubblegumNode second = null;
         int index = 0;
+        long startBootstrap = System.currentTimeMillis();
         for(String id : networkIDs) {
             BubblegumNode node = bb.getNode(id);
             if (node != null) {
@@ -137,13 +137,22 @@ public class Bubblegum {
                 if(index == 1) second = node;
 
                 if(index == 0) first = node;
-                else node.bootstrap(first.getServer().getLocal(), first.getServer().getPort());
+                else {
+                    node.bootstrap(first.getServer().getLocal(), first.getServer().getPort());
+
+//                    final BubblegumNode fFirst = first;
+//                    node.getExecutionContext().addActivity("master", () -> {
+//                        node.bootstrap(fFirst.getServer().getLocal(), fFirst.getServer().getPort());
+//                    });
+                }
                 index++;
             }
         }
+        long endBootstrap = System.currentTimeMillis();
+
 
         System.out.println("complete.");
-        System.out.println(network.size() + " nodes.\n");
+        System.out.println(network.size() + " nodes in " + (endBootstrap - startBootstrap) + "ms.\n");
 
 
         System.out.println("First:  " + first.getIdentifier());
