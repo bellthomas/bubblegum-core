@@ -21,7 +21,7 @@ public class Database {
             this.checkDatabasesDirectory();
 
             // create a databasing connection
-            connection = DriverManager.getConnection("jdbc:sqlite:databases/" + this.localNode.getNodeIdentifier().toString() + ".db");
+            connection = DriverManager.getConnection("jdbc:sqlite:.databases/" + this.localNode.getNodeIdentifier().toString() + ".db");
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
@@ -42,18 +42,17 @@ public class Database {
             // if the error message is "out of memory",
             // it probably means no databasing file is found
             System.err.println(e.getMessage());
+            e.printStackTrace();
         }
         finally
         {
-            try
-            {
-                if(connection != null)
-                    connection.close();
+            try {
+                if(connection != null) connection.close();
             }
-            catch(SQLException e)
-            {
+            catch(SQLException e) {
                 // connection close failed.
                 System.err.println(e);
+                e.printStackTrace();
             }
         }
 
@@ -74,7 +73,7 @@ public class Database {
     }
 
     private void checkDatabasesDirectory() {
-        File directory = new File("databases");
+        File directory = new File(".databases");
         if (! directory.exists()) directory.mkdir();
     }
 

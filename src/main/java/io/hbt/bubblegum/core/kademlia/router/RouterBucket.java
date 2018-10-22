@@ -4,9 +4,9 @@ import io.hbt.bubblegum.core.kademlia.NodeID;
 
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class RouterBucket {
@@ -95,7 +95,20 @@ public final class RouterBucket {
 
     public Set<RouterNode> getNodes() {
         if(this.activeBucket.isEmpty()) return new HashSet<>();
-        else return this.activeBucket.clone();
+        else {
+            HashSet<RouterNode> result = new HashSet<>();
+            result.addAll(this.activeBucket);
+            return result;
+        }
+    }
+
+    public Set<RouterNode> getReplacementNodes() {
+        if(this.replacements.isEmpty()) return new HashSet<>();
+        else {
+            HashSet<RouterNode> result = new HashSet<>();
+            result.addAll(this.replacements);
+            return result;
+        }
     }
 
     public RouterNode getRouterNodeWithID(NodeID id) {
@@ -106,6 +119,32 @@ public final class RouterBucket {
 
     public int getBucketSize() {
         return this.activeNodes;
+    }
+
+    public int getPrefixLength() {
+        return this.prefixLength;
+    }
+
+    protected synchronized void loadInSnapshotNodes(List<Set<RouterNode>> nodes) {
+        Set<RouterNode> active = nodes.get(0);
+        if(active != null) {
+            for(RouterNode node : active) {
+                if(this.activeNodes < BUCKET_SIZE) {
+                    this.activeBucket.add(node);
+                    this.activeNodes++;
+                }
+            }
+        }
+
+        Set<RouterNode> replacements = nodes.get(1);
+        if(replacements != null) {
+            for(RouterNode node : replacements) {
+                if(this.replacementNodes < BUCKET_SIZE) {
+                    this.replacements.add(node);
+                    this.replacementNodes++;
+                }
+            }
+        }
     }
 
     @Override

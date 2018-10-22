@@ -12,7 +12,6 @@ import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
@@ -37,8 +36,6 @@ public class Bubblegum {
             this.nodes = new HashMap<>();
 
             this.loadNodes();
-//            this.buildNodes(100);
-
             this.isAlive = true;
 
         } catch (AddressInitialisationException e) {
@@ -75,13 +72,6 @@ public class Bubblegum {
         this.executionContext.newProcessesInContext(newProcesses);
     }
 
-    private void buildNodes(int numNodes) {
-        for(int i = 0; i < numNodes; i++) this.createNode();
-
-        MasterDatabase mdb = MasterDatabase.getInstance();
-        mdb.updateNetworks(this.nodes.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList()));
-    }
-
     private void initialiseIPAddress() throws AddressInitialisationException {
         try {
             this.ipAddress = InetAddress.getLocalHost();
@@ -90,7 +80,15 @@ public class Bubblegum {
         }
     }
 
-    private BubblegumNode createNode() {
+    public void buildNodes(int numNodes) {
+        for(int i = 0; i < numNodes; i++) this.createNode();
+
+//        MasterDatabase mdb = MasterDatabase.getInstance();
+//        mdb.updateNetworks(this.nodes.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList()));
+    }
+
+
+    public BubblegumNode createNode() {
         UUID identifier = UUID.randomUUID();
         this.executionContext.newProcessInContext();
         BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
@@ -101,6 +99,8 @@ public class Bubblegum {
 
         BubblegumNode newNode = newNodeBuilder.build();
         this.nodes.put(identifier.toString(), newNode);
+        MasterDatabase mdb = MasterDatabase.getInstance();
+        mdb.updateNetwork(newNode);
         return newNode;
     }
 
@@ -117,67 +117,6 @@ public class Bubblegum {
     public BubblegumNode getNode(String identifier) {
         return this.nodes.get(identifier);
     }
-
-
-    /* Entrypoint */
-    public static void main(String[] args) {
-        Bubblegum bb = new Bubblegum();
-
-        System.out.print("Bootstrapping... ");
-        Set<String> networkIDs = bb.getNodeIdentifiers();
-        ArrayList<BubblegumNode> network = new ArrayList<>();
-        BubblegumNode first = null;
-        BubblegumNode second = null;
-        int index = 0;
-        long startBootstrap = System.currentTimeMillis();
-        for(String id : networkIDs) {
-            BubblegumNode node = bb.getNode(id);
-            if (node != null) {
-                network.add(node);
-                if(index == 1) second = node;
-
-                if(index == 0) first = node;
-                else {
-                    node.bootstrap(first.getServer().getLocal(), first.getServer().getPort());
-
-//                    final BubblegumNode fFirst = first;
-//                    node.getExecutionContext().addActivity("master", () -> {
-//                        node.bootstrap(fFirst.getServer().getLocal(), fFirst.getServer().getPort());
-//                    });
-                }
-                index++;
-            }
-        }
-        long endBootstrap = System.currentTimeMillis();
-
-
-        System.out.println("complete.");
-        System.out.println(network.size() + " nodes in " + (endBootstrap - startBootstrap) + "ms.\n");
-
-
-        System.out.println("First:  " + first.getIdentifier());
-        System.out.println("Second: " + second.getIdentifier());
-
-
-        boolean accepted = first.store(NodeID.hash("hello"), "Can you read my post?".getBytes());
-
-        if(accepted) {
-            System.out.println("Stored ['hello' -> 'Can you read my post?']");
-
-            byte[] result = second.lookup(NodeID.hash("hello"));
-            if(result != null) {
-                System.out.println("Lookup ('hello') = " + new String(result));
-            }
-            else {
-                System.out.println("Lookup failed");
-            }
-        }
-        else {
-            System.out.println("Rejected ['hello' -> 'Can you read my post?']");
-        }
-    }
-
-
 
 
 

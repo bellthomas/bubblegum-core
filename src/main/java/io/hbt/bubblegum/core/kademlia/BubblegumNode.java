@@ -4,6 +4,7 @@ import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.logging.Logger;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.MasterDatabase;
+import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
@@ -14,7 +15,6 @@ import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -178,7 +178,7 @@ public class BubblegumNode {
     }
 
     public void saveRouterSnapshot() {
-
+        SnapshotDatabase.saveRouterSnapshot(this, this.getRoutingTable());
     }
 
     @Override

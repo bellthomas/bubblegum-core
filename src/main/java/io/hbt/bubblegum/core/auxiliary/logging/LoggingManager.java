@@ -6,11 +6,13 @@ import java.util.HashMap;
 public class LoggingManager {
     private static LoggingManager instance;
     private HashMap<String, Logger> loggers;
-    protected final String logFolder = "logs/";
+    protected final String logFolder = ".logs/";
 
     private LoggingManager() {
         this.loggers = new HashMap<>();
-        for(File file: new File(logFolder).listFiles()) {
+        File logFolder = new File(this.logFolder);
+        if(!logFolder.exists() || !logFolder.isDirectory()) logFolder.mkdirs();
+        for(File file: logFolder.listFiles()) {
             if (!file.isDirectory()) file.delete();
         }
     }

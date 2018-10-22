@@ -152,5 +152,5 @@ Temporary Items
 # Used for custom bash scripts
 *.script
 
-logs/*
-databases/*
+.logs/*
+.databases/*

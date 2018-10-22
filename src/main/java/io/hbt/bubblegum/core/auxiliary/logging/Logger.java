@@ -10,7 +10,7 @@ public class Logger {
     private File f;
     protected Logger(String id) {
         this.id = id;
-        this.f = new File("logs/" + id + ".log");
+        this.f = new File(".logs/" + id + ".log");
         this.f.getParentFile().mkdirs();
     }
 

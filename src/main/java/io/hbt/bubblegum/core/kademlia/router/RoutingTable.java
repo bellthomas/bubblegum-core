@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
+import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
@@ -19,10 +20,25 @@ public final class RoutingTable {
         this.self = self;
         this.buckets = new RouterBucket[NodeID.KEY_BIT_LENGTH];
         for(int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) this.buckets[i] = new RouterBucket(i);
+
+        // Try restore from snapshot
+        Map<Integer, List<Set<RouterNode>>> snapshot = SnapshotDatabase.buildRoutingTableNodesFromSnapshot(self.getIdentifier());
+        if(snapshot != null) {
+            for (int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) {
+                if (snapshot.containsKey(i)) {
+                    this.buckets[i].loadInSnapshotNodes(snapshot.get(i));
+                }
+            }
+        }
     }
 
     public void insert(RouterNode node) {
         this.getBucketForNode(node.getNode()).add(node);
+    }
+
+    public RouterBucket getBucket(int index) {
+        if(index < this.buckets.length && index >= 0) return this.buckets[index];
+        else return null;
     }
 
     public RouterBucket getBucketForNode(NodeID node) {

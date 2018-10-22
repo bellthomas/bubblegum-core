@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class MasterDatabase {
 
-    protected static final String DB_FOLDER_PATH = "databases/";
+    protected static final String DB_FOLDER_PATH = ".databases/";
     private static final String MASTER_DB_NAME = "_master.db";
     private static MasterDatabase instance;
 
@@ -74,12 +74,14 @@ public class MasterDatabase {
             // if the error message is "out of memory",
             // it probably means no databasing file is found
             System.err.println(e.getMessage());
+            e.printStackTrace();
         } finally {
             try {
                 if(connection != null) connection.close();
             } catch (SQLException e) {
                 // connection close failed.
                 System.err.println(e);
+                e.printStackTrace();
             }
         }
     }
@@ -93,6 +95,8 @@ public class MasterDatabase {
             connection = DriverManager.getConnection("jdbc:sqlite:" + DB_FOLDER_PATH + MASTER_DB_NAME);
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            statement.executeUpdate(this.setupMasterTableSQL());
 
             Set<NetworkDetails> details = new HashSet<>();
             ResultSet rs = statement.executeQuery(this.getAllNetworksSQL());
