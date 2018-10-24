@@ -132,6 +132,20 @@ public class MasterDatabase {
         if (!directory.exists()) directory.mkdir();
     }
 
+    public void resetDatabases() {
+        File directory = new File(MasterDatabase.DB_FOLDER_PATH);
+        if(directory.exists()) {
+            this.delete(directory);
+        }
+    }
+
+    private void delete(File f) {
+        if (f.isDirectory()) {
+            for (File c : f.listFiles()) delete(c);
+        }
+        f.delete();
+    }
+
     private String setupMasterTableSQL() {
         /* create table if not exists networks( id varchar(255) NOT NULL, hash varchar(255) NOT NULL, port int NOT NULL, CONSTRAINT key PRIMARY KEY (id,hash) ) */
         StringBuilder sb = new StringBuilder();

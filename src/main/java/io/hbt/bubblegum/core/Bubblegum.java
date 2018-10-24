@@ -118,6 +118,10 @@ public class Bubblegum {
         return this.nodes.get(identifier);
     }
 
+    public void reset() {
+        MasterDatabase.getInstance().resetDatabases();
+        this.nodes.clear();
+    }
 
 
 //        HashMap<String, String> values = new HashMap<>();
