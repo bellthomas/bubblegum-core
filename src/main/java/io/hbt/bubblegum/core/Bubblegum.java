@@ -12,7 +12,9 @@ import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -80,8 +82,11 @@ public class Bubblegum {
         }
     }
 
-    public void buildNodes(int numNodes) {
-        for(int i = 0; i < numNodes; i++) this.createNode();
+    public List<BubblegumNode> buildNodes(int numNodes) {
+        List<BubblegumNode> nodes = new ArrayList<>();
+        for(int i = 0; i < numNodes; i++) nodes.add(this.createNode());
+
+        return nodes;
 
 //        MasterDatabase mdb = MasterDatabase.getInstance();
 //        mdb.updateNetworks(this.nodes.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList()));

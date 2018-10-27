@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
 Class-Path: sqlite-jdbc-3.25.2.jar protobuf-java-3.6.1.jar
-Main-Class: io.hbt.bubblegum.core.Bubblegum
+Main-Class: CLINew
 

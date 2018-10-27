@@ -60,7 +60,7 @@ public class SnapshotDatabase {
             connection.commit();
             connection.setAutoCommit(true);
 
-            System.out.println("Saved snapshot for " + localNode.getIdentifier());
+//            System.out.println("Saved snapshot for " + localNode.getIdentifier());
 
             return true;
 
@@ -84,7 +84,7 @@ public class SnapshotDatabase {
         File snapshotFile = new File(DB_FOLDER_PATH + identifier + ".db");
         if(!snapshotFile.exists()) return null;
 
-        System.out.println("Building from snapshot: " + identifier);
+//        System.out.println("Building from snapshot: " + identifier);
 
         // Initialise return structure
         HashMap<Integer, List<Set<RouterNode>>> result = new HashMap<>();

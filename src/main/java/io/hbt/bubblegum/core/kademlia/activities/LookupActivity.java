@@ -1,13 +1,16 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import io.hbt.bubblegum.core.auxiliary.logging.Logger;
-import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class LookupActivity extends SystemActivity {
 
@@ -28,6 +31,15 @@ public class LookupActivity extends SystemActivity {
 
     @Override
     public void run() {
+
+        // Check if we have a value locally first
+        if(this.getValue && this.localNode.databaseHasKey(this.nodeToLookup.toString())) {
+            this.result = this.localNode.databaseRetrieveValue(this.nodeToLookup.toString());
+            this.onSuccess("Lookup Value - found locally");
+            return;
+        }
+
+
         RouterNode closestNode;
         RouterNode previousClosestNode = null;
         ArrayList<FindActivity> currentActivities = new ArrayList<>(alpha);
