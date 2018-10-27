@@ -163,7 +163,7 @@ public class MasterDatabase {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT EXISTS( ");
         sb.append("SELECT 1 FROM networks WHERE ");
-        sb.append("id='"+ network.getIdentifier()+"' LIMIT 1 ");
+        sb.append("id='"+ network.getIdentifier() +"' LIMIT 1 ");
         sb.append(")");
         return sb.toString();
     }

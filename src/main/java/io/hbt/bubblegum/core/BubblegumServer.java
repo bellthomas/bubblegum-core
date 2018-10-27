@@ -1,7 +1,10 @@
-package io.hbt.bubblegum.core.kademlia;
+package io.hbt.bubblegum.core;
 
-import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.MessageLite;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
+import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.KademliaServerWorker;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
@@ -11,23 +14,23 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class KademliaServer {
-    private final BubblegumNode localNode;
+public class BubblegumServer {
+
     private int port;
     private InetAddress localAddress;
     private final DatagramSocket listeningSocket;
 
-    private final ConcurrentBlockingQueue<DatagramPacket> kademliaHandlers;
-    private final int numWorkers = 2;
     private static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // 64KB
 
     private final ConcurrentHashMap<String, Consumer<KademliaMessage>> responses = new ConcurrentHashMap<>();
+    private final HashMap<String, BubblegumNode> recipients = new HashMap<>();
 
     private boolean alive = false;
     private Thread listenerThread;
@@ -36,11 +39,8 @@ public class KademliaServer {
     private long packetsSent = 0;
     private long packetsReceived = 0;
 
-    public KademliaServer(BubblegumNode local, int port) throws BubblegumException {
-        this.localNode = local;
+    public BubblegumServer(int port) throws BubblegumException {
         this.port = port;
-        this.kademliaHandlers = new ConcurrentBlockingQueue<>();
-        this.initialiseWorkers();
 
         try {
 //            if(this.sendingSocket == null) this.sendingSocket = new DatagramSocket();
@@ -50,7 +50,7 @@ public class KademliaServer {
             this.listenerThread = new Thread(() -> this.listen());
             this.listenerThread.setDaemon(true);
             this.listenerThread.start();
-            this.print("KademliaServer started on port " + this.port);
+            this.print("BubblegumServer started on port " + this.port);
 
         } catch (SocketException e) {
             e.printStackTrace();
@@ -66,11 +66,16 @@ public class KademliaServer {
 
         ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
         executor.scheduleAtFixedRate(
-                () -> this.print("Stats  ~  Sent: " + this.packetsSent + ",  Received: " + this.packetsReceived),
-                5,
-                5,
-                TimeUnit.SECONDS
+            () -> this.print("Stats  ~  Sent: " + this.packetsSent + ",  Received: " + this.packetsReceived),
+            5,
+            5,
+            TimeUnit.SECONDS
         );
+    }
+
+    public void registerNewLocalNode(BubblegumNode node) {
+        System.out.println("Server now knows " + node.getNetworkIdentifier() + ":" + node.getNodeIdentifier().toString());
+        this.recipients.put(node.getNetworkIdentifier() + ":" + node.getNodeIdentifier().toString(), node);
     }
 
     private void listen() {
@@ -79,8 +84,41 @@ public class KademliaServer {
                 byte[] buffer = new byte[DATAGRAM_BUFFER_SIZE];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 this.listeningSocket.receive(packet);
-                this.kademliaHandlers.put(packet);
                 this.packetsReceived++;
+
+                byte[] data = new byte[packet.getLength()];
+                System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
+
+                try {
+                    KademliaMessage message = KademliaMessage.parseFrom(data);
+                    System.out.println(message.getRecipient());
+                    if(this.recipients.containsKey(message.getRecipient())) {
+                        // Pass to them
+                        BubblegumNode localRecipient = this.recipients.get(message.getRecipient());
+
+                        if(this.responses.containsKey(message.getExchangeID())) {
+                            Consumer<KademliaMessage> callback = this.responses.remove(message.getExchangeID());
+                            if(callback != null) {
+                                localRecipient.getExecutionContext().addCallbackActivity(
+                                    localRecipient.getIdentifier(),
+                                    () -> callback.accept(message)
+                                );
+                            }
+                        }
+
+                        else {
+                            // Create worker to handle
+                            localRecipient.getExecutionContext().addActivity(
+                                localRecipient.getIdentifier(),
+                                () -> KademliaServerWorker.accept(localRecipient, message)
+                            );
+                        }
+                    }
+
+                } catch (InvalidProtocolBufferException ipbe) {
+                    MessageLite ml = ipbe.getUnfinishedMessage();
+                    ipbe.printStackTrace();
+                }
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -88,14 +126,6 @@ public class KademliaServer {
         }
     }
 
-    private void initialiseWorkers() {
-        Thread t;
-        for(int i = 0; i < this.numWorkers; i++) {
-            t = new KademliaServerWorker(this.localNode, this.kademliaHandlers, this.responses);
-            t.setDaemon(true);
-            t.start();
-        }
-    }
 
     public void sendDatagram(RouterNode node, KademliaMessage payload, Consumer<KademliaMessage> callback) {
 //        synchronized (this.sendingSocket) {
@@ -134,6 +164,6 @@ public class KademliaServer {
     }
 
     private void print(String msg) {
-        this.localNode.log(msg);
+        //this.localNode.log(msg);
     }
 }

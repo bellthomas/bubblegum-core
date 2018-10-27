@@ -9,17 +9,24 @@ import "BgKademliaStoreRequest.proto";
 import "BgKademliaStoreResponse.proto";
 
 message KademliaMessage {
-    string exchangeID = 1;
-    string originHash = 2;
-    string originIP = 3;
-    int32 originPort = 4;
 
+    // Who you are and the context of the message
+    string exchangeID = 1;
+    string recipient = 2;
+
+    // Who I am
+    string originNetwork = 3;
+    string originHash = 4;
+    string originIP = 5;
+    int32 originPort = 6;
+
+    // Message content
     oneof message {
-        KademliaPing pingMessage = 5;
-        KademliaFindRequest findNodeRequest = 6;
-        KademliaFindNodeResponse findNodeResponse = 7;
-        KademliaFindValueResponse findValueResponse = 8;
-        KademliaStoreRequest storeRequest = 9;
-        KademliaStoreResponse storeResponse = 10;
+        KademliaPing pingMessage = 7;
+        KademliaFindRequest findRequest = 8;
+        KademliaFindNodeResponse findNodeResponse = 9;
+        KademliaFindValueResponse findValueResponse = 10;
+        KademliaStoreRequest storeRequest = 11;
+        KademliaStoreResponse storeResponse = 12;
     }
 }

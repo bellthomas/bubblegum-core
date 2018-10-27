@@ -1,11 +1,11 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import io.hbt.bubblegum.core.BubblegumServer;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.logging.Logger;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.MasterDatabase;
 import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
-import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
 import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
@@ -29,20 +29,21 @@ public class BubblegumNode {
     private SocialIdentity socialIdentity;
     private NodeID nodeIdentifier;
     private RoutingTable routingTable;
-    private KademliaServer server;
+    private BubblegumServer server;
     private ActivityExecutionContext executionContext;
     private Database db;
     private Logger logger;
     private ScheduledExecutorService internalScheduler;
 
     private BubblegumNode(
-            String identifier,
-            String networkIdentifier,
-            SocialIdentity socialIdentity,
-            ActivityExecutionContext context,
-            Logger logger,
-            NodeID nid,
-            int port
+        String identifier,
+        String networkIdentifier,
+        SocialIdentity socialIdentity,
+        ActivityExecutionContext context,
+        BubblegumServer server,
+        Logger logger,
+        NodeID nid,
+        int port
     ) {
         this.identifier = identifier;
         this.networkIdentifier = networkIdentifier;
@@ -50,19 +51,14 @@ public class BubblegumNode {
         this.nodeIdentifier = nid;
         this.executionContext = context;
         this.logger = logger;
+        this.server = server;
+        this.server.registerNewLocalNode(this);
 
         this.routingTable = new RoutingTable(this);
         this.db = new Database(this);
         this.db.add(nid.toString(), new byte[] {0x01}); // responds only to self
 
         this.setupInternalScheduling();
-
-        try {
-            // This is the node for a particular network
-            this.server = new KademliaServer(this, port);
-        } catch (BubblegumException e) {
-            e.printStackTrace();
-        }
 
         this.log("Constructed BubblegumNode: " + this.nodeIdentifier.toString());
     }
@@ -105,10 +101,10 @@ public class BubblegumNode {
         return nodeIdentifier.toString();
     }
 
-    public boolean bootstrap(InetAddress address, int port) {
+    public boolean bootstrap(InetAddress address, int port, String foreignNetwork) {
 
         RouterNode to = new RouterNode(new NodeID(), address, port);
-        BootstrapActivity boostrapActivity = new BootstrapActivity(this, to, (networkID) -> this.networkIdentifier = networkID);
+        BootstrapActivity boostrapActivity = new BootstrapActivity(this, to, foreignNetwork, (networkID) -> this.networkIdentifier = networkID);
         boostrapActivity.run(); // sync
 
         if(boostrapActivity.getSuccess()) {
@@ -151,12 +147,16 @@ public class BubblegumNode {
         return this.executionContext;
     }
 
-    public KademliaServer getServer() {
+    public BubblegumServer getServer() {
         return this.server;
     }
 
     public Database getDatabase() {
         return this.db;
+    }
+
+    public String getRecipientID() {
+        return this.networkIdentifier + ":" + this.nodeIdentifier.toString();
     }
 
     public void log(String message) {
@@ -198,6 +198,7 @@ public class BubblegumNode {
         private SocialIdentity socialIdentity;
         private NodeID nodeIdentifier;
         private ActivityExecutionContext executionContext;
+        private BubblegumServer server;
         private Logger logger;
         private int port = 0;
 
@@ -226,6 +227,11 @@ public class BubblegumNode {
             return this;
         }
 
+        public Builder setServer(BubblegumServer server) {
+            this.server = server;
+            return this;
+        }
+
         public Builder setLogger(Logger logger) {
             this.logger = logger;
             return this;
@@ -238,7 +244,8 @@ public class BubblegumNode {
 
         public BubblegumNode build() {
             // Check required
-            if(this.socialIdentity == null || this.executionContext == null || this.logger == null) return null;
+            if(this.socialIdentity == null || this.executionContext == null || this.logger == null || this.server == null)
+                return null;
 
             // Fill in optionals
             if(this.identifier == null) this.identifier = UUID.randomUUID().toString();
@@ -248,7 +255,7 @@ public class BubblegumNode {
 
             return new BubblegumNode(
                 this.identifier, this.networkIdentifier, this.socialIdentity,
-                this.executionContext, this.logger, this.nodeIdentifier, this.port
+                this.executionContext, this.server, this.logger, this.nodeIdentifier, this.port
             );
         }
     }

@@ -1,9 +1,9 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import com.google.protobuf.ByteString;
+import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
-import io.hbt.bubblegum.core.kademlia.KademliaServer;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindNodeResponse.KademliaFindNodeResponse;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest;
@@ -11,7 +11,6 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.Kadem
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
-import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -47,58 +46,55 @@ public class FindActivity extends NetworkActivity {
     @Override
     public void run() {
 
-        KademliaMessage.Builder message = KademliaMessage.newBuilder();
-        message.setOriginHash(this.localNode.getNodeIdentifier().toString());
-        message.setOriginIP(this.server.getLocal().getHostAddress());
-        message.setOriginPort(this.server.getPort());
-        message.setExchangeID(this.exchangeID);
+        KademliaMessage message = null;
 
         if(this.isResponse) {
             this.print("Replying to " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + " from "
                     + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
 
             if(this.returnValue && this.localNode.databaseHasKey(this.request.getSearchHash())) {
-                // We want to return the value
-                KademliaFindValueResponse.Builder findValueResponse = KademliaFindValueResponse.newBuilder();
-                findValueResponse.setRequest(this.request);
 
                 // TODO validate
-                findValueResponse.setValue(ByteString.copyFrom(this.localNode.databaseRetrieveValue(this.request.getSearchHash())));
-                message.setFindValueResponse(findValueResponse);
+                byte[] value = this.localNode.databaseRetrieveValue(this.request.getSearchHash());
+
+                message = ProtobufHelper.buildFindValueResponse(
+                    this.localNode,
+                    this.to,
+                    this.exchangeID,
+                    this.request,
+                    value
+                );
             }
             else {
 
-                // Return close nodes
-                KademliaFindNodeResponse.Builder findNodeResponse = KademliaFindNodeResponse.newBuilder();
-                // TODO check not null
-                findNodeResponse.setRequest(this.request);
-
                 Set<RouterNode> results = this.routingTable.getNodesClosestToKeyWithExclusions(
-                        this.request.getSearchHash(),
-                        this.request.getNumberRequested(),
-                        new HashSet<>(Arrays.asList(this.requestingHash))
+                    this.request.getSearchHash(),
+                    this.request.getNumberRequested(),
+                    new HashSet<>(Arrays.asList(this.requestingHash))
                 );
 
-                for (RouterNode result : results) {
-                    KademliaNode.Builder pbNode = KademliaNode.newBuilder();
-                    pbNode.setHash(result.getNode().toString());
-                    pbNode.setIpAddress(result.getIPAddress().getHostAddress());
-                    pbNode.setPort(result.getPort());
-                    findNodeResponse.addResults(pbNode);
-                }
-
-                message.setFindNodeResponse(findNodeResponse);
+                message = ProtobufHelper.buildFindNodeResponse(
+                    this.localNode,
+                    this.to,
+                    this.exchangeID,
+                    this.request,
+                    results
+                );
             }
         }
         else {
             this.print("Starting " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + "(" + this.search + ") activity to "
                     + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
 
-            KademliaFindRequest.Builder findNodeRequest = KademliaFindRequest.newBuilder();
-            findNodeRequest.setSearchHash(this.search);
-            findNodeRequest.setNumberRequested(FindActivity.RESULTS_REQUESTED);
-            findNodeRequest.setReturnValue(this.returnValue);
-            message.setFindNodeRequest(findNodeRequest);
+
+            message = ProtobufHelper.buildFindRequest(
+                this.localNode,
+                this.to,
+                this.exchangeID,
+                this.search,
+                FindActivity.RESULTS_REQUESTED,
+                this.returnValue
+            );
         }
 
         Consumer<KademliaMessage> callback = this.isResponse ? null : (kademliaMessage) -> {
@@ -122,7 +118,7 @@ public class FindActivity extends NetworkActivity {
                 this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
                 this.onSuccess();
 
-                // TODO handle response
+                // TODO handle response?
             }
             else if(kademliaMessage.hasFindValueResponse()) {
                 KademliaFindValueResponse findValueResponse = kademliaMessage.getFindValueResponse();
@@ -137,7 +133,8 @@ public class FindActivity extends NetworkActivity {
             }
         };
 
-        this.server.sendDatagram(this.to, message.build(), callback);
+        if(message != null) this.server.sendDatagram(this.to, message, callback);
+
         if(!this.isResponse) this.timeoutOnComplete();
         else this.onSuccess();
     }

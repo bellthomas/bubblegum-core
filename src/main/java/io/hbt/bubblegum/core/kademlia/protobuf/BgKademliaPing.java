@@ -19,23 +19,9 @@ public final class BgKademliaPing {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <pre>
-     * Deliberately blank
-     * </pre>
-     *
      * <code>bool reply = 1;</code>
      */
     boolean getReply();
-
-    /**
-     * <code>string networkID = 2;</code>
-     */
-    java.lang.String getNetworkID();
-    /**
-     * <code>string networkID = 2;</code>
-     */
-    com.google.protobuf.ByteString
-        getNetworkIDBytes();
   }
   /**
    * Protobuf type {@code io.hbt.bubblegum.core.kademlia.protobuf.KademliaPing}
@@ -51,7 +37,6 @@ public final class BgKademliaPing {
     }
     private KademliaPing() {
       reply_ = false;
-      networkID_ = "";
     }
 
     @java.lang.Override
@@ -81,12 +66,6 @@ public final class BgKademliaPing {
             case 8: {
 
               reply_ = input.readBool();
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              networkID_ = s;
               break;
             }
             default: {
@@ -124,48 +103,10 @@ public final class BgKademliaPing {
     public static final int REPLY_FIELD_NUMBER = 1;
     private boolean reply_;
     /**
-     * <pre>
-     * Deliberately blank
-     * </pre>
-     *
      * <code>bool reply = 1;</code>
      */
     public boolean getReply() {
       return reply_;
-    }
-
-    public static final int NETWORKID_FIELD_NUMBER = 2;
-    private volatile java.lang.Object networkID_;
-    /**
-     * <code>string networkID = 2;</code>
-     */
-    public java.lang.String getNetworkID() {
-      java.lang.Object ref = networkID_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        networkID_ = s;
-        return s;
-      }
-    }
-    /**
-     * <code>string networkID = 2;</code>
-     */
-    public com.google.protobuf.ByteString
-        getNetworkIDBytes() {
-      java.lang.Object ref = networkID_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        networkID_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
     }
 
     private byte memoizedIsInitialized = -1;
@@ -185,9 +126,6 @@ public final class BgKademliaPing {
       if (reply_ != false) {
         output.writeBool(1, reply_);
       }
-      if (!getNetworkIDBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, networkID_);
-      }
       unknownFields.writeTo(output);
     }
 
@@ -200,9 +138,6 @@ public final class BgKademliaPing {
       if (reply_ != false) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(1, reply_);
-      }
-      if (!getNetworkIDBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, networkID_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -222,8 +157,6 @@ public final class BgKademliaPing {
       boolean result = true;
       result = result && (getReply()
           == other.getReply());
-      result = result && getNetworkID()
-          .equals(other.getNetworkID());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -238,8 +171,6 @@ public final class BgKademliaPing {
       hash = (37 * hash) + REPLY_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
           getReply());
-      hash = (37 * hash) + NETWORKID_FIELD_NUMBER;
-      hash = (53 * hash) + getNetworkID().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -375,8 +306,6 @@ public final class BgKademliaPing {
         super.clear();
         reply_ = false;
 
-        networkID_ = "";
-
         return this;
       }
 
@@ -404,7 +333,6 @@ public final class BgKademliaPing {
       public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing buildPartial() {
         io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing result = new io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing(this);
         result.reply_ = reply_;
-        result.networkID_ = networkID_;
         onBuilt();
         return result;
       }
@@ -456,10 +384,6 @@ public final class BgKademliaPing {
         if (other.getReply() != false) {
           setReply(other.getReply());
         }
-        if (!other.getNetworkID().isEmpty()) {
-          networkID_ = other.networkID_;
-          onChanged();
-        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -491,20 +415,12 @@ public final class BgKademliaPing {
 
       private boolean reply_ ;
       /**
-       * <pre>
-       * Deliberately blank
-       * </pre>
-       *
        * <code>bool reply = 1;</code>
        */
       public boolean getReply() {
         return reply_;
       }
       /**
-       * <pre>
-       * Deliberately blank
-       * </pre>
-       *
        * <code>bool reply = 1;</code>
        */
       public Builder setReply(boolean value) {
@@ -514,84 +430,11 @@ public final class BgKademliaPing {
         return this;
       }
       /**
-       * <pre>
-       * Deliberately blank
-       * </pre>
-       *
        * <code>bool reply = 1;</code>
        */
       public Builder clearReply() {
         
         reply_ = false;
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object networkID_ = "";
-      /**
-       * <code>string networkID = 2;</code>
-       */
-      public java.lang.String getNetworkID() {
-        java.lang.Object ref = networkID_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          networkID_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>string networkID = 2;</code>
-       */
-      public com.google.protobuf.ByteString
-          getNetworkIDBytes() {
-        java.lang.Object ref = networkID_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          networkID_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>string networkID = 2;</code>
-       */
-      public Builder setNetworkID(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        networkID_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string networkID = 2;</code>
-       */
-      public Builder clearNetworkID() {
-        
-        networkID_ = getDefaultInstance().getNetworkID();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string networkID = 2;</code>
-       */
-      public Builder setNetworkIDBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        networkID_ = value;
         onChanged();
         return this;
       }
@@ -663,9 +506,8 @@ public final class BgKademliaPing {
   static {
     java.lang.String[] descriptorData = {
       "\n\024BgKademliaPing.proto\022\'io.hbt.bubblegum" +
-      ".core.kademlia.protobuf\"0\n\014KademliaPing\022" +
-      "\r\n\005reply\030\001 \001(\010\022\021\n\tnetworkID\030\002 \001(\tb\006proto" +
-      "3"
+      ".core.kademlia.protobuf\"\035\n\014KademliaPing\022" +
+      "\r\n\005reply\030\001 \001(\010b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -684,7 +526,7 @@ public final class BgKademliaPing {
     internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaPing_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaPing_descriptor,
-        new java.lang.String[] { "Reply", "NetworkID", });
+        new java.lang.String[] { "Reply", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -1,7 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
-import io.hbt.bubblegum.core.kademlia.KademliaServer;
+import io.hbt.bubblegum.core.BubblegumServer;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 
@@ -9,10 +9,11 @@ import java.util.UUID;
 
 public abstract class NetworkActivity extends SystemActivity {
 
-    private final int RETRIES = 3;
+    private final static int RETRIES = 3;
+
     private int currentTry;
 
-    protected final KademliaServer server;
+    protected final BubblegumServer server;
     protected final RouterNode to;
     protected final RoutingTable routingTable;
     protected String exchangeID;

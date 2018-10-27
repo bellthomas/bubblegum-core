@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
@@ -13,12 +14,25 @@ import java.util.function.Consumer;
 
 public class PingActivity extends NetworkActivity {
 
-    private String networkID;
+    private String networkID, originNetworkID;
+    private KademliaMessage originalPing;
 
     public PingActivity(BubblegumNode self, RouterNode to) {
+        this(self, to, self.getNetworkIdentifier());
+    }
+
+    public PingActivity(BubblegumNode self, RouterNode to, String originNetwork) {
         super(self, to);
         this.networkID = self.getNetworkIdentifier();
+        this.originNetworkID = originNetwork;
     }
+
+
+    public void setResponse(KademliaMessage originalPing) {
+        super.setResponse(originalPing.getExchangeID());
+        this.originalPing = originalPing;
+    }
+
 
     @Override
     public void run() {
@@ -43,22 +57,12 @@ public class PingActivity extends NetworkActivity {
         }
         else if(destination.isFresh()) {
             this.onSuccess("Node fresh, PING not required for " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
-            return;
+//            return;
         }
         else {
             this.print("Starting PING to " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
         }
 
-
-        KademliaMessage.Builder message = KademliaMessage.newBuilder();
-        KademliaPing.Builder connectionMessage = KademliaPing.newBuilder();
-        message.setOriginHash(this.localNode.getNodeIdentifier().toString());
-        message.setOriginIP(this.server.getLocal().getHostAddress());
-        message.setOriginPort(this.server.getPort());
-        message.setExchangeID(this.exchangeID);
-        connectionMessage.setReply(this.isResponse);
-        if(this.isResponse) connectionMessage.setNetworkID(this.localNode.getNetworkIdentifier());
-        message.setPingMessage(connectionMessage.build());
 
         Consumer<KademliaMessage> response = this.isResponse ? null : (kademliaMessage -> {
             // TODO verify ip/port
@@ -71,7 +75,7 @@ public class PingActivity extends NetworkActivity {
                 );
 
                 // Get the returned network identifier
-                String newNetworkID = kademliaMessage.getPingMessage().getNetworkID();
+                String newNetworkID = kademliaMessage.getOriginNetwork();
                 if(newNetworkID != null && newNetworkID.length() > 0) this.networkID = newNetworkID;
 
                 responder.hasResponded();
@@ -92,7 +96,14 @@ public class PingActivity extends NetworkActivity {
 //            if(responder != null) responder.hasFailedToRespond();
 //        };
 
-        this.server.sendDatagram(destination, message.build(), response);
+        String originHash = (this.originalPing == null) ? this.to.getNode().toString() : this.originalPing.getOriginHash();
+
+        this.server.sendDatagram(
+            destination,
+            ProtobufHelper.buildPingMessage(this.localNode, originHash, this.exchangeID, this.isResponse, this.originNetworkID),
+            response
+        );
+
         if(!this.isResponse) this.timeoutOnComplete();
     }
 

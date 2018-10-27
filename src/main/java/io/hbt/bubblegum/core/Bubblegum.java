@@ -4,6 +4,7 @@ import io.hbt.bubblegum.core.auxiliary.NetworkDetails;
 import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
 import io.hbt.bubblegum.core.databasing.MasterDatabase;
 import io.hbt.bubblegum.core.exceptions.AddressInitialisationException;
+import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
@@ -17,13 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class Bubblegum {
 
     private InetAddress ipAddress;
     private SocialIdentity socialIdentity;
     private ActivityExecutionContext executionContext;
+    private BubblegumServer server;
     private HashMap<String, BubblegumNode> nodes;
 
     private boolean isAlive = false;
@@ -35,6 +36,7 @@ public class Bubblegum {
             this.initialiseIPAddress();
             this.initialiseSocialIdentity();
             this.executionContext = new ActivityExecutionContext(0);
+            this.server = new BubblegumServer(50001);
             this.nodes = new HashMap<>();
 
             this.loadNodes();
@@ -42,6 +44,8 @@ public class Bubblegum {
 
         } catch (AddressInitialisationException e) {
             System.out.println("Failed to start network");
+        } catch (BubblegumException e) {
+            e.printStackTrace();
         }
     }
 
@@ -59,6 +63,7 @@ public class Bubblegum {
                 reloadedNodeBuilder.setPort(network.port);
                 reloadedNodeBuilder.setSocialIdentity(this.socialIdentity);
                 reloadedNodeBuilder.setExecutionContext(this.executionContext);
+                reloadedNodeBuilder.setServer(this.server);
                 reloadedNodeBuilder.setLogger(LoggingManager.getLogger(network.id));
 
                 BubblegumNode reloadedNode = reloadedNodeBuilder.build();
@@ -100,6 +105,7 @@ public class Bubblegum {
         newNodeBuilder.setIdentifier(identifier.toString());
         newNodeBuilder.setSocialIdentity(this.socialIdentity);
         newNodeBuilder.setExecutionContext(this.executionContext);
+        newNodeBuilder.setServer(this.server);
         newNodeBuilder.setLogger(LoggingManager.getLogger(identifier.toString()));
 
         BubblegumNode newNode = newNodeBuilder.build();
