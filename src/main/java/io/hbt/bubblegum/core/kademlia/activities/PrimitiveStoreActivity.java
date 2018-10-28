@@ -22,12 +22,12 @@ public class PrimitiveStoreActivity extends NetworkActivity {
             this.print("Responding to STORE("+this.key+") request to " + this.to.getNode().toString());
             boolean accepted = this.localNode.getDatabase().add(this.key, this.payload);
             KademliaMessage message = ProtobufHelper.buildStoreResponse(this.localNode, this.to, this.exchangeID, accepted);
-            this.server.sendDatagram(this.to, message, null);
+            this.server.sendDatagram(this.localNode, this.to, message, null);
         }
         else {
             this.print("Sending STORE("+this.key+") request to " + this.to.getNode().toString());
             KademliaMessage message = ProtobufHelper.buildStoreRequest(this.localNode, this.to, this.exchangeID, this.key, this.payload);
-            this.server.sendDatagram(this.to, message, (kademliaMessage -> {
+            this.server.sendDatagram(this.localNode, this.to, message, (kademliaMessage -> {
                 if(kademliaMessage.hasStoreResponse()) {
                     if(kademliaMessage.getStoreResponse().getAccepted()) {
                         this.onSuccess("STORE("+this.key+") operation successful to " + this.to.getNode().toString());

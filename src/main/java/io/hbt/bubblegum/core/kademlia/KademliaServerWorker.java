@@ -24,7 +24,7 @@ public class KademliaServerWorker {
                 );
                 node.getRoutingTable().insert(sender);
 
-                PingActivity pingReply = new PingActivity(node, sender);
+                PingActivity pingReply = new PingActivity(node, sender, message.getOriginNetwork() + ":" + message.getOriginHash());
                 pingReply.setResponse(message);
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), pingReply);
 

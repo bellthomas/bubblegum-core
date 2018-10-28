@@ -14,17 +14,17 @@ import java.util.function.Consumer;
 
 public class PingActivity extends NetworkActivity {
 
-    private String networkID, originNetworkID;
+    private String networkID, foreignRecipient;
     private KademliaMessage originalPing;
 
     public PingActivity(BubblegumNode self, RouterNode to) {
         this(self, to, self.getNetworkIdentifier());
     }
 
-    public PingActivity(BubblegumNode self, RouterNode to, String originNetwork) {
+    public PingActivity(BubblegumNode self, RouterNode to, String foreignRecipient) {
         super(self, to);
         this.networkID = self.getNetworkIdentifier();
-        this.originNetworkID = originNetwork;
+        this.foreignRecipient = foreignRecipient;
     }
 
 
@@ -65,13 +65,13 @@ public class PingActivity extends NetworkActivity {
 
 
         Consumer<KademliaMessage> response = this.isResponse ? null : (kademliaMessage -> {
-            // TODO verify ip/port
+            // TODO Verify IP/Port
             try {
                 RouterNode responder = this.routingTable.getRouterNodeForID(new NodeID(kademliaMessage.getOriginHash()));
                 if(responder == null) responder = new RouterNode(
-                        new NodeID(kademliaMessage.getOriginHash()),
-                        InetAddress.getByName(kademliaMessage.getOriginIP()),
-                        kademliaMessage.getOriginPort()
+                    new NodeID(kademliaMessage.getOriginHash()),
+                    InetAddress.getByName(kademliaMessage.getOriginIP()),
+                    kademliaMessage.getOriginPort()
                 );
 
                 // Get the returned network identifier
@@ -99,8 +99,9 @@ public class PingActivity extends NetworkActivity {
         String originHash = (this.originalPing == null) ? this.to.getNode().toString() : this.originalPing.getOriginHash();
 
         this.server.sendDatagram(
+            localNode,
             destination,
-            ProtobufHelper.buildPingMessage(this.localNode, originHash, this.exchangeID, this.isResponse, this.originNetworkID),
+            ProtobufHelper.buildPingMessage(this.localNode, originHash, this.exchangeID, this.isResponse, this.foreignRecipient),
             response
         );
 

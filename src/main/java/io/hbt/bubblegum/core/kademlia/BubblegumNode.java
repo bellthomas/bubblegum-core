@@ -8,6 +8,7 @@ import io.hbt.bubblegum.core.databasing.MasterDatabase;
 import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
+import io.hbt.bubblegum.core.kademlia.activities.DiscoveryActivity;
 import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
 import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
@@ -15,6 +16,7 @@ import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -101,10 +103,10 @@ public class BubblegumNode {
         return nodeIdentifier.toString();
     }
 
-    public boolean bootstrap(InetAddress address, int port, String foreignNetwork) {
+    public boolean bootstrap(InetAddress address, int port, String foreignRecipient) {
 
         RouterNode to = new RouterNode(new NodeID(), address, port);
-        BootstrapActivity boostrapActivity = new BootstrapActivity(this, to, foreignNetwork, (networkID) -> this.networkIdentifier = networkID);
+        BootstrapActivity boostrapActivity = new BootstrapActivity(this, to, foreignRecipient, (networkID) -> this.networkIdentifier = networkID);
         boostrapActivity.run(); // sync
 
         if(boostrapActivity.getSuccess()) {
@@ -115,6 +117,18 @@ public class BubblegumNode {
         else {
             return false;
         }
+    }
+
+    public Set<String> discover(InetAddress address, int port) {
+        RouterNode to = new RouterNode(new NodeID(), address, port);
+        DiscoveryActivity discoveryActivity = new DiscoveryActivity(this, to);
+        discoveryActivity.run();
+
+        if(discoveryActivity.getComplete() && discoveryActivity.getSuccess()) {
+            return discoveryActivity.getEntries();
+        }
+
+        return null;
     }
 
     public byte[] lookup(NodeID id) {

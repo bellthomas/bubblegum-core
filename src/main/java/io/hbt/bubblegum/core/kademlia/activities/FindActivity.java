@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import com.google.protobuf.ByteString;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -45,7 +44,6 @@ public class FindActivity extends NetworkActivity {
 
     @Override
     public void run() {
-
         KademliaMessage message = null;
 
         if(this.isResponse) {
@@ -133,8 +131,8 @@ public class FindActivity extends NetworkActivity {
             }
         };
 
-        if(message != null) this.server.sendDatagram(this.to, message, callback);
-
+        if(message != null) this.server.sendDatagram(this.localNode, this.to, message, callback);
+        else System.out.println("No message sent");
         if(!this.isResponse) this.timeoutOnComplete();
         else this.onSuccess();
     }
