@@ -17,7 +17,8 @@ public class KademliaServerWorker {
         if(message.hasPingMessage() && !message.getPingMessage().getReply()) {
             node.log("PING received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]");
             try {
-                RouterNode sender = new RouterNode(
+                RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
+                if(sender == null) sender = new RouterNode(
                     new NodeID(message.getOriginHash()),
                     InetAddress.getByName(message.getOriginIP()),
                     message.getOriginPort()
@@ -26,7 +27,7 @@ public class KademliaServerWorker {
 
                 PingActivity pingReply = new PingActivity(node, sender, message.getOriginNetwork() + ":" + message.getOriginHash());
                 pingReply.setResponse(message);
-                node.getExecutionContext().addCallbackActivity(node.getIdentifier(), pingReply);
+                node.getExecutionContext().addPingActivity(node.getIdentifier(), pingReply);
 
             } catch (MalformedKeyException e) {
                 e.printStackTrace();
@@ -40,12 +41,14 @@ public class KademliaServerWorker {
             node.log((returnValue ? "FIND_VALUE" : "FIND_NODE") + " received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getFindRequest().getSearchHash());
 
             try {
-                RouterNode sender = new RouterNode(
+                RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
+                if(sender == null) sender = new RouterNode(
                     new NodeID(message.getOriginHash()),
                     InetAddress.getByName(message.getOriginIP()),
                     message.getOriginPort()
                 );
                 // TODO insert?
+                node.getRoutingTable().insert(sender);
 
                 FindActivity findNodeReply = new FindActivity(
                     node,
@@ -66,12 +69,14 @@ public class KademliaServerWorker {
         else if(message.hasStoreRequest()) {
             node.log("STORE received[" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getStoreRequest().getKey());
             try {
-                RouterNode sender = new RouterNode(
+                RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
+                if(sender == null) sender = new RouterNode(
                     new NodeID(message.getOriginHash()),
                     InetAddress.getByName(message.getOriginIP()),
                     message.getOriginPort()
                 );
                 // TODO insert?
+                node.getRoutingTable().insert(sender);
 
                 PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(node, sender, message.getStoreRequest().getKey(), message.getStoreRequest().getValue().toByteArray());
                 storeActivity.setResponse(message.getExchangeID());

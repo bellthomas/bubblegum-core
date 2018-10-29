@@ -41,26 +41,26 @@ public class PingActivity extends NetworkActivity {
         RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
         if(destination == null) {
             destination = this.to;
-            if(!isResponse) this.print("-------- No node in routing table");
-            else this.print("-------- Must reply to pings");
+//            if(!isResponse) this.print("-------- No node in routing table");
+//            else this.print("-------- Must reply to pings");
         }
         else {
-            if (!isResponse) this.print("-------- Found node in routing table, fresh: " + destination.isFresh());
-            else this.print("-------- Must reply to pings");
+//            if (!isResponse) this.print("-------- Found node in routing table, fresh: " + destination.isFresh());
+//            else this.print("-------- Must reply to pings");
         }
 
         // dest and to with different ip/port?
 
 
         if(this.isResponse) {
-            this.print("["+this.exchangeID+"] Replying to PING from " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
+            this.print("["+this.exchangeID+"] Replying to PING from " + this.networkID + ":" + destination.getNode());
         }
         else if(destination.isFresh()) {
-            this.onSuccess("Node fresh, PING not required for " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
+            this.onSuccess("Node fresh, PING not required for " + this.networkID + ":" + destination.getNode());
 //            return;
         }
         else {
-            this.print("Starting PING to " + destination.getIPAddress().getHostAddress() + ":" + destination.getPort());
+            this.print("Starting PING to " + this.networkID + ":" + destination.getNode());
         }
 
 

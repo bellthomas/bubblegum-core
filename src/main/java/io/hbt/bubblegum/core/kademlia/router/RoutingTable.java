@@ -5,7 +5,9 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode;
+import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
+import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -85,14 +87,35 @@ public final class RoutingTable {
 
     public void refreshBuckets() {
         this.self.log("Refreshing Buckets...");
-        int maximumNonEmptyBucket = this.self.getRoutingTable().getGreatestNonEmptyBucket();
+
+        LookupActivity lookupActivity = new LookupActivity(this.self, this.self.getNodeIdentifier(), 10, false);
+        lookupActivity.run();
+
+        int maximumNonEmptyBucket = this.self.getRoutingTable().getGreatestNonEmptyBucket() + 2; // TODO think about this
         NodeID searchKey;
         for(int i = 0; i < maximumNonEmptyBucket; i++) {
             searchKey = this.self.getNodeIdentifier().generateIDWithSharedPrefixLength(i);
-            Set<RouterNode> nodesToSearch = this.self.getRoutingTable().getNodesClosestToKey(searchKey, 5);
+            Set<RouterNode> nodesToSearch = this.self.getRoutingTable().getNodesClosestToKey(searchKey, 8);
             for(RouterNode node : nodesToSearch) {
-                FindActivity findActivity = new FindActivity(this.self, node, searchKey.toString(), false);
-                this.self.getExecutionContext().addActivity(this.self.getNodeIdentifier().toString(), findActivity);
+                LookupActivity lookupActivity1 = new LookupActivity(this.self, searchKey, 5, false);
+                this.self.getExecutionContext().addActivity(this.self.getIdentifier(), lookupActivity1);
+
+//                FindActivity findActivity = new FindActivity(this.self, node, searchKey.toString(), false);
+//                this.self.getExecutionContext().addActivity(this.self.getIdentifier(), () -> {
+//                    findActivity.run();
+//                    if(findActivity.getSuccess()) {
+//                        Set<KademliaNode> kNodes = findActivity.getFindNodeResults();
+//                        if(kNodes != null) {
+//                            for (KademliaNode kNode : kNodes) {
+//                                RouterNode localRNode = this.fromKademliaNode(kNode);
+//                                if (!localRNode.isFresh()) {
+//                                    PingActivity pingActivity = new PingActivity(this.self, localRNode);
+//                                    this.self.getExecutionContext().addPingActivity(this.self.getIdentifier(), pingActivity);
+//                                }
+//                            }
+//                        }
+//                    }
+//                });
             }
         }
     }
@@ -128,7 +151,13 @@ public final class RoutingTable {
         return bucket.getRouterNodeWithID(id);
     }
 
-    public RouterNode fromKademliaNode(BgKademliaNode.KademliaNode node) {
+    public int getSize() {
+        int i = 0;
+        for(RouterBucket bucket : this.buckets) i += bucket.getBucketSize();
+        return i;
+    }
+
+    public RouterNode fromKademliaNode(KademliaNode node) {
         try {
             NodeID id = new NodeID(node.getHash());
             RouterNode result = this.getRouterNodeForID(id);

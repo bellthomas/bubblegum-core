@@ -7,6 +7,7 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.KademliaServerWorker;
 import io.hbt.bubblegum.core.kademlia.NodeID;
+import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.DiscoveryActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
@@ -29,6 +30,7 @@ public class BubblegumServer {
     private int port;
     private InetAddress localAddress;
     private final DatagramSocket listeningSocket;
+    private ActivityExecutionContext executionContext;
 
     private static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // 64KB
 
@@ -37,16 +39,17 @@ public class BubblegumServer {
 
     private boolean alive = false;
     private Thread listenerThread;
-//    private static DatagramSocket sendingSocket;
+    private static DatagramSocket sendingSocket;
 
     private long packetsSent = 0;
     private long packetsReceived = 0;
 
-    public BubblegumServer(int port) throws BubblegumException {
+    public BubblegumServer(int port, ActivityExecutionContext executionContext) throws BubblegumException {
         this.port = port;
+        this.executionContext = executionContext;
 
         try {
-//            if(this.sendingSocket == null) this.sendingSocket = new DatagramSocket();
+            if(this.sendingSocket == null) this.sendingSocket = new DatagramSocket();
             this.listeningSocket = new DatagramSocket(this.port);
             this.port = this.listeningSocket.getLocalPort();
             this.alive = true;
@@ -91,63 +94,68 @@ public class BubblegumServer {
                 byte[] data = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
 
-                try {
-                    KademliaMessage message = KademliaMessage.parseFrom(data);
+                this.executionContext.addCallbackActivity("server", () -> {
+                    try {
+                        KademliaMessage message = KademliaMessage.parseFrom(data);
 
-                    if(message.hasDiscoveryRequest()) {
-                        if(this.recipients.size() > 0) {
-                            this.recipients.keySet();
-                            RouterNode sender = new RouterNode(
-                                new NodeID(message.getOriginHash()),
-                                InetAddress.getByName(message.getOriginIP()),
-                                message.getOriginPort()
-                            );
-
-                            String firstLocalID = (String)(this.recipients.keySet().toArray())[0];
-                            BubblegumNode firstLocal = this.recipients.get(firstLocalID);
-
-                            if(firstLocal != null) {
-                                DiscoveryActivity discover = new DiscoveryActivity(firstLocal, sender);
-                                discover.setResponse(message.getExchangeID(), this.recipients.keySet(), message.getOriginNetwork() + ":" + message.getOriginHash());
-                                firstLocal.getExecutionContext().addCallbackActivity(
-                                    "server",
-                                    () -> discover.run()
+                        if (message.hasDiscoveryRequest()) {
+                            if (this.recipients.size() > 0) {
+                                this.recipients.keySet();
+                                RouterNode sender = new RouterNode(
+                                    new NodeID(message.getOriginHash()),
+                                    InetAddress.getByName(message.getOriginIP()),
+                                    message.getOriginPort()
                                 );
+
+                                String firstLocalID = (String) (this.recipients.keySet().toArray())[0];
+                                BubblegumNode firstLocal = this.recipients.get(firstLocalID);
+
+                                if (firstLocal != null) {
+                                    DiscoveryActivity discover = new DiscoveryActivity(firstLocal, sender);
+                                    discover.setResponse(message.getExchangeID(), this.recipients.keySet(), message.getOriginNetwork() + ":" + message.getOriginHash());
+                                    firstLocal.getExecutionContext().addCallbackActivity(
+                                        "server",
+                                        () -> discover.run()
+                                    );
+                                }
                             }
                         }
-                    }
 
-                    else if(this.recipients.containsKey(message.getRecipient())) {
-                        // Pass to them
-                        BubblegumNode localRecipient = this.recipients.get(message.getRecipient());
+                        else if (this.recipients.containsKey(message.getRecipient())) {
+                            // Pass to them
+                            BubblegumNode localRecipient = this.recipients.get(message.getRecipient());
 
-                        if(this.responses.containsKey(localRecipient.getIdentifier() + ":" + message.getExchangeID())) {
-                            Consumer<KademliaMessage> callback = this.responses.remove(localRecipient.getIdentifier() + ":" + message.getExchangeID());
-                            if(callback != null) {
-                                localRecipient.getExecutionContext().addCallbackActivity(
+                            if (this.responses.containsKey(localRecipient.getIdentifier() + ":" + message.getExchangeID())) {
+                                Consumer<KademliaMessage> callback = this.responses.remove(localRecipient.getIdentifier() + ":" + message.getExchangeID());
+                                if (callback != null) {
+                                    localRecipient.getExecutionContext().addCallbackActivity(
+                                        localRecipient.getIdentifier(),
+                                        () -> callback.accept(message)
+                                    );
+                                }
+                            } else {
+                                // Create worker to handle
+                                localRecipient.getExecutionContext().addActivity(
                                     localRecipient.getIdentifier(),
-                                    () -> callback.accept(message)
+                                    () -> KademliaServerWorker.accept(localRecipient, message)
                                 );
                             }
                         }
 
+                        // else: drop
                         else {
-                            // Create worker to handle
-                            localRecipient.getExecutionContext().addActivity(
-                                localRecipient.getIdentifier(),
-                                () -> KademliaServerWorker.accept(localRecipient, message)
-                            );
+                            System.out.println("Dropped message to " + message.getRecipient());
                         }
+
+                    } catch (InvalidProtocolBufferException ipbe) {
+                        MessageLite ml = ipbe.getUnfinishedMessage();
+                        ipbe.printStackTrace();
+                    } catch (MalformedKeyException e) {
+                        e.printStackTrace();
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
                     }
-
-                    // else: drop
-
-                } catch (InvalidProtocolBufferException ipbe) {
-                    MessageLite ml = ipbe.getUnfinishedMessage();
-                    ipbe.printStackTrace();
-                } catch (MalformedKeyException e) {
-                    e.printStackTrace();
-                }
+                });
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -157,17 +165,17 @@ public class BubblegumServer {
 
 
     public void sendDatagram(BubblegumNode localNode, RouterNode node, KademliaMessage payload, Consumer<KademliaMessage> callback) {
-//        synchronized (this.sendingSocket) {
+        synchronized (this.sendingSocket) {
             try {
                 if (callback != null) this.responses.put(localNode.getIdentifier() + ":" + payload.getExchangeID(), callback);
 
                 DatagramPacket packet = new DatagramPacket(payload.toByteArray(), payload.toByteArray().length, node.getIPAddress(), node.getPort());
-//                if (this.sendingSocket == null) {
-//                    if(!this.sendingSocket.isConnected() || this.sendingSocket.isClosed()) this.sendingSocket.close();
-//                    this.sendingSocket = new DatagramSocket();
-//                }
-//                this.sendingSocket.send(packet);
-                new DatagramSocket().send(packet);
+                if (this.sendingSocket == null) {
+                    if(!this.sendingSocket.isConnected() || this.sendingSocket.isClosed()) this.sendingSocket.close();
+                    this.sendingSocket = new DatagramSocket();
+                }
+                this.sendingSocket.send(packet);
+//                new DatagramSocket().send(packet);
                 this.packetsSent++;
 
             } catch (SocketException e) {
@@ -177,7 +185,7 @@ public class BubblegumServer {
                 System.out.println("[Socket Failure] " + e.getMessage());
 //                e.printStackTrace();
             }
-//        }
+        }
     }
 
     public void removeCallback(String exchangeID) {

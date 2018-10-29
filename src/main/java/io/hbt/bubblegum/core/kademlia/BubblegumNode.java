@@ -79,11 +79,11 @@ public class BubblegumNode {
 
         // Setup bucket refreshes
         this.internalScheduler.scheduleAtFixedRate(
-                () -> {
-                    this.log("[Scheduled] Saving router snapshot");
-                    this.executionContext.addActivity(this.getNodeIdentifier().toString(), () -> this.routingTable.refreshBuckets());
-                },
-                5, 5, TimeUnit.MINUTES
+            () -> {
+                this.log("[Scheduled] Saving router snapshot");
+                this.executionContext.addActivity(this.getNodeIdentifier().toString(), () -> this.routingTable.refreshBuckets());
+            },
+            1, 1, TimeUnit.MINUTES
         );
 
         // Refresh/delete content as it expires

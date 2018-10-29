@@ -36,7 +36,7 @@ public class Bubblegum {
             this.initialiseIPAddress();
             this.initialiseSocialIdentity();
             this.executionContext = new ActivityExecutionContext(0);
-            this.server = new BubblegumServer(50001);
+            this.server = new BubblegumServer(50001, this.executionContext);
             this.nodes = new HashMap<>();
 
             this.loadNodes();

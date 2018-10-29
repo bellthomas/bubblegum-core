@@ -106,7 +106,11 @@ public class FindActivity extends NetworkActivity {
                     // Only ping if not found or stale
                     RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
                     if(destination == null || !destination.isFresh()) {
-                        PingActivity nodePing = new PingActivity(this.localNode, this.localNode.getRoutingTable().fromKademliaNode(node));
+                        PingActivity nodePing = new PingActivity(
+                            this.localNode,
+                            this.localNode.getRoutingTable().fromKademliaNode(node),
+                            kademliaMessage.getOriginNetwork() + ":" + node.getHash()
+                        );
                         this.localNode.getExecutionContext().addPingActivity(this.localNode.getNodeIdentifier().toString(), nodePing);
                     }
                 }
@@ -123,6 +127,7 @@ public class FindActivity extends NetworkActivity {
                 byte[] value = findValueResponse.getValue().toByteArray();
                 this.value = value;
                 this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + value.length + " bytes");
+                this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
                 this.onSuccess();
             }
             else {
@@ -132,7 +137,7 @@ public class FindActivity extends NetworkActivity {
         };
 
         if(message != null) this.server.sendDatagram(this.localNode, this.to, message, callback);
-        else System.out.println("No message sent");
+
         if(!this.isResponse) this.timeoutOnComplete();
         else this.onSuccess();
     }
