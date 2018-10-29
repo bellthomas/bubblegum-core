@@ -9,6 +9,9 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
+import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
+import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
+import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
@@ -24,7 +27,7 @@ public class Bubblegum {
     private InetAddress ipAddress;
     private SocialIdentity socialIdentity;
     private ActivityExecutionContext executionContext;
-    private BubblegumServer server;
+    private ArrayList<BubblegumCell> cells;
     private HashMap<String, BubblegumNode> nodes;
 
     private boolean isAlive = false;
@@ -36,15 +39,16 @@ public class Bubblegum {
             this.initialiseIPAddress();
             this.initialiseSocialIdentity();
             this.executionContext = new ActivityExecutionContext(0);
-            this.server = new BubblegumServer(50001, this.executionContext);
+            this.cells = new ArrayList<>();
             this.nodes = new HashMap<>();
 
-            this.loadNodes();
+            //this.loadNodes();
             this.isAlive = true;
 
-        } catch (AddressInitialisationException e) {
-            System.out.println("Failed to start network");
-        } catch (BubblegumException e) {
+//        } catch (AddressInitialisationException e) {
+//            System.out.println("Failed to start network");
+        }
+        catch (BubblegumException e) {
             e.printStackTrace();
         }
     }
@@ -63,10 +67,9 @@ public class Bubblegum {
                 reloadedNodeBuilder.setPort(network.port);
                 reloadedNodeBuilder.setSocialIdentity(this.socialIdentity);
                 reloadedNodeBuilder.setExecutionContext(this.executionContext);
-                reloadedNodeBuilder.setServer(this.server);
                 reloadedNodeBuilder.setLogger(LoggingManager.getLogger(network.id));
+                BubblegumNode reloadedNode = this.insertIntoCell(reloadedNodeBuilder);
 
-                BubblegumNode reloadedNode = reloadedNodeBuilder.build();
                 newProcesses++;
                 this.nodes.put(network.id, reloadedNode);
             }
@@ -105,10 +108,9 @@ public class Bubblegum {
         newNodeBuilder.setIdentifier(identifier.toString());
         newNodeBuilder.setSocialIdentity(this.socialIdentity);
         newNodeBuilder.setExecutionContext(this.executionContext);
-        newNodeBuilder.setServer(this.server);
         newNodeBuilder.setLogger(LoggingManager.getLogger(identifier.toString()));
+        BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
 
-        BubblegumNode newNode = newNodeBuilder.build();
         this.nodes.put(identifier.toString(), newNode);
         MasterDatabase mdb = MasterDatabase.getInstance();
         mdb.updateNetwork(newNode);
@@ -117,6 +119,29 @@ public class Bubblegum {
 
     private void initialiseSocialIdentity() {
         this.socialIdentity = new SocialIdentity();
+    }
+
+    private BubblegumNode insertIntoCell(BubblegumNode.Builder node) {
+        BubblegumNode result = null;
+        int i = 0;
+        while(result == null && i < this.cells.size()) {
+            result = this.cells.get(i).registerNode(node);
+            i++;
+        }
+
+        if(result == null) {
+            // Need to create new cell
+            try {
+                BubblegumCell newCell = new BubblegumCell(0, this.executionContext);
+                this.cells.add(newCell);
+                result = newCell.registerNode(node);
+
+            } catch (BubblegumException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return result;
     }
 
     /* API */
@@ -132,6 +157,34 @@ public class Bubblegum {
     public void reset() {
         MasterDatabase.getInstance().resetDatabases();
         this.nodes.clear();
+    }
+
+
+    public static void main(String[] args) {
+        Bubblegum bb = new Bubblegum();
+        BubblegumNode _1 = bb.createNode();
+        System.out.println("1: " + _1.getIdentifier());
+        BubblegumNode _2 = bb.createNode();
+        System.out.println("2: " + _2.getIdentifier());
+        BubblegumNode _3 = bb.createNode();
+        System.out.println("3: " + _2.getIdentifier());
+        BubblegumNode _4 = bb.createNode();
+        System.out.println("4: " + _2.getIdentifier());
+
+        PingActivity pingActivity = new PingActivity(_1, new RouterNode(_2.getNodeIdentifier(), _2.getServer().getLocal(), _2.getServer().getPort()), _2.getRecipientID());
+        pingActivity.run();
+//        if(pingActivity.getSuccess())
+
+        PingActivity pingActivity2 = new PingActivity(_1, new RouterNode(_3.getNodeIdentifier(), _3.getServer().getLocal(), _3.getServer().getPort()), _3.getRecipientID());
+        pingActivity2.run();
+
+        PingActivity pingActivity3 = new PingActivity(_1, new RouterNode(_4.getNodeIdentifier(), _4.getServer().getLocal(), _4.getServer().getPort()), _4.getRecipientID());
+        pingActivity3.run();
+
+        LookupActivity lookupActivity = new LookupActivity(_1, _1.getNodeIdentifier(), 5, false);
+        lookupActivity.run();
+
+        System.out.println();
     }
 
 

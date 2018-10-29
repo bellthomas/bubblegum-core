@@ -28,8 +28,10 @@ public class BootstrapActivity extends NetworkActivity {
 
         if(ping.getComplete()) {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
-            if(ping.getNetworkID() != null) this.networkIDUpdate.accept(ping.getNetworkID());
-            this.server.registerNewLocalNode(this.localNode);
+            if(ping.getNetworkID() != null) {
+                this.networkIDUpdate.accept(ping.getNetworkID());
+                this.server.registerNewLocalNode(this.localNode);
+            }
             // TODO delete old one
 
             LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getNodeIdentifier(), 10, false);

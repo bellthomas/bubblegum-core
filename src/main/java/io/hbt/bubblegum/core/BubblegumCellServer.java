@@ -25,7 +25,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class BubblegumServer {
+public class BubblegumCellServer {
 
     private int port;
     private InetAddress localAddress;
@@ -44,7 +44,7 @@ public class BubblegumServer {
     private long packetsSent = 0;
     private long packetsReceived = 0;
 
-    public BubblegumServer(int port, ActivityExecutionContext executionContext) throws BubblegumException {
+    public BubblegumCellServer(int port, ActivityExecutionContext executionContext) throws BubblegumException {
         this.port = port;
         this.executionContext = executionContext;
 

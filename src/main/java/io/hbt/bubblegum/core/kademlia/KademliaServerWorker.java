@@ -27,7 +27,7 @@ public class KademliaServerWorker {
 
                 PingActivity pingReply = new PingActivity(node, sender, message.getOriginNetwork() + ":" + message.getOriginHash());
                 pingReply.setResponse(message);
-                node.getExecutionContext().addPingActivity(node.getIdentifier(), pingReply);
+                node.getExecutionContext().addCallbackActivity(node.getIdentifier(), pingReply);
 
             } catch (MalformedKeyException e) {
                 e.printStackTrace();

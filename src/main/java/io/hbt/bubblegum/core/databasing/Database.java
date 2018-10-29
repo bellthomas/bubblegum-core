@@ -15,15 +15,15 @@ public class Database {
     public Database(BubblegumNode localNode) {
         this.localNode = localNode;
 
-        Connection connection = null;
-        try
-        {
-            this.checkDatabasesDirectory();
-
+//        Connection connection = null;
+//        try
+//        {
+//            this.checkDatabasesDirectory();
+//
             // create a databasing connection
-            connection = DriverManager.getConnection("jdbc:sqlite:.databases/" + this.localNode.getNodeIdentifier().toString() + ".db");
-            Statement statement = connection.createStatement();
-            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+//            connection = DriverManager.getConnection("jdbc:sqlite:.databases/" + this.localNode.getNodeIdentifier().toString() + ".db");
+//            Statement statement = connection.createStatement();
+//            statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
 //            statement.executeUpdate("drop table if exists person");
 //            statement.executeUpdate("create table person (id integer, name string)");
@@ -36,25 +36,25 @@ public class Database {
 //                System.out.println("name = " + rs.getString("name"));
 //                System.out.println("id = " + rs.getInt("id"));
 //            }
-        }
-        catch(SQLException e)
-        {
-            // if the error message is "out of memory",
-            // it probably means no databasing file is found
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
-        finally
-        {
-            try {
-                if(connection != null) connection.close();
-            }
-            catch(SQLException e) {
-                // connection close failed.
-                System.err.println(e);
-                e.printStackTrace();
-            }
-        }
+//        }
+//        catch(SQLException e)
+//        {
+//            // if the error message is "out of memory",
+//            // it probably means no databasing file is found
+//            System.err.println(e.getMessage());
+//            e.printStackTrace();
+//        }
+//        finally
+//        {
+//            try {
+//                if(connection != null) connection.close();
+//            }
+//            catch(SQLException e) {
+//                // connection close failed.
+//                System.err.println(e);
+//                e.printStackTrace();
+//            }
+//        }
 
     }
 

@@ -1,6 +1,6 @@
 package io.hbt.bubblegum.core.kademlia;
 
-import io.hbt.bubblegum.core.BubblegumServer;
+import io.hbt.bubblegum.core.BubblegumCellServer;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.logging.Logger;
 import io.hbt.bubblegum.core.databasing.Database;
@@ -31,7 +31,7 @@ public class BubblegumNode {
     private SocialIdentity socialIdentity;
     private NodeID nodeIdentifier;
     private RoutingTable routingTable;
-    private BubblegumServer server;
+    private BubblegumCellServer server;
     private ActivityExecutionContext executionContext;
     private Database db;
     private Logger logger;
@@ -42,7 +42,7 @@ public class BubblegumNode {
         String networkIdentifier,
         SocialIdentity socialIdentity,
         ActivityExecutionContext context,
-        BubblegumServer server,
+        BubblegumCellServer server,
         Logger logger,
         NodeID nid,
         int port
@@ -161,7 +161,7 @@ public class BubblegumNode {
         return this.executionContext;
     }
 
-    public BubblegumServer getServer() {
+    public BubblegumCellServer getServer() {
         return this.server;
     }
 
@@ -212,7 +212,7 @@ public class BubblegumNode {
         private SocialIdentity socialIdentity;
         private NodeID nodeIdentifier;
         private ActivityExecutionContext executionContext;
-        private BubblegumServer server;
+        private BubblegumCellServer server;
         private Logger logger;
         private int port = 0;
 
@@ -241,7 +241,7 @@ public class BubblegumNode {
             return this;
         }
 
-        public Builder setServer(BubblegumServer server) {
+        public Builder setServer(BubblegumCellServer server) {
             this.server = server;
             return this;
         }
