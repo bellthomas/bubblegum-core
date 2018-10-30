@@ -21,19 +21,19 @@ public class ActivityExecutionContext {
         double parallelismTotal = GENERAL_ACTIVITY_PARALLELISM + CALLBACK_ACTIVITY_PARALLELISM + PING_ACTIVITY_PARALLELISM;
 
         this.activityManager = new ActivityExecutionManager(
-                numProcesses, GENERAL_ACTIVITY_PARALLELISM,
-                (int)((GENERAL_ACTIVITY_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
+            numProcesses, GENERAL_ACTIVITY_PARALLELISM,
+            (int)((GENERAL_ACTIVITY_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
         );
 
         this.callbackManager = new ActivityExecutionManager(
-                numProcesses, CALLBACK_ACTIVITY_PARALLELISM,
-                (int)((CALLBACK_ACTIVITY_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
+            numProcesses, CALLBACK_ACTIVITY_PARALLELISM,
+            (int)((CALLBACK_ACTIVITY_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
         );
 
         this.pingManager = new ActivityExecutionManager(
-                numProcesses,
-                PING_ACTIVITY_PARALLELISM,
-                (int)((PING_ACTIVITY_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
+            numProcesses,
+            PING_ACTIVITY_PARALLELISM,
+            (int)((PING_ACTIVITY_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
         );
     }
 

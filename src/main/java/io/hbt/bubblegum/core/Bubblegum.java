@@ -167,22 +167,22 @@ public class Bubblegum {
         BubblegumNode _2 = bb.createNode();
         System.out.println("2: " + _2.getIdentifier());
         BubblegumNode _3 = bb.createNode();
-        System.out.println("3: " + _2.getIdentifier());
+        System.out.println("3: " + _3.getIdentifier());
         BubblegumNode _4 = bb.createNode();
-        System.out.println("4: " + _2.getIdentifier());
+        System.out.println("4: " + _4.getIdentifier());
 
-        PingActivity pingActivity = new PingActivity(_1, new RouterNode(_2.getNodeIdentifier(), _2.getServer().getLocal(), _2.getServer().getPort()), _2.getRecipientID());
-        pingActivity.run();
-//        if(pingActivity.getSuccess())
-
-        PingActivity pingActivity2 = new PingActivity(_1, new RouterNode(_3.getNodeIdentifier(), _3.getServer().getLocal(), _3.getServer().getPort()), _3.getRecipientID());
-        pingActivity2.run();
-
-        PingActivity pingActivity3 = new PingActivity(_1, new RouterNode(_4.getNodeIdentifier(), _4.getServer().getLocal(), _4.getServer().getPort()), _4.getRecipientID());
-        pingActivity3.run();
-
-        LookupActivity lookupActivity = new LookupActivity(_1, _1.getNodeIdentifier(), 5, false);
-        lookupActivity.run();
+//        PingActivity pingActivity = new PingActivity(_1, new RouterNode(_2.getNodeIdentifier(), _2.getServer().getLocal(), _2.getServer().getPort()), _2.getRecipientID());
+////        pingActivity.run();
+//////        if(pingActivity.getSuccess())
+////
+////        PingActivity pingActivity2 = new PingActivity(_1, new RouterNode(_3.getNodeIdentifier(), _3.getServer().getLocal(), _3.getServer().getPort()), _3.getRecipientID());
+////        pingActivity2.run();
+////
+////        PingActivity pingActivity3 = new PingActivity(_1, new RouterNode(_4.getNodeIdentifier(), _4.getServer().getLocal(), _4.getServer().getPort()), _4.getRecipientID());
+////        pingActivity3.run();
+////
+////        LookupActivity lookupActivity = new LookupActivity(_1, _1.getNodeIdentifier(), 5, false);
+////        lookupActivity.run();
 
         System.out.println();
     }

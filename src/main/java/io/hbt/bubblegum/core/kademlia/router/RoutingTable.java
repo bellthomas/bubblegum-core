@@ -88,8 +88,8 @@ public final class RoutingTable {
     public void refreshBuckets() {
         this.self.log("Refreshing Buckets...");
 
-        LookupActivity lookupActivity = new LookupActivity(this.self, this.self.getNodeIdentifier(), 10, false);
-        lookupActivity.run();
+//        LookupActivity lookupActivity = new LookupActivity(this.self, this.self.getNodeIdentifier(), 10, false);
+//        lookupActivity.run();
 
         int maximumNonEmptyBucket = this.self.getRoutingTable().getGreatestNonEmptyBucket() + 2; // TODO think about this
         NodeID searchKey;
@@ -99,23 +99,6 @@ public final class RoutingTable {
             for(RouterNode node : nodesToSearch) {
                 LookupActivity lookupActivity1 = new LookupActivity(this.self, searchKey, 5, false);
                 this.self.getExecutionContext().addActivity(this.self.getIdentifier(), lookupActivity1);
-
-//                FindActivity findActivity = new FindActivity(this.self, node, searchKey.toString(), false);
-//                this.self.getExecutionContext().addActivity(this.self.getIdentifier(), () -> {
-//                    findActivity.run();
-//                    if(findActivity.getSuccess()) {
-//                        Set<KademliaNode> kNodes = findActivity.getFindNodeResults();
-//                        if(kNodes != null) {
-//                            for (KademliaNode kNode : kNodes) {
-//                                RouterNode localRNode = this.fromKademliaNode(kNode);
-//                                if (!localRNode.isFresh()) {
-//                                    PingActivity pingActivity = new PingActivity(this.self, localRNode);
-//                                    this.self.getExecutionContext().addPingActivity(this.self.getIdentifier(), pingActivity);
-//                                }
-//                            }
-//                        }
-//                    }
-//                });
             }
         }
     }

@@ -6,6 +6,7 @@ import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 
 public class StoreActivity extends SystemActivity {
@@ -21,12 +22,14 @@ public class StoreActivity extends SystemActivity {
 
     @Override
     public void run() {
+        this.print("\n\nStarting STORE");
         try {
             NodeID storeIdentifier = new NodeID(key);
             LookupActivity lookupActivity = new LookupActivity(this.localNode, storeIdentifier, 5, false);
             lookupActivity.run();
 
             if(lookupActivity.getComplete() && lookupActivity.getSuccess()) {
+                this.print("LOOKUP completed\n");
                 // was a success
                 Set<RouterNode> results = lookupActivity.getClosestNodes();
                 if(!results.isEmpty()) {

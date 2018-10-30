@@ -128,17 +128,11 @@ public class BubblegumCellServer {
                             if (this.responses.containsKey(localRecipient.getIdentifier() + ":" + message.getExchangeID())) {
                                 Consumer<KademliaMessage> callback = this.responses.remove(localRecipient.getIdentifier() + ":" + message.getExchangeID());
                                 if (callback != null) {
-                                    localRecipient.getExecutionContext().addCallbackActivity(
-                                        localRecipient.getIdentifier(),
-                                        () -> callback.accept(message)
-                                    );
+                                    callback.accept(message);
                                 }
                             } else {
                                 // Create worker to handle
-                                localRecipient.getExecutionContext().addActivity(
-                                    localRecipient.getIdentifier(),
-                                    () -> KademliaServerWorker.accept(localRecipient, message)
-                                );
+                                KademliaServerWorker.accept(localRecipient, message);
                             }
                         }
 

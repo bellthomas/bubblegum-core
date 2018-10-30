@@ -15,7 +15,7 @@ public class KademliaServerWorker {
     public static void accept(BubblegumNode node, KademliaMessage message) {
 
         if(message.hasPingMessage() && !message.getPingMessage().getReply()) {
-            node.log("PING received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]");
+//            node.log("PING received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]");
             try {
                 RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
                 if(sender == null) sender = new RouterNode(
@@ -38,7 +38,7 @@ public class KademliaServerWorker {
 
         else if(message.hasFindRequest()) {
             boolean returnValue = message.getFindRequest().getReturnValue();
-            node.log((returnValue ? "FIND_VALUE" : "FIND_NODE") + " received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getFindRequest().getSearchHash());
+//            node.log((returnValue ? "FIND_VALUE" : "FIND_NODE") + " received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getFindRequest().getSearchHash());
 
             try {
                 RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
@@ -67,7 +67,7 @@ public class KademliaServerWorker {
         }
 
         else if(message.hasStoreRequest()) {
-            node.log("STORE received[" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getStoreRequest().getKey());
+//            node.log("STORE received[" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getStoreRequest().getKey());
             try {
                 RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
                 if(sender == null) sender = new RouterNode(

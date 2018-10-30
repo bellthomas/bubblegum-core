@@ -98,6 +98,7 @@ public final class RouterBucket {
         else {
             HashSet<RouterNode> result = new HashSet<>();
             result.addAll(this.activeBucket);
+            result.addAll(this.replacements);
             return result;
         }
     }
@@ -118,7 +119,7 @@ public final class RouterBucket {
     }
 
     public int getBucketSize() {
-        return this.activeNodes;
+        return this.activeNodes + this.replacementNodes;
     }
 
     public int getPrefixLength() {

@@ -29,6 +29,11 @@ public abstract class NetworkActivity extends SystemActivity {
         this.currentTry = 1;
     }
 
+    @Override
+    protected void print(String msg) {
+        if(!isResponse) super.print(msg);
+    }
+
     public void setResponse(String responseID) {
         this.isResponse = true;
         this.exchangeID = responseID;

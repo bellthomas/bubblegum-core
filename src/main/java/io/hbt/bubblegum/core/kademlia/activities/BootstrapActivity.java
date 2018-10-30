@@ -26,14 +26,18 @@ public class BootstrapActivity extends NetworkActivity {
 
         this.print("Bootstrap: Finished Initial Ping");
 
-        if(ping.getComplete()) {
+        if(ping.getSuccess()) {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
             if(ping.getNetworkID() != null) {
                 this.networkIDUpdate.accept(ping.getNetworkID());
                 this.server.registerNewLocalNode(this.localNode);
             }
+            else {
+                this.print("Network ID from PING null");
+            }
             // TODO delete old one
 
+            this.print("Starting lookup");
             LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getNodeIdentifier(), 10, false);
             lookupActivity.run();
 

@@ -8,7 +8,7 @@ import java.util.HashSet;
 
 public class BubblegumCell {
 
-    public final static int CELL_SIZE = 3;
+    public final static int CELL_SIZE = 25;
     private BubblegumCellServer server;
     private ActivityExecutionContext executionContext;
     private HashSet<BubblegumNode> nodes;

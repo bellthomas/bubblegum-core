@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 public class FindActivity extends NetworkActivity {
 
     private final String search;
-    private final Set<KademliaNode> resultNodes = new HashSet<>();
+    private final Set<RouterNode> resultNodes = new HashSet<>();
     private KademliaFindRequest request;
     private String requestingHash;
     private boolean returnValue;
@@ -82,7 +82,7 @@ public class FindActivity extends NetworkActivity {
         }
         else {
             this.print("Starting " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + "(" + this.search + ") activity to "
-                    + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
+                    + this.localNode.getNetworkIdentifier() + ":" + this.to.getNode());
 
 
             message = ProtobufHelper.buildFindRequest(
@@ -104,19 +104,11 @@ public class FindActivity extends NetworkActivity {
                     logMessage.append("- " + node.getHash() + " @ " + node.getIpAddress() + ":" + node.getPort() + "\n");
 
                     // Only ping if not found or stale
-                    RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
-                    if(destination == null || !destination.isFresh()) {
-                        PingActivity nodePing = new PingActivity(
-                            this.localNode,
-                            this.localNode.getRoutingTable().fromKademliaNode(node),
-                            kademliaMessage.getOriginNetwork() + ":" + node.getHash()
-                        );
-                        this.localNode.getExecutionContext().addPingActivity(this.localNode.getNodeIdentifier().toString(), nodePing);
-                    }
+                    RouterNode destination = this.routingTable.fromKademliaNode(node);
+                    this.resultNodes.add(destination);
                 }
 
-                this.print(logMessage.toString());
-                this.resultNodes.addAll(response.getResultsList());
+//                this.print(logMessage.toString());
                 this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
                 this.onSuccess();
 
@@ -162,7 +154,7 @@ public class FindActivity extends NetworkActivity {
         }
     }
 
-    public Set<KademliaNode> getFindNodeResults() {
+    public Set<RouterNode> getFindNodeResults() {
         return this.resultNodes;
     }
 
@@ -172,5 +164,14 @@ public class FindActivity extends NetworkActivity {
 
     public RouterNode getDestination() {
         return this.to;
+    }
+
+    public void pingToValidate() {
+        if(this.resultNodes != null) {
+            for(RouterNode node : this.resultNodes) {
+                PingActivity nodePing = new PingActivity(this.localNode, node); // kademliaMessage.getOriginNetwork() + ":" + node.getHash()
+                this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier(), nodePing);
+            }
+        }
     }
 }
