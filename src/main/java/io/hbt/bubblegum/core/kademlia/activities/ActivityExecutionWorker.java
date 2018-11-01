@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import co.paralleluniverse.fibers.Fiber;
 import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionManager.WorkItem;
 
@@ -8,7 +9,7 @@ public class ActivityExecutionWorker {
 
     private final ActivityExecutionManager manager;
     private final ConcurrentBlockingQueue<WorkItem> queue;
-    private final Thread executionContext;
+    private final Fiber executionContext;
     private final int id;
     private boolean alive = true;
 
@@ -16,8 +17,8 @@ public class ActivityExecutionWorker {
         this.manager = manager;
         this.id = id;
         this.queue = queue;
-        this.executionContext = new Thread(() -> this.start());
-        this.executionContext.setDaemon(true);
+        this.executionContext = new Fiber<>(() -> this.start());
+//        this.executionContext.setDaemon(true);
         this.executionContext.start();
     }
 

@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.BubblegumCellServer;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.logging.Logger;
@@ -103,6 +104,7 @@ public class BubblegumNode {
         return nodeIdentifier.toString();
     }
 
+    @Suspendable
     public boolean bootstrap(InetAddress address, int port, String foreignRecipient) {
 
         RouterNode to = new RouterNode(new NodeID(), address, port);

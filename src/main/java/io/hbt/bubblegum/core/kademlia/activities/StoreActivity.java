@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
@@ -21,6 +22,7 @@ public class StoreActivity extends SystemActivity {
     }
 
     @Override
+    @Suspendable
     public void run() {
         this.print("\n\nStarting STORE");
         try {

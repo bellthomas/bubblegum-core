@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -35,6 +36,7 @@ public class PingActivity extends NetworkActivity {
 
 
     @Override
+    @Suspendable
     public void run() {
 
         // Get real RouterNode if we have one

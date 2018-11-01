@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core;
 
+import co.paralleluniverse.fibers.Fiber;
 import io.hbt.bubblegum.core.auxiliary.NetworkDetails;
 import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
 import io.hbt.bubblegum.core.databasing.MasterDatabase;
@@ -161,15 +162,17 @@ public class Bubblegum {
 
 
     public static void main(String[] args) {
-        Bubblegum bb = new Bubblegum();
-        BubblegumNode _1 = bb.createNode();
-        System.out.println("1: " + _1.getIdentifier());
-        BubblegumNode _2 = bb.createNode();
-        System.out.println("2: " + _2.getIdentifier());
-        BubblegumNode _3 = bb.createNode();
-        System.out.println("3: " + _3.getIdentifier());
-        BubblegumNode _4 = bb.createNode();
-        System.out.println("4: " + _4.getIdentifier());
+
+
+//        Bubblegum bb = new Bubblegum();
+//        BubblegumNode _1 = bb.createNode();
+//        System.out.println("1: " + _1.getIdentifier());
+//        BubblegumNode _2 = bb.createNode();
+//        System.out.println("2: " + _2.getIdentifier());
+//        BubblegumNode _3 = bb.createNode();
+//        System.out.println("3: " + _3.getIdentifier());
+//        BubblegumNode _4 = bb.createNode();
+//        System.out.println("4: " + _4.getIdentifier());
 
 //        PingActivity pingActivity = new PingActivity(_1, new RouterNode(_2.getNodeIdentifier(), _2.getServer().getLocal(), _2.getServer().getPort()), _2.getRecipientID());
 ////        pingActivity.run();
@@ -184,7 +187,7 @@ public class Bubblegum {
 ////        LookupActivity lookupActivity = new LookupActivity(_1, _1.getNodeIdentifier(), 5, false);
 ////        lookupActivity.run();
 
-        System.out.println();
+//        System.out.println();
     }
 
 

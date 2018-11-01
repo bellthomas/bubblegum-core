@@ -8,7 +8,10 @@ import java.util.HashSet;
 
 public class BubblegumCell {
 
-    public final static int CELL_SIZE = 25;
+    private static final int MAX_CELLS = 300;
+    private static int cellSize = 1;
+    private static int totalNodes = 0;
+
     private BubblegumCellServer server;
     private ActivityExecutionContext executionContext;
     private HashSet<BubblegumNode> nodes;
@@ -20,10 +23,12 @@ public class BubblegumCell {
     }
 
     public synchronized BubblegumNode registerNode(BubblegumNode.Builder node) {
-        if(this.nodes.size() < BubblegumCell.CELL_SIZE) {
+        if(this.nodes.size() < BubblegumCell.cellSize) {
             node.setServer(this.server);
             BubblegumNode finalNode = node.build();
             this.nodes.add(finalNode);
+            totalNodes++;
+            cellSize = Math.floorDiv(MAX_CELLS + totalNodes, MAX_CELLS);
             return finalNode;
         }
 

@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core;
 
+import co.paralleluniverse.fibers.Suspendable;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
@@ -157,11 +158,17 @@ public class BubblegumCellServer {
         }
     }
 
-
     public void sendDatagram(BubblegumNode localNode, RouterNode node, KademliaMessage payload, Consumer<KademliaMessage> callback) {
         synchronized (this.sendingSocket) {
             try {
-                if (callback != null) this.responses.put(localNode.getIdentifier() + ":" + payload.getExchangeID(), callback);
+                if (callback != null) {
+//                    System.out.println(this.responses == null);
+//                    System.out.println(localNode == null);
+//                    System.out.println(localNode.getIdentifier() == null);
+//                    System.out.println(payload == null);
+//                    System.out.println(payload.getExchangeID() == null);
+                    this.responses.put(localNode.getIdentifier() + ":" + payload.getExchangeID(), callback);
+                }
 
                 DatagramPacket packet = new DatagramPacket(payload.toByteArray(), payload.toByteArray().length, node.getIPAddress(), node.getPort());
                 if (this.sendingSocket == null) {

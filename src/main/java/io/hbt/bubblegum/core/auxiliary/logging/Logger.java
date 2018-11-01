@@ -15,16 +15,16 @@ public class Logger {
     }
 
     public synchronized void logMessage(String message) {
-        try (FileOutputStream fos = new FileOutputStream(this.f,true)) {
-            try (PrintWriter out = new PrintWriter(fos)) {
-                DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-                Date date = new Date();
-                out.println("[" + dateFormat.format(date) + "] " + message);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try (FileOutputStream fos = new FileOutputStream(this.f,true)) {
+//            try (PrintWriter out = new PrintWriter(fos)) {
+//                DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+//                Date date = new Date();
+//                out.println("[" + dateFormat.format(date) + "] " + message);
+//            }
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }
