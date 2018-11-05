@@ -61,7 +61,7 @@ public class BubblegumNode {
 
         this.routingTable = new RoutingTable(this);
         this.db = Database.getInstance();
-        this.db.add(nid.toString(), new byte[] {0x01}); // responds only to self
+        this.db.add(this.identifier, nid.toString(), new byte[] {0x01}); // responds only to self
 
         this.setupInternalScheduling();
 
@@ -183,11 +183,11 @@ public class BubblegumNode {
 
     /* Database */
     public boolean databaseHasKey(String key) {
-        return this.db.hasKey(key);
+        return this.db.hasKey(this.identifier, key);
     }
 
     public byte[] databaseRetrieveValue(String key) {
-        return this.db.valueForKey(key);
+        return this.db.valueForKey(this.identifier, key);
     }
 
     public Post savePost(String content) {

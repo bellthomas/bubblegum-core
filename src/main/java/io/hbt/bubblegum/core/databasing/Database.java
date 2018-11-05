@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Database {
 
-    private HashMap<String, byte[]> db;
+    private HashMap<String, HashMap<String, byte[]>> db;
 
     private static Database instance;
     private static ContentDatabase cdbInstance;
@@ -72,16 +72,19 @@ public class Database {
 
     }
 
-    public boolean hasKey(String key) {
-        return this.db.containsKey(key);
+    public boolean hasKey(String node, String key) {
+        if(!this.db.containsKey(node)) return false;
+        else return this.db.get(node).containsKey(key);
     }
 
-    public byte[] valueForKey(String key) {
-        return this.db.get(key);
+    public byte[] valueForKey(String node, String key) {
+        if(!this.db.containsKey(node)) return null;
+        else return this.db.get(node).get(key);
     }
 
-    public boolean add(String key, byte[] value) {
-        this.db.put(key, value);
+    public boolean add(String node, String key, byte[] value) {
+        if(!this.db.containsKey(node)) this.db.put(node, new HashMap<>());
+        this.db.get(node).put(key, value);
         this.print("[Database] Saved " + key + " -> " + Arrays.toString(value));
         return true;
     }
