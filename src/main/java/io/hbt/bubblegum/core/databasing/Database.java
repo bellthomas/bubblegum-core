@@ -6,14 +6,28 @@ import java.io.File;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class Database {
 
-    private HashMap<String, byte[]> db = new HashMap<>();
-    private BubblegumNode localNode;
+    private HashMap<String, byte[]> db;
+
+    private static Database instance;
+    private static ContentDatabase cdbInstance;
+
+    protected static final String DB_FOLDER_PATH = ".databases/";
+
+    private Database() {
+        this.db = new HashMap<>();
+        Database.cdbInstance = ContentDatabase.getInstance();
+    }
+
+    public synchronized static Database getInstance() {
+        if(Database.instance == null) Database.instance = new Database();
+        return Database.instance;
+    }
 
     public Database(BubblegumNode localNode) {
-        this.localNode = localNode;
 
 //        Connection connection = null;
 //        try
@@ -72,12 +86,24 @@ public class Database {
         return true;
     }
 
+    public Post savePost(BubblegumNode node, String content) {
+        return Database.cdbInstance.savePost(node, content);
+    }
+
+    public Post getPost(BubblegumNode node, String id) {
+        return Database.cdbInstance.getPost(node, id);
+    }
+
+    public List<Post> getAllPosts(BubblegumNode node) {
+        return Database.cdbInstance.getPosts(node);
+    }
+
     private void checkDatabasesDirectory() {
         File directory = new File(".databases");
         if (! directory.exists()) directory.mkdir();
     }
 
     private void print(String msg) {
-        this.localNode.log(msg);
+//        this.localNode.log(msg);
     }
 }

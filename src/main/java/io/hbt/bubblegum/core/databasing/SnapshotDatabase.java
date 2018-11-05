@@ -33,6 +33,7 @@ public class SnapshotDatabase {
 //    private int failedResponses;
 
     public static boolean saveRouterSnapshot(BubblegumNode localNode, RoutingTable routingTable) {
+        /*
         String identifier = localNode.getIdentifier();
         Connection connection = null;
         try {
@@ -78,6 +79,8 @@ public class SnapshotDatabase {
             }
         }
         return false;
+        */
+        return true;
     }
 
     public static Map<Integer, List<Set<RouterNode>>> buildRoutingTableNodesFromSnapshot(String identifier) {

@@ -16,7 +16,6 @@ import java.util.Set;
 
 public class MasterDatabase {
 
-    protected static final String DB_FOLDER_PATH = ".databases/";
     private static final String MASTER_DB_NAME = "_master.db";
     private static MasterDatabase instance;
 
@@ -32,6 +31,8 @@ public class MasterDatabase {
     }
 
     public void updateNetworks(List<BubblegumNode> networks) {
+        return;
+        /*
         Connection connection = null;
         try {
             this.checkDatabasesDirectory();
@@ -84,6 +85,7 @@ public class MasterDatabase {
                 e.printStackTrace();
             }
         }
+        */
     }
 
     public Set<NetworkDetails> loadNetworksFromDatabase() {
@@ -92,7 +94,7 @@ public class MasterDatabase {
             this.checkDatabasesDirectory();
 
             // create a databasing connection
-            connection = DriverManager.getConnection("jdbc:sqlite:" + DB_FOLDER_PATH + MASTER_DB_NAME);
+            connection = DriverManager.getConnection("jdbc:sqlite:" + Database.DB_FOLDER_PATH + MASTER_DB_NAME);
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
@@ -128,12 +130,12 @@ public class MasterDatabase {
     }
 
     protected void checkDatabasesDirectory() {
-        File directory = new File(MasterDatabase.DB_FOLDER_PATH);
+        File directory = new File(Database.DB_FOLDER_PATH);
         if (!directory.exists()) directory.mkdir();
     }
 
     public void resetDatabases() {
-        File directory = new File(MasterDatabase.DB_FOLDER_PATH);
+        File directory = new File(Database.DB_FOLDER_PATH);
         if(directory.exists()) {
             this.delete(directory);
         }

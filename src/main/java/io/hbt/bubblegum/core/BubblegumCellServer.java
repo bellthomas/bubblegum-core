@@ -143,8 +143,9 @@ public class BubblegumCellServer {
                         }
 
                     } catch (InvalidProtocolBufferException ipbe) {
-                        MessageLite ml = ipbe.getUnfinishedMessage();
-                        ipbe.printStackTrace();
+//                        MessageLite ml = ipbe.getUnfinishedMessage();
+////                        ipbe.printStackTrace();
+                        System.out.println("Corrupted packet");
                     } catch (MalformedKeyException e) {
                         e.printStackTrace();
                     } catch (UnknownHostException e) {
@@ -157,6 +158,7 @@ public class BubblegumCellServer {
             }
         }
     }
+
 
     public void sendDatagram(BubblegumNode localNode, RouterNode node, KademliaMessage payload, Consumer<KademliaMessage> callback) {
         synchronized (this.sendingSocket) {

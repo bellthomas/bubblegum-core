@@ -93,7 +93,10 @@ public class Bubblegum {
 
     public List<BubblegumNode> buildNodes(int numNodes) {
         List<BubblegumNode> nodes = new ArrayList<>();
-        for(int i = 0; i < numNodes; i++) nodes.add(this.createNode());
+        for(int i = 0; i < numNodes; i++) {
+            nodes.add(this.createNode());
+//            if(i % 1000 == 0) System.out.println("Building: " + i);
+        }
 
         return nodes;
 
@@ -113,8 +116,8 @@ public class Bubblegum {
         BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
 
         this.nodes.put(identifier.toString(), newNode);
-        MasterDatabase mdb = MasterDatabase.getInstance();
-        mdb.updateNetwork(newNode);
+//        MasterDatabase mdb = MasterDatabase.getInstance();
+//        mdb.updateNetwork(newNode);
         return newNode;
     }
 

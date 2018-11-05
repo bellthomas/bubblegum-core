@@ -6,6 +6,7 @@ import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.logging.Logger;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.MasterDatabase;
+import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
@@ -17,6 +18,7 @@ import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -58,7 +60,7 @@ public class BubblegumNode {
         this.server.registerNewLocalNode(this);
 
         this.routingTable = new RoutingTable(this);
-        this.db = new Database(this);
+        this.db = Database.getInstance();
         this.db.add(nid.toString(), new byte[] {0x01}); // responds only to self
 
         this.setupInternalScheduling();
@@ -186,6 +188,19 @@ public class BubblegumNode {
 
     public byte[] databaseRetrieveValue(String key) {
         return this.db.valueForKey(key);
+    }
+
+    public Post savePost(String content) {
+        if(content != null) return this.db.savePost(this, content);
+        else return null;
+    }
+
+    public Post getPost(String id) {
+        return this.db.getPost(this, id);
+    }
+
+    public List<Post> getAllPosts() {
+        return this.db.getAllPosts(this);
     }
 
     /* Router */
