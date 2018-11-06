@@ -22,18 +22,12 @@ import java.util.Set;
 
 public class SnapshotDatabase {
 
-    protected static final String DB_FOLDER_PATH = ".databases/snapshots/";
+    protected static final String DB_FOLDER_PATH = Database.DB_FOLDER_PATH + "snapshots/";
 
     protected SnapshotDatabase() { /* Static only */ }
 
-//    private final NodeID node;
-//    private InetAddress ipAddress;
-//    private int port;
-//    private long latestResponse;
-//    private int failedResponses;
-
     public static boolean saveRouterSnapshot(BubblegumNode localNode, RoutingTable routingTable) {
-        /*
+
         String identifier = localNode.getIdentifier();
         Connection connection = null;
         try {
@@ -79,8 +73,6 @@ public class SnapshotDatabase {
             }
         }
         return false;
-        */
-        return true;
     }
 
     public static Map<Integer, List<Set<RouterNode>>> buildRoutingTableNodesFromSnapshot(String identifier) {

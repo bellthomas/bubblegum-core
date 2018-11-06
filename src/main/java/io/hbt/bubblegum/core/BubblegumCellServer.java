@@ -30,7 +30,7 @@ public class BubblegumCellServer {
 
     private int port;
     private InetAddress localAddress;
-    private final DatagramSocket listeningSocket;
+    private DatagramSocket listeningSocket;
     private ActivityExecutionContext executionContext;
 
     private static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // 64KB
@@ -46,13 +46,23 @@ public class BubblegumCellServer {
     private long packetsReceived = 0;
 
     public BubblegumCellServer(int port, ActivityExecutionContext executionContext) throws BubblegumException {
-        this.port = port;
+
+        try {
+            this.listeningSocket = new DatagramSocket(port);
+        } catch (SocketException e) {
+            try {
+                System.out.println("Having to change port...");
+                this.listeningSocket = new DatagramSocket(0);
+            } catch (SocketException e1) {
+                throw new BubblegumException();
+            }
+        }
+
+        this.port = this.listeningSocket.getLocalPort();
         this.executionContext = executionContext;
 
         try {
             if(this.sendingSocket == null) this.sendingSocket = new DatagramSocket();
-            this.listeningSocket = new DatagramSocket(this.port);
-            this.port = this.listeningSocket.getLocalPort();
             this.alive = true;
             this.listenerThread = new Thread(() -> this.listen());
             this.listenerThread.setDaemon(true);

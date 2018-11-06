@@ -23,15 +23,24 @@ public class BubblegumCell {
     }
 
     public synchronized BubblegumNode registerNode(BubblegumNode.Builder node) {
-        if(this.nodes.size() < BubblegumCell.cellSize) {
-            node.setServer(this.server);
-            BubblegumNode finalNode = node.build();
-            this.nodes.add(finalNode);
-            totalNodes++;
-            cellSize = Math.floorDiv(MAX_CELLS + totalNodes, MAX_CELLS);
-            return finalNode;
-        }
+        if(this.nodes.size() < BubblegumCell.cellSize) return this.internalAddNode(node);
+        else return null;
+    }
 
-        return null;
+    protected synchronized BubblegumNode forceNode(BubblegumNode.Builder node) {
+        return this.internalAddNode(node);
+    }
+
+    private BubblegumNode internalAddNode(BubblegumNode.Builder node) {
+        node.setServer(this.server);
+        BubblegumNode finalNode = node.build();
+        this.nodes.add(finalNode);
+        totalNodes++;
+        cellSize = Math.floorDiv(MAX_CELLS + totalNodes, MAX_CELLS);
+        return finalNode;
+    }
+
+    public int getPort() {
+        return this.server.getPort();
     }
 }

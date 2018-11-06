@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.core.databasing;
 
-import io.hbt.bubblegum.core.auxiliary.NetworkDetails;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
 import java.io.File;
@@ -10,9 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 public class MasterDatabase {
 
@@ -21,24 +20,23 @@ public class MasterDatabase {
 
     private MasterDatabase() { /* Singleton */ }
 
-    public synchronized static MasterDatabase getInstance() {
+    protected synchronized static MasterDatabase getInstance() {
         if (MasterDatabase.instance == null) MasterDatabase.instance = new MasterDatabase();
         return MasterDatabase.instance;
     }
 
     public void updateNetwork(BubblegumNode network) {
-        this.updateNetworks(new ArrayList<BubblegumNode>() {{ add(network); }});
+        this.updateNetworks(new ArrayList<>() {{ add(network); }});
     }
 
-    public void updateNetworks(List<BubblegumNode> networks) {
-        return;
-        /*
+    public synchronized void updateNetworks(List<BubblegumNode> networks) {
+
         Connection connection = null;
         try {
             this.checkDatabasesDirectory();
 
             // create a databasing connection
-            connection = DriverManager.getConnection("jdbc:sqlite:" + DB_FOLDER_PATH + MASTER_DB_NAME);
+            connection = DriverManager.getConnection("jdbc:sqlite:" + Database.DB_FOLDER_PATH + MASTER_DB_NAME);
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
@@ -62,15 +60,6 @@ public class MasterDatabase {
                 }
             }
 
-
-//            ResultSet rs = statement.executeQuery("select * from person");
-//            while(rs.next())
-//            {
-//                // read the result set
-//                System.out.println("name = " + rs.getString("name"));
-//                System.out.println("id = " + rs.getInt("id"));
-//            }
-
         } catch (SQLException e) {
             // if the error message is "out of memory",
             // it probably means no databasing file is found
@@ -85,10 +74,10 @@ public class MasterDatabase {
                 e.printStackTrace();
             }
         }
-        */
+
     }
 
-    public Set<NetworkDetails> loadNetworksFromDatabase() {
+    public Map<Integer, List<NetworkDetails>> loadNetworksFromDatabase() {
         Connection connection = null;
         try {
             this.checkDatabasesDirectory();
@@ -100,15 +89,15 @@ public class MasterDatabase {
 
             statement.executeUpdate(this.setupMasterTableSQL());
 
-            Set<NetworkDetails> details = new HashSet<>();
+            Map<Integer, List<NetworkDetails>> details = new HashMap<>();
             ResultSet rs = statement.executeQuery(this.getAllNetworksSQL());
             while (rs.next()) {
-                NetworkDetails nd = new NetworkDetails();
-                nd.id = rs.getString(1);
-                nd.network = rs.getString(2);
-                nd.hash = rs.getString(3);
-                nd.port = rs.getInt(4);
-                details.add(nd);
+                String id = rs.getString(1);
+                String network = rs.getString(2);
+                String hash = rs.getString(3);
+                int port = rs.getInt(4);
+                if(!details.containsKey(port)) details.put(port, new ArrayList<>());
+                details.get(port).add(new NetworkDetails(id, network, hash, port));
             }
 
             return details;
@@ -126,7 +115,7 @@ public class MasterDatabase {
             }
         }
 
-        return new HashSet<>();
+        return new HashMap<>();
     }
 
     protected void checkDatabasesDirectory() {

@@ -7,6 +7,7 @@ import java.sql.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Database {
 
@@ -14,12 +15,14 @@ public class Database {
 
     private static Database instance;
     private static ContentDatabase cdbInstance;
+    private static MasterDatabase masterDatabase;
 
     protected static final String DB_FOLDER_PATH = ".databases/";
 
     private Database() {
         this.db = new HashMap<>();
         Database.cdbInstance = ContentDatabase.getInstance();
+        Database.masterDatabase = MasterDatabase.getInstance();
     }
 
     public synchronized static Database getInstance() {
@@ -72,6 +75,18 @@ public class Database {
 
     }
 
+    public Map<Integer, List<NetworkDetails>> loadNetworksFromDatabase() {
+        return Database.masterDatabase.loadNetworksFromDatabase();
+    }
+
+    public void updateNodeInDatabase(BubblegumNode node) {
+        Database.masterDatabase.updateNetwork(node);
+    }
+
+    public void updateNodesInDatabase(List<BubblegumNode> nodes) {
+        Database.masterDatabase.updateNetworks(nodes);
+    }
+
     public boolean hasKey(String node, String key) {
         if(!this.db.containsKey(node)) return false;
         else return this.db.get(node).containsKey(key);
@@ -104,6 +119,11 @@ public class Database {
     private void checkDatabasesDirectory() {
         File directory = new File(".databases");
         if (! directory.exists()) directory.mkdir();
+    }
+
+    public void reset() {
+        // TODO finish
+        Database.masterDatabase.resetDatabases();
     }
 
     private void print(String msg) {

@@ -115,7 +115,8 @@ public class BubblegumNode {
 
         if(boostrapActivity.getSuccess()) {
             this.saveRouterSnapshot();
-            MasterDatabase.getInstance().updateNetwork(this);
+            Database.getInstance().updateNodeInDatabase(this);
+            SnapshotDatabase.saveRouterSnapshot(this, this.getRoutingTable());
             return true;
         }
         else {
