@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.auxiliary;
 
 import com.google.protobuf.ByteString;
+import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaDiscoveryRequest.KademliaDiscoveryRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaDiscoveryResponse.KademliaDiscoveryResponse;
@@ -10,11 +11,15 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.Kadem
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryRequest.KademliaQueryRequest;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.KademliaQueryResponse;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponseItem.KademliaQueryResponseItem;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreRequest.KademliaStoreRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreResponse.KademliaStoreResponse;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.awt.event.KeyAdapter;
+import java.util.List;
 import java.util.Set;
 
 public class ProtobufHelper {
@@ -110,4 +115,29 @@ public class ProtobufHelper {
         return message.build();
     }
 
+    public static KademliaMessage buildQueryRequest(BubblegumNode localNode, RouterNode to, String exchangeID, long start, long end, List<String> ids) {
+        KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
+        KademliaQueryRequest.Builder queryRequest = KademliaQueryRequest.newBuilder();
+        queryRequest.setFromTime(start);
+        queryRequest.setToTime(end);
+        queryRequest.addAllIdList(ids);
+        message.setQueryRequest(queryRequest);
+        return message.build();
+    }
+
+    public static KademliaMessage buildQueryResponse(BubblegumNode localNode, RouterNode to, String exchangeID, List<Post> posts) {
+        KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
+        KademliaQueryResponse.Builder queryResponse = KademliaQueryResponse.newBuilder();
+        for(Post p : posts) queryResponse.addItems(buildQueryResponseItem(p));
+        message.setQueryResponse(queryResponse);
+        return message.build();
+    }
+
+    public static KademliaQueryResponseItem buildQueryResponseItem(Post post) {
+        KademliaQueryResponseItem.Builder responseItem = KademliaQueryResponseItem.newBuilder();
+        responseItem.setId(post.getID());
+        responseItem.setContent(post.getContent());
+        responseItem.setTime(post.getTimeCreated());
+        return responseItem.build();
+    }
 }

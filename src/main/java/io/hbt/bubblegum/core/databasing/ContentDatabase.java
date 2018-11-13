@@ -142,6 +142,37 @@ class ContentDatabase {
         return new ArrayList<>();
     }
 
+    public List<Post> queryPosts(BubblegumNode node, long start, long end, List<String> ids) {
+
+        // TODO use ids
+        if(start < 0 || end < 0 || end < start) return new ArrayList<>();
+
+        if(ContentDatabase.connection == null) this.openDatabaseConnection();
+        if(ContentDatabase.connection == null) return new ArrayList<>(); // Database connection failed, don't try to save anything
+
+        PreparedStatement ps;
+        try {
+            ps = ContentDatabase.connection.prepareStatement(this.queryPostsSQLByTime());
+            ps.setLong(1, start);
+            ps.setLong(2, end);
+            ResultSet rs = ps.executeQuery();
+
+            ArrayList<Post> posts = new ArrayList<>();
+            while(rs.next()) {
+                String content = rs.getString("content");
+                long timeCreated = rs.getLong("time_created");
+                String postID = rs.getString("id");
+                posts.add(new Post(postID, node.getIdentifier(), node.getNetworkIdentifier(), content, timeCreated));
+            }
+
+            return posts;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return new ArrayList<>();
+    }
+
     /** SQL **/
 
     private String initContentDatabaseSQL() {
@@ -188,5 +219,9 @@ class ContentDatabase {
 
     private String getAllPostsSQL() {
         return "SELECT id, content, time_created FROM _posts WHERE owner=? AND network=?";
+    }
+
+    private String queryPostsSQLByTime() {
+        return "SELECT id, content, time_created FROM _posts WHERE time_created >= ? AND time_created <= ?";
     }
 }

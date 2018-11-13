@@ -12,12 +12,14 @@ import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
 import io.hbt.bubblegum.core.kademlia.activities.DiscoveryActivity;
 import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
+import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
 import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -154,6 +156,42 @@ public class BubblegumNode {
         return (storeActivity.getComplete() && storeActivity.getSuccess());
     }
 
+    public List<Post> query(NodeID id, long start, long end) {
+        LookupActivity lookupActivity = new LookupActivity(this, id, 1, false);
+        lookupActivity.run();
+
+        if(lookupActivity.getComplete() && lookupActivity.getSuccess()) {
+            if(lookupActivity.getClosestNodes().size() > 0) {
+                RouterNode to = null;
+                for(RouterNode node : lookupActivity.getClosestNodes()) {
+                    if(node.getNode().equals(id)) {
+                        to = node;
+                        break;
+                    }
+                }
+
+                if(to == null) return null;
+
+                // Got the destination
+                QueryActivity queryActivity = new QueryActivity(this, to, start, end, new ArrayList<>());
+                queryActivity.run();
+
+                if(queryActivity.getComplete() && queryActivity.getSuccess()) {
+                    return queryActivity.getResults();
+                }
+                else {
+                    return null;
+                }
+            }
+            else {
+                return null;
+            }
+        }
+        else {
+            return null;
+        }
+    }
+
     public String getNetworkIdentifier() {
         return this.networkIdentifier;
     }
@@ -202,6 +240,10 @@ public class BubblegumNode {
 
     public List<Post> getAllPosts() {
         return this.db.getAllPosts(this);
+    }
+
+    public List<Post> queryPosts(long start, long end, List<String> ids) {
+        return this.db.queryPosts(this, start, end, ids);
     }
 
     /* Router */

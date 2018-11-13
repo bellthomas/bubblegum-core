@@ -1,0 +1,8 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+import "BgKademliaQueryResponseItem.proto";
+
+message KademliaQueryResponse {
+    repeated KademliaQueryResponseItem items = 1;
+}

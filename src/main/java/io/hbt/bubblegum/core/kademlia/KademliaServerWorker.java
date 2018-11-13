@@ -4,6 +4,7 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PrimitiveStoreActivity;
+import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
@@ -81,6 +82,29 @@ public class KademliaServerWorker {
                 PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(node, sender, message.getStoreRequest().getKey(), message.getStoreRequest().getValue().toByteArray());
                 storeActivity.setResponse(message.getExchangeID());
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), storeActivity);
+
+            } catch (MalformedKeyException e) {
+                e.printStackTrace();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+        }
+
+        else if(message.hasQueryRequest()) {
+            //            node.log("STORE received[" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getStoreRequest().getKey());
+            try {
+                RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
+                if (sender == null) sender = new RouterNode(
+                    new NodeID(message.getOriginHash()),
+                    InetAddress.getByName(message.getOriginIP()),
+                    message.getOriginPort()
+                );
+                // TODO insert?
+                node.getRoutingTable().insert(sender);
+
+                QueryActivity queryActivity = new QueryActivity(node, sender, 0, 0, null);
+                queryActivity.setResponse(message.getExchangeID(), message.getQueryRequest());
+                node.getExecutionContext().addCallbackActivity(node.getIdentifier(), queryActivity);
 
             } catch (MalformedKeyException e) {
                 e.printStackTrace();

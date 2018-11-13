@@ -116,6 +116,10 @@ public class Database {
         return Database.cdbInstance.getPosts(node);
     }
 
+    public List<Post> queryPosts(BubblegumNode node, long from, long to, List<String> ids) {
+        return Database.cdbInstance.queryPosts(node, from, to, ids);
+    }
+
     private void checkDatabasesDirectory() {
         File directory = new File(".databases");
         if (! directory.exists()) directory.mkdir();

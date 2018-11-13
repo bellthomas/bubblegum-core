@@ -1,6 +1,8 @@
 package io.hbt.bubblegum.core.databasing;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponseItem.KademliaQueryResponseItem;
+import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.util.UUID;
 
@@ -49,6 +51,16 @@ public class Post {
 
     public long getTimeCreated() {
         return this.timeCreated;
+    }
+
+    public static Post fromKademliaQueryResponseItem(KademliaQueryResponseItem responseItem, BubblegumNode node) {
+        return new Post(
+            responseItem.getId(),
+            node.getIdentifier(),
+            node.getNetworkIdentifier(),
+            responseItem.getContent(),
+            responseItem.getTime()
+        );
     }
 
     @Override

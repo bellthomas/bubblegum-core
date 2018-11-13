@@ -1,0 +1,12 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+message KademliaQueryRequest {
+
+    // Times
+    int64 fromTime = 1;
+    int64 toTime = 2;
+
+    // ID query
+    repeated string idList = 3;
+}

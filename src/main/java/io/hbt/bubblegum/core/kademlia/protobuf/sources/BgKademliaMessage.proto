@@ -9,6 +9,8 @@ import "BgKademliaStoreRequest.proto";
 import "BgKademliaStoreResponse.proto";
 import "BgKademliaDiscoveryRequest.proto";
 import "BgKademliaDiscoveryResponse.proto";
+import "BgKademliaQueryRequest.proto";
+import "BgKademliaQueryResponse.proto";
 
 message KademliaMessage {
 
@@ -32,5 +34,7 @@ message KademliaMessage {
         KademliaStoreResponse storeResponse = 12;
         KademliaDiscoveryRequest discoveryRequest = 13;
         KademliaDiscoveryResponse discoveryResponse = 14;
+        KademliaQueryRequest queryRequest = 15;
+        KademliaQueryResponse queryResponse = 16;
     }
 }

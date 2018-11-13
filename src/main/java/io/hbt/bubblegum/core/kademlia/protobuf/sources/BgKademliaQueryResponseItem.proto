@@ -1,0 +1,9 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+message KademliaQueryResponseItem {
+    string id = 1;
+    string content = 2;
+    int64 time = 3;
+
+}
