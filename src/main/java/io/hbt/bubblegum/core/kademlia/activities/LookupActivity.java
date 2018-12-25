@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -24,7 +25,7 @@ public class LookupActivity extends SystemActivity {
     private final int numResults;
     private final boolean getValue;
 
-    private byte[] result;
+    private List<byte[]> results;
     private Set<RouterNode> closestNodes;
 
     public LookupActivity(BubblegumNode localNode, NodeID lookup, int results, boolean getValue) {
@@ -170,7 +171,7 @@ public class LookupActivity extends SystemActivity {
 
         // Check if we have a value locally first
         if(this.getValue && this.localNode.databaseHasKey(this.nodeToLookup.toString())) {
-            this.result = this.localNode.databaseRetrieveValue(this.nodeToLookup.toString());
+            this.results = this.localNode.databaseRetrieveValue(this.nodeToLookup.toString());
             this.onSuccess("Lookup Value - found locally");
             return;
         }
@@ -218,11 +219,11 @@ public class LookupActivity extends SystemActivity {
                         }
 
                         // FIND_VALUE check
-                        byte[] value = activity.getFindValueResult();
+                        List<byte[]> value = activity.getFindValueResult();
                         if (this.getValue && value != null) {
                             // got our result
-                            this.result = value;
-                            this.onSuccess("Finished!\nValue: " + Arrays.toString(value));
+                            this.results = value;
+                            this.onSuccess("Retrieved " + this.results.size() + " values");
                             return;
                         }
 
@@ -291,8 +292,8 @@ public class LookupActivity extends SystemActivity {
         this.onSuccess();
     }
 
-    public byte[] getResult() {
-        return this.result;
+    public List<byte[]> getResult() {
+        return this.results;
     }
 
     public Set<RouterNode> getClosestNodes() {

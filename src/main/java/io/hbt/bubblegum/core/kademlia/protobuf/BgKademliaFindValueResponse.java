@@ -32,9 +32,17 @@ public final class BgKademliaFindValueResponse {
     io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequestOrBuilder getRequestOrBuilder();
 
     /**
-     * <code>bytes value = 2;</code>
+     * <code>repeated bytes value = 2;</code>
      */
-    com.google.protobuf.ByteString getValue();
+    java.util.List<com.google.protobuf.ByteString> getValueList();
+    /**
+     * <code>repeated bytes value = 2;</code>
+     */
+    int getValueCount();
+    /**
+     * <code>repeated bytes value = 2;</code>
+     */
+    com.google.protobuf.ByteString getValue(int index);
   }
   /**
    * Protobuf type {@code io.hbt.bubblegum.core.kademlia.protobuf.KademliaFindValueResponse}
@@ -49,7 +57,7 @@ public final class BgKademliaFindValueResponse {
       super(builder);
     }
     private KademliaFindValueResponse() {
-      value_ = com.google.protobuf.ByteString.EMPTY;
+      value_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -90,8 +98,11 @@ public final class BgKademliaFindValueResponse {
               break;
             }
             case 18: {
-
-              value_ = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                value_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              value_.add(input.readBytes());
               break;
             }
             default: {
@@ -109,6 +120,9 @@ public final class BgKademliaFindValueResponse {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          value_ = java.util.Collections.unmodifiableList(value_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -126,6 +140,7 @@ public final class BgKademliaFindValueResponse {
               io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse.class, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse.Builder.class);
     }
 
+    private int bitField0_;
     public static final int REQUEST_FIELD_NUMBER = 1;
     private io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest request_;
     /**
@@ -148,12 +163,25 @@ public final class BgKademliaFindValueResponse {
     }
 
     public static final int VALUE_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString value_;
+    private java.util.List<com.google.protobuf.ByteString> value_;
     /**
-     * <code>bytes value = 2;</code>
+     * <code>repeated bytes value = 2;</code>
      */
-    public com.google.protobuf.ByteString getValue() {
+    public java.util.List<com.google.protobuf.ByteString>
+        getValueList() {
       return value_;
+    }
+    /**
+     * <code>repeated bytes value = 2;</code>
+     */
+    public int getValueCount() {
+      return value_.size();
+    }
+    /**
+     * <code>repeated bytes value = 2;</code>
+     */
+    public com.google.protobuf.ByteString getValue(int index) {
+      return value_.get(index);
     }
 
     private byte memoizedIsInitialized = -1;
@@ -173,8 +201,8 @@ public final class BgKademliaFindValueResponse {
       if (request_ != null) {
         output.writeMessage(1, getRequest());
       }
-      if (!value_.isEmpty()) {
-        output.writeBytes(2, value_);
+      for (int i = 0; i < value_.size(); i++) {
+        output.writeBytes(2, value_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -189,9 +217,14 @@ public final class BgKademliaFindValueResponse {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getRequest());
       }
-      if (!value_.isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, value_);
+      {
+        int dataSize = 0;
+        for (int i = 0; i < value_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(value_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getValueList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -214,8 +247,8 @@ public final class BgKademliaFindValueResponse {
         result = result && getRequest()
             .equals(other.getRequest());
       }
-      result = result && getValue()
-          .equals(other.getValue());
+      result = result && getValueList()
+          .equals(other.getValueList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -231,8 +264,10 @@ public final class BgKademliaFindValueResponse {
         hash = (37 * hash) + REQUEST_FIELD_NUMBER;
         hash = (53 * hash) + getRequest().hashCode();
       }
-      hash = (37 * hash) + VALUE_FIELD_NUMBER;
-      hash = (53 * hash) + getValue().hashCode();
+      if (getValueCount() > 0) {
+        hash = (37 * hash) + VALUE_FIELD_NUMBER;
+        hash = (53 * hash) + getValueList().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -372,8 +407,8 @@ public final class BgKademliaFindValueResponse {
           request_ = null;
           requestBuilder_ = null;
         }
-        value_ = com.google.protobuf.ByteString.EMPTY;
-
+        value_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -400,12 +435,19 @@ public final class BgKademliaFindValueResponse {
       @java.lang.Override
       public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse buildPartial() {
         io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse result = new io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         if (requestBuilder_ == null) {
           result.request_ = request_;
         } else {
           result.request_ = requestBuilder_.build();
         }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          value_ = java.util.Collections.unmodifiableList(value_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
         result.value_ = value_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -457,8 +499,15 @@ public final class BgKademliaFindValueResponse {
         if (other.hasRequest()) {
           mergeRequest(other.getRequest());
         }
-        if (other.getValue() != com.google.protobuf.ByteString.EMPTY) {
-          setValue(other.getValue());
+        if (!other.value_.isEmpty()) {
+          if (value_.isEmpty()) {
+            value_ = other.value_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureValueIsMutable();
+            value_.addAll(other.value_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -488,6 +537,7 @@ public final class BgKademliaFindValueResponse {
         }
         return this;
       }
+      private int bitField0_;
 
       private io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest request_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
@@ -606,31 +656,74 @@ public final class BgKademliaFindValueResponse {
         return requestBuilder_;
       }
 
-      private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>bytes value = 2;</code>
-       */
-      public com.google.protobuf.ByteString getValue() {
-        return value_;
+      private java.util.List<com.google.protobuf.ByteString> value_ = java.util.Collections.emptyList();
+      private void ensureValueIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          value_ = new java.util.ArrayList<com.google.protobuf.ByteString>(value_);
+          bitField0_ |= 0x00000002;
+         }
       }
       /**
-       * <code>bytes value = 2;</code>
+       * <code>repeated bytes value = 2;</code>
        */
-      public Builder setValue(com.google.protobuf.ByteString value) {
+      public java.util.List<com.google.protobuf.ByteString>
+          getValueList() {
+        return java.util.Collections.unmodifiableList(value_);
+      }
+      /**
+       * <code>repeated bytes value = 2;</code>
+       */
+      public int getValueCount() {
+        return value_.size();
+      }
+      /**
+       * <code>repeated bytes value = 2;</code>
+       */
+      public com.google.protobuf.ByteString getValue(int index) {
+        return value_.get(index);
+      }
+      /**
+       * <code>repeated bytes value = 2;</code>
+       */
+      public Builder setValue(
+          int index, com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
-        value_ = value;
+  ensureValueIsMutable();
+        value_.set(index, value);
         onChanged();
         return this;
       }
       /**
-       * <code>bytes value = 2;</code>
+       * <code>repeated bytes value = 2;</code>
+       */
+      public Builder addValue(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureValueIsMutable();
+        value_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes value = 2;</code>
+       */
+      public Builder addAllValue(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureValueIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, value_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes value = 2;</code>
        */
       public Builder clearValue() {
-        
-        value_ = getDefaultInstance().getValue();
+        value_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
         onChanged();
         return this;
       }
@@ -706,7 +799,7 @@ public final class BgKademliaFindValueResponse {
       "KademliaFindRequest.proto\"y\n\031KademliaFin" +
       "dValueResponse\022M\n\007request\030\001 \001(\0132<.io.hbt" +
       ".bubblegum.core.kademlia.protobuf.Kademl" +
-      "iaFindRequest\022\r\n\005value\030\002 \001(\014b\006proto3"
+      "iaFindRequest\022\r\n\005value\030\002 \003(\014b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {

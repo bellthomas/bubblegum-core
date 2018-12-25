@@ -42,6 +42,8 @@ public class BubblegumNode {
     private Logger logger;
     private ScheduledExecutorService internalScheduler;
 
+    public static long epochBinDuration = 15000; // 15ms
+
     private BubblegumNode(
         String identifier,
         String networkIdentifier,
@@ -71,7 +73,7 @@ public class BubblegumNode {
     }
 
     private void setupInternalScheduling() {
-        this.internalScheduler = Executors.newSingleThreadScheduledExecutor();
+//        this.internalScheduler = Executors.newSingleThreadScheduledExecutor();
 
         // Setup Router snapshots
 //        this.internalScheduler.scheduleAtFixedRate(
@@ -138,7 +140,7 @@ public class BubblegumNode {
         return null;
     }
 
-    public byte[] lookup(NodeID id) {
+    public List<byte[]> lookup(NodeID id) {
         LookupActivity lookupActivity = new LookupActivity(this, id, 5, true);
         lookupActivity.run();
 
@@ -225,13 +227,23 @@ public class BubblegumNode {
         return this.db.hasKey(this.identifier, key);
     }
 
-    public byte[] databaseRetrieveValue(String key) {
+    public List<byte[]> databaseRetrieveValue(String key) {
         return this.db.valueForKey(this.identifier, key);
     }
 
     public Post savePost(String content) {
-        if(content != null) return this.db.savePost(this, content);
-        else return null;
+        if(content != null) {
+            Post saved = this.db.savePost(this, content);
+            long epochBin = saved.getTimeCreated() / BubblegumNode.epochBinDuration;
+            String globalPostIdentifier = this.nodeIdentifier.toString() + ":" + saved.getID();
+            boolean savedIndex = this.store(NodeID.hash(epochBin), globalPostIdentifier.getBytes());
+
+            System.out.println(epochBin + " -> " + globalPostIdentifier);
+            System.out.println(savedIndex);
+
+            return saved;
+        }
+        return null;
     }
 
     public Post getPost(String id) {

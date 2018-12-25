@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.auxiliary;
 
+import com.google.common.primitives.Bytes;
 import com.google.protobuf.ByteString;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -64,11 +65,11 @@ public class ProtobufHelper {
         return message.build();
     }
 
-    public static KademliaMessage buildFindValueResponse(BubblegumNode localNode, RouterNode to, String exchangeID, KademliaFindRequest request, byte[] value) {
+    public static KademliaMessage buildFindValueResponse(BubblegumNode localNode, RouterNode to, String exchangeID, KademliaFindRequest request, List<byte[]> values) {
         KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
         KademliaFindValueResponse.Builder findValueResponse = KademliaFindValueResponse.newBuilder();
         findValueResponse.setRequest(request);
-        findValueResponse.setValue(ByteString.copyFrom(value));
+        values.forEach((v) -> findValueResponse.addValue(ByteString.copyFrom(v)));
         message.setFindValueResponse(findValueResponse);
         return message.build();
     }

@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import co.paralleluniverse.fibers.Suspendable;
+import com.google.protobuf.ByteString;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -16,8 +17,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class FindActivity extends NetworkActivity {
 
@@ -26,7 +29,7 @@ public class FindActivity extends NetworkActivity {
     private KademliaFindRequest request;
     private String requestingHash;
     private boolean returnValue;
-    private byte[] value;
+    private List<byte[]> values;
 
     private final static int RESULTS_REQUESTED = 8;
 
@@ -55,7 +58,7 @@ public class FindActivity extends NetworkActivity {
             if(this.returnValue && this.localNode.databaseHasKey(this.request.getSearchHash())) {
 
                 // TODO validate
-                byte[] value = this.localNode.databaseRetrieveValue(this.request.getSearchHash());
+                List<byte[]> value = this.localNode.databaseRetrieveValue(this.request.getSearchHash());
 
                 message = ProtobufHelper.buildFindValueResponse(
                     this.localNode,
@@ -118,9 +121,10 @@ public class FindActivity extends NetworkActivity {
             }
             else if(kademliaMessage.hasFindValueResponse()) {
                 KademliaFindValueResponse findValueResponse = kademliaMessage.getFindValueResponse();
-                byte[] value = findValueResponse.getValue().toByteArray();
-                this.value = value;
-                this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + value.length + " bytes");
+                List<ByteString> byteStringValues = findValueResponse.getValueList();
+                List<byte[]> byteArrayValues = byteStringValues.stream().map((bs) -> bs.toByteArray()).collect(Collectors.toList());
+                this.values = byteArrayValues;
+                this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + this.values.size() + " elements");
                 this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
                 this.onSuccess();
             }
@@ -160,8 +164,8 @@ public class FindActivity extends NetworkActivity {
         return this.resultNodes;
     }
 
-    public byte[] getFindValueResult() {
-        return this.value;
+    public List<byte[]> getFindValueResult() {
+        return this.values;
     }
 
     public RouterNode getDestination() {

@@ -143,6 +143,10 @@ public class NodeID {
         return null;
     }
 
+    public static NodeID hash(long num) {
+        return NodeID.hash("" + num);
+    }
+
     @Override
     public String toString() {
         return bytesToHex(this.key);

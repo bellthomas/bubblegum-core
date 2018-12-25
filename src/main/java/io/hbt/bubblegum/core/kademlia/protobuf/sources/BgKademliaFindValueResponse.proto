@@ -5,5 +5,5 @@ import "BgKademliaFindRequest.proto";
 
 message KademliaFindValueResponse {
     KademliaFindRequest request = 1;
-    bytes value = 2;
+    repeated bytes value = 2;
 }

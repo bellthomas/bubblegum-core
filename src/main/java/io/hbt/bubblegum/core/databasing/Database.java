@@ -4,6 +4,7 @@ import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
 import java.io.File;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.Map;
 
 public class Database {
 
-    private HashMap<String, HashMap<String, byte[]>> db;
+    private HashMap<String, HashMap<String, List< byte[]>>> db;
 
     private static Database instance;
     private static ContentDatabase cdbInstance;
@@ -92,14 +93,15 @@ public class Database {
         else return this.db.get(node).containsKey(key);
     }
 
-    public byte[] valueForKey(String node, String key) {
+    public List<byte[]> valueForKey(String node, String key) {
         if(!this.db.containsKey(node)) return null;
         else return this.db.get(node).get(key);
     }
 
     public boolean add(String node, String key, byte[] value) {
         if(!this.db.containsKey(node)) this.db.put(node, new HashMap<>());
-        this.db.get(node).put(key, value);
+        if(!this.db.get(node).containsKey(key)) this.db.get(node).put(key, new ArrayList<>());
+        if(!this.db.get(node).get(key).contains(value)) this.db.get(node).get(key).add(value);
         this.print("[Database] Saved " + key + " -> " + Arrays.toString(value));
         return true;
     }
