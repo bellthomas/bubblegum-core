@@ -3,31 +3,37 @@ package io.hbt.bubblegum.core.databasing;
 import io.hbt.bubblegum.core.auxiliary.ComparableBytePayload;
 import io.hbt.bubblegum.core.auxiliary.Pair;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
+import javax.xml.crypto.Data;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class Database {
 
-    private HashMap<String, HashMap<String, List<Pair<ComparableBytePayload, Long>>>> db;
+    private ConcurrentHashMap<String, HashMap<String, List<Pair<ComparableBytePayload, Long>>>> db;
 
     private static Database instance;
     private static ContentDatabase cdbInstance;
     private static MasterDatabase masterDatabase;
 
     protected static final String DB_FOLDER_PATH = ".databases/";
-    protected static final long EXPIRY_AGE = 30; // seconds
+    protected static final long EXPIRY_AGE = 60; // seconds
+
+    private final ConcurrentHashMap<String, Pair<Long, Long>> lastNetworkUpdates;
 
     private Database() {
         this.checkDatabasesDirectory();
-        this.db = new HashMap<>();
+        this.db = new ConcurrentHashMap<>();
+        this.lastNetworkUpdates = new ConcurrentHashMap<>();
         Database.cdbInstance = ContentDatabase.getInstance();
         Database.masterDatabase = MasterDatabase.getInstance();
     }
@@ -39,7 +45,7 @@ public class Database {
 
     public void initialiseExpiryScheduler(ActivityExecutionContext context) {
         if(context != null) {
-            context.scheduleTask(() -> this.checkForExpiredPosts(), 30, 30, TimeUnit.SECONDS);
+            context.scheduleTask(() -> this.checkForExpiredPosts(), 10, 10, TimeUnit.SECONDS);
         }
     }
 
@@ -115,11 +121,14 @@ public class Database {
         if(!this.db.containsKey(node)) this.db.put(node, new HashMap<>());
         if(!this.db.get(node).containsKey(key)) this.db.get(node).put(key, new ArrayList<>());
 
+        // TODO error on removeAll line?
         // If we have an old version, remove it
         ComparableBytePayload newPayload = new ComparableBytePayload(value);
-        this.db.get(node).get(key).removeAll(
-            this.db.get(node).get(key).stream().filter((p) -> p.getFirst().equals(newPayload)).collect(Collectors.toList())
-        );
+        synchronized (this.db) {
+            this.db.get(node).get(key).removeAll(
+                this.db.get(node).get(key).stream().filter((p) -> p.getFirst().equals(newPayload)).collect(Collectors.toList())
+            );
+        }
 
         // Save new version
         this.db.get(node).get(key).add(new Pair<>(new ComparableBytePayload(value), System.currentTimeMillis()));
@@ -128,8 +137,26 @@ public class Database {
         return true;
     }
 
+    public void saveUserMeta(BubblegumNode node, String content) {
+        Database.cdbInstance.saveMeta("username", node, content);
+    }
+
+    private void savePostMeta(BubblegumNode node, long epochBin, String globalPostIdentifier) {
+        if(node.store(NodeID.hash(epochBin), globalPostIdentifier.getBytes())) {
+            this.lastNetworkUpdates.put(globalPostIdentifier, new Pair<>(epochBin, System.currentTimeMillis()));
+        } else {
+            this.lastNetworkUpdates.put(globalPostIdentifier, new Pair<>(epochBin, 0L));
+        }
+    }
+
     public Post savePost(BubblegumNode node, String content) {
-        return Database.cdbInstance.savePost(node, content);
+        Post saved = Database.cdbInstance.savePost(node, content);
+        long epochBin = saved.getTimeCreated() / BubblegumNode.epochBinDuration;
+        String globalPostIdentifier = node.getNodeIdentifier().toString() + ":" + saved.getID();
+        this.savePostMeta(node, epochBin, globalPostIdentifier);
+
+        System.out.println(epochBin + " -> " + globalPostIdentifier);
+        return saved;
     }
 
     public Post getPost(BubblegumNode node, String id) {
@@ -146,7 +173,7 @@ public class Database {
 
     private void checkDatabasesDirectory() {
         File directory = new File(".databases");
-        if (! directory.exists()) directory.mkdir();
+        if (!directory.exists()) directory.mkdir();
     }
 
     public void checkForExpiredPosts() {
@@ -160,6 +187,20 @@ public class Database {
                 );
             });
         });
+    }
+
+    public void refreshExpiringPosts(BubblegumNode node, int margin) {
+        long cutoff = System.currentTimeMillis() - (Database.EXPIRY_AGE * 1000) + margin;
+        List<Pair<String, Long>> ids = this.lastNetworkUpdates.entrySet()
+            .stream()
+            .filter((e) -> e.getValue().getSecond() < cutoff && e.getKey().startsWith(node.getNodeIdentifier().toString()))
+            .map((e) -> new Pair<>(e.getKey(), e.getValue().getFirst()))
+            .collect(Collectors.toList());
+
+        if(ids.size() > 0) {
+            System.out.println("Refreshing " + ids.size() + " posts");
+        }
+        ids.forEach((p) -> this.savePostMeta(node, p.getSecond(), p.getFirst()));
     }
 
     public void reset() {

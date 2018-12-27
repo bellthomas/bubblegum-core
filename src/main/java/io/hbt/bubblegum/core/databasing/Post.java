@@ -15,7 +15,7 @@ public class Post {
 
     public Post(BubblegumNode node, String content) {
         this.id = UUID.randomUUID().toString();
-        this.owner = node.getIdentifier();
+        this.owner = node.getNodeIdentifier().toString();
         this.network = node.getNetworkIdentifier();
         this.content = content;
         this.timeCreated = System.currentTimeMillis();
@@ -56,8 +56,8 @@ public class Post {
     public static Post fromKademliaQueryResponseItem(KademliaQueryResponseItem responseItem, BubblegumNode node) {
         return new Post(
             responseItem.getId(),
-            node.getIdentifier(),
-            node.getNetworkIdentifier(),
+            responseItem.getOwner(),
+            responseItem.getNetwork(),
             responseItem.getContent(),
             responseItem.getTime()
         );
@@ -65,6 +65,6 @@ public class Post {
 
     @Override
     public String toString() {
-        return "(Post #"+ this.id +"); Timestamp: " + this.timeCreated + "\n" + this.content;
+        return "Owner: "+ this.network +":"+ this.owner +"\nPost #"+ this.id +"\nTimestamp: " + this.timeCreated + "\nContent: " + this.content;
     }
 }

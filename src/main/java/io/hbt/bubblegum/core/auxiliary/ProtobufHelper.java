@@ -139,6 +139,8 @@ public class ProtobufHelper {
         responseItem.setId(post.getID());
         responseItem.setContent(post.getContent());
         responseItem.setTime(post.getTimeCreated());
+        responseItem.setNetwork(post.getNetwork());
+        responseItem.setOwner(post.getOwner());
         return responseItem.build();
     }
 }

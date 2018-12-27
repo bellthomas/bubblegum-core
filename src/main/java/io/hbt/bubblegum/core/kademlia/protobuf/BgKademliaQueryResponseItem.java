@@ -42,6 +42,26 @@ public final class BgKademliaQueryResponseItem {
      * <code>int64 time = 3;</code>
      */
     long getTime();
+
+    /**
+     * <code>string network = 4;</code>
+     */
+    java.lang.String getNetwork();
+    /**
+     * <code>string network = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getNetworkBytes();
+
+    /**
+     * <code>string owner = 5;</code>
+     */
+    java.lang.String getOwner();
+    /**
+     * <code>string owner = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getOwnerBytes();
   }
   /**
    * Protobuf type {@code io.hbt.bubblegum.core.kademlia.protobuf.KademliaQueryResponseItem}
@@ -59,6 +79,8 @@ public final class BgKademliaQueryResponseItem {
       id_ = "";
       content_ = "";
       time_ = 0L;
+      network_ = "";
+      owner_ = "";
     }
 
     @java.lang.Override
@@ -100,6 +122,18 @@ public final class BgKademliaQueryResponseItem {
             case 24: {
 
               time_ = input.readInt64();
+              break;
+            }
+            case 34: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              network_ = s;
+              break;
+            }
+            case 42: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              owner_ = s;
               break;
             }
             default: {
@@ -211,6 +245,74 @@ public final class BgKademliaQueryResponseItem {
       return time_;
     }
 
+    public static final int NETWORK_FIELD_NUMBER = 4;
+    private volatile java.lang.Object network_;
+    /**
+     * <code>string network = 4;</code>
+     */
+    public java.lang.String getNetwork() {
+      java.lang.Object ref = network_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        network_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string network = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getNetworkBytes() {
+      java.lang.Object ref = network_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        network_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int OWNER_FIELD_NUMBER = 5;
+    private volatile java.lang.Object owner_;
+    /**
+     * <code>string owner = 5;</code>
+     */
+    public java.lang.String getOwner() {
+      java.lang.Object ref = owner_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        owner_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string owner = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getOwnerBytes() {
+      java.lang.Object ref = owner_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        owner_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -234,6 +336,12 @@ public final class BgKademliaQueryResponseItem {
       if (time_ != 0L) {
         output.writeInt64(3, time_);
       }
+      if (!getNetworkBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, network_);
+      }
+      if (!getOwnerBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, owner_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -252,6 +360,12 @@ public final class BgKademliaQueryResponseItem {
       if (time_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(3, time_);
+      }
+      if (!getNetworkBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, network_);
+      }
+      if (!getOwnerBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, owner_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -275,6 +389,10 @@ public final class BgKademliaQueryResponseItem {
           .equals(other.getContent());
       result = result && (getTime()
           == other.getTime());
+      result = result && getNetwork()
+          .equals(other.getNetwork());
+      result = result && getOwner()
+          .equals(other.getOwner());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -293,6 +411,10 @@ public final class BgKademliaQueryResponseItem {
       hash = (37 * hash) + TIME_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getTime());
+      hash = (37 * hash) + NETWORK_FIELD_NUMBER;
+      hash = (53 * hash) + getNetwork().hashCode();
+      hash = (37 * hash) + OWNER_FIELD_NUMBER;
+      hash = (53 * hash) + getOwner().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -432,6 +554,10 @@ public final class BgKademliaQueryResponseItem {
 
         time_ = 0L;
 
+        network_ = "";
+
+        owner_ = "";
+
         return this;
       }
 
@@ -461,6 +587,8 @@ public final class BgKademliaQueryResponseItem {
         result.id_ = id_;
         result.content_ = content_;
         result.time_ = time_;
+        result.network_ = network_;
+        result.owner_ = owner_;
         onBuilt();
         return result;
       }
@@ -519,6 +647,14 @@ public final class BgKademliaQueryResponseItem {
         }
         if (other.getTime() != 0L) {
           setTime(other.getTime());
+        }
+        if (!other.getNetwork().isEmpty()) {
+          network_ = other.network_;
+          onChanged();
+        }
+        if (!other.getOwner().isEmpty()) {
+          owner_ = other.owner_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -712,6 +848,144 @@ public final class BgKademliaQueryResponseItem {
         onChanged();
         return this;
       }
+
+      private java.lang.Object network_ = "";
+      /**
+       * <code>string network = 4;</code>
+       */
+      public java.lang.String getNetwork() {
+        java.lang.Object ref = network_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          network_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string network = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNetworkBytes() {
+        java.lang.Object ref = network_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          network_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string network = 4;</code>
+       */
+      public Builder setNetwork(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        network_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string network = 4;</code>
+       */
+      public Builder clearNetwork() {
+        
+        network_ = getDefaultInstance().getNetwork();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string network = 4;</code>
+       */
+      public Builder setNetworkBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        network_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object owner_ = "";
+      /**
+       * <code>string owner = 5;</code>
+       */
+      public java.lang.String getOwner() {
+        java.lang.Object ref = owner_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          owner_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string owner = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getOwnerBytes() {
+        java.lang.Object ref = owner_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          owner_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string owner = 5;</code>
+       */
+      public Builder setOwner(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        owner_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string owner = 5;</code>
+       */
+      public Builder clearOwner() {
+        
+        owner_ = getDefaultInstance().getOwner();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string owner = 5;</code>
+       */
+      public Builder setOwnerBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        owner_ = value;
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -780,9 +1054,10 @@ public final class BgKademliaQueryResponseItem {
   static {
     java.lang.String[] descriptorData = {
       "\n!BgKademliaQueryResponseItem.proto\022\'io." +
-      "hbt.bubblegum.core.kademlia.protobuf\"F\n\031" +
+      "hbt.bubblegum.core.kademlia.protobuf\"f\n\031" +
       "KademliaQueryResponseItem\022\n\n\002id\030\001 \001(\t\022\017\n" +
-      "\007content\030\002 \001(\t\022\014\n\004time\030\003 \001(\003b\006proto3"
+      "\007content\030\002 \001(\t\022\014\n\004time\030\003 \001(\003\022\017\n\007network\030" +
+      "\004 \001(\t\022\r\n\005owner\030\005 \001(\tb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -801,7 +1076,7 @@ public final class BgKademliaQueryResponseItem {
     internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaQueryResponseItem_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaQueryResponseItem_descriptor,
-        new java.lang.String[] { "Id", "Content", "Time", });
+        new java.lang.String[] { "Id", "Content", "Time", "Network", "Owner", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

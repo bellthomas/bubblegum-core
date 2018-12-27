@@ -42,7 +42,7 @@ public class BubblegumNode {
     private Logger logger;
     private ScheduledExecutorService internalScheduler;
 
-    public static long epochBinDuration = 15000; // 15ms
+    public static long epochBinDuration = 1000 * 60 * 15; // 15 minutes
 
     private BubblegumNode(
         String identifier,
@@ -65,7 +65,7 @@ public class BubblegumNode {
 
         this.routingTable = new RoutingTable(this);
         this.db = Database.getInstance();
-        this.db.add(this.identifier, nid.toString(), new byte[] {0x01}); // responds only to self
+        this.db.saveUserMeta(this, "Harri");
 
         this.setupInternalScheduling();
 
@@ -94,6 +94,9 @@ public class BubblegumNode {
 //        );
 
         // Refresh/delete content as it expires
+        this.getExecutionContext().scheduleTask(() -> {
+            this.db.refreshExpiringPosts(this, 15);
+        }, 60, 30, TimeUnit.SECONDS);
 
     }
 
@@ -158,7 +161,13 @@ public class BubblegumNode {
         return (storeActivity.getComplete() && storeActivity.getSuccess());
     }
 
-    public List<Post> query(NodeID id, long start, long end) {
+    public List<Post> query(NodeID id, long start, long end, List<String> ids) {
+
+        // Check for local query
+        if(id.toString().equals(this.getNodeIdentifier().toString())) {
+            return this.db.queryPosts(this, start, end, ids);
+        }
+
         LookupActivity lookupActivity = new LookupActivity(this, id, 1, false);
         lookupActivity.run();
 
@@ -175,7 +184,7 @@ public class BubblegumNode {
                 if(to == null) return null;
 
                 // Got the destination
-                QueryActivity queryActivity = new QueryActivity(this, to, start, end, new ArrayList<>());
+                QueryActivity queryActivity = new QueryActivity(this, to, start, end, ids);
                 queryActivity.run();
 
                 if(queryActivity.getComplete() && queryActivity.getSuccess()) {
@@ -232,17 +241,7 @@ public class BubblegumNode {
     }
 
     public Post savePost(String content) {
-        if(content != null) {
-            Post saved = this.db.savePost(this, content);
-            long epochBin = saved.getTimeCreated() / BubblegumNode.epochBinDuration;
-            String globalPostIdentifier = this.nodeIdentifier.toString() + ":" + saved.getID();
-            boolean savedIndex = this.store(NodeID.hash(epochBin), globalPostIdentifier.getBytes());
-
-            System.out.println(epochBin + " -> " + globalPostIdentifier);
-            System.out.println(savedIndex);
-
-            return saved;
-        }
+        if(content != null) return this.db.savePost(this, content);
         return null;
     }
 

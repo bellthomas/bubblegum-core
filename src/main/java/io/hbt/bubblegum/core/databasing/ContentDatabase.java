@@ -2,6 +2,7 @@ package io.hbt.bubblegum.core.databasing;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,16 +56,15 @@ class ContentDatabase {
         }
     }
 
-    public Post savePost(BubblegumNode node, String content) {
+
+    private Post saveEntity(String id, BubblegumNode node, String content) {
         if(content == null || node == null) return null;
 
         if(ContentDatabase.connection == null) this.openDatabaseConnection();
         if(ContentDatabase.connection == null) return null; // Database connection failed, don't try to save anything
 
-        // TODO check UUID unique
-        String id = UUID.randomUUID().toString();
         String network = node.getNetworkIdentifier();
-        String owner = node.getIdentifier();
+        String owner = node.getNodeIdentifier().toString();
 
         PreparedStatement ps = null;
         try {
@@ -86,6 +87,14 @@ class ContentDatabase {
         return null;
     }
 
+    public Post savePost(BubblegumNode node, String content) {
+        return this.saveEntity(UUID.randomUUID().toString(), node, content);
+    }
+
+    public Post saveMeta(String key, BubblegumNode node, String content) {
+        return this.saveEntity("_"+ key + "_" + node.getNodeIdentifier().toString(), node, content);
+    }
+
     public Post getPost(BubblegumNode node, String id) {
         if(id == null || node == null) return null;
 
@@ -102,7 +111,7 @@ class ContentDatabase {
             if(rs.next()) {
                 String content = rs.getString("content");
                 long timeCreated = rs.getLong("time_created");
-                return new Post(id, node.getIdentifier(), node.getNetworkIdentifier(), content, timeCreated);
+                return new Post(id, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, timeCreated);
             }
 
         } catch (SQLException e) {
@@ -130,7 +139,7 @@ class ContentDatabase {
                 String id = rs.getString("id");
                 String content = rs.getString("content");
                 long timeCreated = rs.getLong("time_created");
-                posts.add(new Post(id, node.getIdentifier(), node.getNetworkIdentifier(), content, timeCreated));
+                posts.add(new Post(id, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, timeCreated));
             }
 
             return posts;
@@ -143,12 +152,15 @@ class ContentDatabase {
     }
 
     public List<Post> queryPosts(BubblegumNode node, long start, long end, List<String> ids) {
+        if(ids != null && ids.size() > 0) return queryPostsByIDs(node, ids);
+        return queryPostsByTime(node, start, end);
+    }
 
-        // TODO use ids
+    public List<Post> queryPostsByTime(BubblegumNode node, long start, long end) {
         if(start < 0 || end < 0 || end < start) return new ArrayList<>();
 
         if(ContentDatabase.connection == null) this.openDatabaseConnection();
-        if(ContentDatabase.connection == null) return new ArrayList<>(); // Database connection failed, don't try to save anything
+        if(ContentDatabase.connection == null) return new ArrayList<>(); // Database connection failed, don't try to retrieve anything
 
         PreparedStatement ps;
         try {
@@ -162,7 +174,35 @@ class ContentDatabase {
                 String content = rs.getString("content");
                 long timeCreated = rs.getLong("time_created");
                 String postID = rs.getString("id");
-                posts.add(new Post(postID, node.getIdentifier(), node.getNetworkIdentifier(), content, timeCreated));
+                posts.add(new Post(postID, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, timeCreated));
+            }
+
+            return posts;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return new ArrayList<>();
+    }
+
+    public List<Post> queryPostsByIDs(BubblegumNode node, List<String> ids) {
+        if(ids == null || ids.size() == 0) return new ArrayList<>();
+
+        if(ContentDatabase.connection == null) this.openDatabaseConnection();
+        if(ContentDatabase.connection == null) return new ArrayList<>(); // Database connection failed, don't try to retrieve anything
+
+        PreparedStatement ps;
+        try {
+            ps = ContentDatabase.connection.prepareStatement(this.queryPostsSQLByIDs(ids.size()));
+            for(int i = 1; i <= ids.size(); i++) ps.setString(i, ids.get(i-1));
+            ResultSet rs = ps.executeQuery();
+
+            ArrayList<Post> posts = new ArrayList<>();
+            while(rs.next()) {
+                String content = rs.getString("content");
+                long timeCreated = rs.getLong("time_created");
+                String postID = rs.getString("id");
+                posts.add(new Post(postID, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, timeCreated));
             }
 
             return posts;
@@ -223,5 +263,11 @@ class ContentDatabase {
 
     private String queryPostsSQLByTime() {
         return "SELECT id, content, time_created FROM _posts WHERE time_created >= ? AND time_created <= ?";
+    }
+
+    private String queryPostsSQLByIDs(int params) {
+        String[] paramString = new String[params];
+        for(int i = 0; i < params; i++) paramString[i] = "?";
+        return "SELECT id, content, time_created FROM _posts WHERE id IN (" + String.join(",", paramString) + ")";
     }
 }
