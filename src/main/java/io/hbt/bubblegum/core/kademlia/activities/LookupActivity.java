@@ -3,6 +3,7 @@ package io.hbt.bubblegum.core.kademlia.activities;
 import co.paralleluniverse.fibers.SuspendExecution;
 import co.paralleluniverse.fibers.Suspendable;
 import co.paralleluniverse.strands.Strand;
+import io.hbt.bubblegum.core.auxiliary.ComparableBytePayload;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
@@ -17,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class LookupActivity extends SystemActivity {
 
@@ -25,14 +27,21 @@ public class LookupActivity extends SystemActivity {
     private final int numResults;
     private final boolean getValue;
 
-    private List<byte[]> results;
+    private Set<ComparableBytePayload> results;
     private Set<RouterNode> closestNodes;
+    private boolean foundFirstValue;
+    private int opsSinceFirstFind;
 
     public LookupActivity(BubblegumNode localNode, NodeID lookup, int results, boolean getValue) {
         super(localNode);
         this.nodeToLookup = lookup;
         this.numResults = results;
         this.getValue = getValue;
+        if(getValue) {
+            this.results = new TreeSet<>();
+            this.foundFirstValue = false;
+            this.opsSinceFirstFind = 0;
+        }
     }
 
 //    @Override
@@ -171,9 +180,9 @@ public class LookupActivity extends SystemActivity {
 
         // Check if we have a value locally first
         if(this.getValue && this.localNode.databaseHasKey(this.nodeToLookup.toString())) {
-            this.results = this.localNode.databaseRetrieveValue(this.nodeToLookup.toString());
-            this.onSuccess("Lookup Value - found locally");
-            return;
+            this.results.addAll(
+                ComparableBytePayload.fromCollection(this.localNode.databaseRetrieveValue(this.nodeToLookup.toString()))
+            );
         }
 
         TreeSet<RouterNode> knownNodes = this.localNode.getRoutingTable().getAllNodesSorted(this.nodeToLookup.getKeyDistanceComparator());
@@ -209,6 +218,7 @@ public class LookupActivity extends SystemActivity {
                     opsWithoutNewClosest++;
 
                     if (activity.getSuccess()) {
+
                         verifiedNodes.add(activity.getDestination());
 
                         // If this is the new closest, save
@@ -218,11 +228,19 @@ public class LookupActivity extends SystemActivity {
                             //sb.append("    ***** New closest - " + rNode.getNode().toString() + "\n");
                         }
 
+                        if(this.getValue && this.foundFirstValue) {
+                            this.opsSinceFirstFind++;
+                        }
+
                         // FIND_VALUE check
                         List<byte[]> value = activity.getFindValueResult();
                         if (this.getValue && value != null) {
-                            // got our result
-                            this.results = value;
+                            if(!this.foundFirstValue) this.foundFirstValue = true;
+                            this.results.addAll(ComparableBytePayload.fromCollection(value));
+                        }
+
+                        // FIND_VALUE continuation for alpha ops
+                        if(this.getValue && this.opsSinceFirstFind >= alpha) {
                             this.onSuccess("Retrieved " + this.results.size() + " values");
                             return;
                         }
@@ -293,7 +311,7 @@ public class LookupActivity extends SystemActivity {
     }
 
     public List<byte[]> getResult() {
-        return this.results;
+        return this.results.stream().distinct().map((cbp) -> cbp.getPayload()).collect(Collectors.toList());
     }
 
     public Set<RouterNode> getClosestNodes() {

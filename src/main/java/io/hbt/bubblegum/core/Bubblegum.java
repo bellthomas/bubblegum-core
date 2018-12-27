@@ -45,6 +45,8 @@ public class Bubblegum {
             this.loadNodes();
             this.isAlive = true;
 
+            Database.getInstance().initialiseExpiryScheduler(this.executionContext);
+
 //        } catch (AddressInitialisationException e) {
 //            System.out.println("Failed to start network");
         }

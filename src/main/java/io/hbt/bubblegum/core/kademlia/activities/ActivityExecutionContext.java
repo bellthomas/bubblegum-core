@@ -3,6 +3,10 @@ package io.hbt.bubblegum.core.kademlia.activities;
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.strands.SuspendableRunnable;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class ActivityExecutionContext {
 
 //    private final ActivityExecutionManager activityManager;
@@ -17,11 +21,15 @@ public class ActivityExecutionContext {
 
     private int numProcesses = 0;
 
+    private final ScheduledExecutorService executor;
+
     public ActivityExecutionContext(int numProcesses) {
         this.numProcesses = (numProcesses < 0) ? 0 : numProcesses;
         if(numProcesses < 1) numProcesses = 1;
 
         double parallelismTotal = GENERAL_ACTIVITY_PARALLELISM + CALLBACK_ACTIVITY_PARALLELISM + PING_ACTIVITY_PARALLELISM;
+
+        executor = Executors.newScheduledThreadPool(20);
 
 //        this.activityManager = new ActivityExecutionManager(
 //            numProcesses, GENERAL_ACTIVITY_PARALLELISM,
@@ -82,6 +90,10 @@ public class ActivityExecutionContext {
 //        this.callbackManager.increaseForNewProcesses(numProcesses);
 //        this.pingManager.increaseForNewProcesses(numProcesses);
 //        System.out.println("[ActivityExecutionContext] Now setup for " + this.numProcesses + " processes.");
+    }
+
+    public void scheduleTask(Runnable command, long initial, long period, TimeUnit unit) {
+        this.executor.scheduleAtFixedRate(command, initial, period, unit);
     }
 }
 
