@@ -96,35 +96,6 @@ public class Bubblegum {
         }
     }
 
-    public List<BubblegumNode> buildNodes(int numNodes) {
-        List<BubblegumNode> nodes = new ArrayList<>();
-        for(int i = 0; i < numNodes; i++) {
-            nodes.add(this.createNode());
-        }
-
-        Database.getInstance().updateNodesInDatabase(
-            this.nodes.entrySet().stream().map(
-                entry -> entry.getValue()
-            ).collect(Collectors.toList())
-        );
-        return nodes;
-    }
-
-
-    public BubblegumNode createNode() {
-        UUID identifier = UUID.randomUUID();
-        this.executionContext.newProcessInContext();
-        BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
-        newNodeBuilder.setIdentifier(identifier.toString());
-        newNodeBuilder.setSocialIdentity(this.socialIdentity);
-        newNodeBuilder.setExecutionContext(this.executionContext);
-        newNodeBuilder.setLogger(LoggingManager.getLogger(identifier.toString()));
-        BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
-
-        this.nodes.put(identifier.toString(), newNode);
-        Database.getInstance().updateNodeInDatabase(newNode);
-        return newNode;
-    }
 
     private void initialiseSocialIdentity() {
         this.socialIdentity = new SocialIdentity();
@@ -195,11 +166,35 @@ public class Bubblegum {
         this.nodes.clear();
     }
 
+    public List<BubblegumNode> buildNodes(int numNodes) {
+        List<BubblegumNode> nodes = new ArrayList<>();
+        for(int i = 0; i < numNodes; i++) {
+            nodes.add(this.createNode());
+        }
 
-    public static void main(String[] args) {
-
+        Database.getInstance().updateNodesInDatabase(
+            this.nodes.entrySet().stream().map(
+                entry -> entry.getValue()
+            ).collect(Collectors.toList())
+        );
+        return nodes;
     }
 
+
+    public BubblegumNode createNode() {
+        UUID identifier = UUID.randomUUID();
+        this.executionContext.newProcessInContext();
+        BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
+        newNodeBuilder.setIdentifier(identifier.toString());
+        newNodeBuilder.setSocialIdentity(this.socialIdentity);
+        newNodeBuilder.setExecutionContext(this.executionContext);
+        newNodeBuilder.setLogger(LoggingManager.getLogger(identifier.toString()));
+        BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
+
+        this.nodes.put(identifier.toString(), newNode);
+        Database.getInstance().updateNodeInDatabase(newNode);
+        return newNode;
+    }
 
 }
 

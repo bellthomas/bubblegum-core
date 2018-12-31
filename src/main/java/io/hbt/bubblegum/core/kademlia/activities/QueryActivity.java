@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import co.paralleluniverse.fibers.SuspendExecution;
+import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -37,6 +38,7 @@ public class QueryActivity extends NetworkActivity {
     }
 
     @Override
+    @Suspendable
     public void run() {
         if(this.periodStart < 0 && this.periodEnd < 0 && (this.ids == null || this.ids.size() == 0)) {
             this.onFail();
@@ -66,7 +68,7 @@ public class QueryActivity extends NetworkActivity {
                 KademliaQueryResponse response = kademliaMessage.getQueryResponse();
 
                 for(KademliaQueryResponseItem item : response.getItemsList()) {
-                    this.results.add(Post.fromKademliaQueryResponseItem(item, this.localNode));
+                    this.results.add(Post.fromKademliaQueryResponseItem(item));
                 }
 
                 this.onSuccess();

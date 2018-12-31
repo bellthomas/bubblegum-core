@@ -1,0 +1,1 @@
+java -javaagent:quasar-core-0.8.0-SNAPSHOT.jar=bm -Dco.paralleluniverse.fibers.verifyInstrumentation=true -Dco.paralleluniverse.fibers.detectRunawayFibers=false -jar bubblegum-cli.jar

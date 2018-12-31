@@ -7,4 +7,5 @@ message KademliaQueryResponseItem {
     int64 time = 3;
     string network = 4;
     string owner = 5;
+    string response = 6;
 }

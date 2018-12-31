@@ -62,6 +62,16 @@ public final class BgKademliaQueryResponseItem {
      */
     com.google.protobuf.ByteString
         getOwnerBytes();
+
+    /**
+     * <code>string response = 6;</code>
+     */
+    java.lang.String getResponse();
+    /**
+     * <code>string response = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getResponseBytes();
   }
   /**
    * Protobuf type {@code io.hbt.bubblegum.core.kademlia.protobuf.KademliaQueryResponseItem}
@@ -81,6 +91,7 @@ public final class BgKademliaQueryResponseItem {
       time_ = 0L;
       network_ = "";
       owner_ = "";
+      response_ = "";
     }
 
     @java.lang.Override
@@ -134,6 +145,12 @@ public final class BgKademliaQueryResponseItem {
               java.lang.String s = input.readStringRequireUtf8();
 
               owner_ = s;
+              break;
+            }
+            case 50: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              response_ = s;
               break;
             }
             default: {
@@ -313,6 +330,40 @@ public final class BgKademliaQueryResponseItem {
       }
     }
 
+    public static final int RESPONSE_FIELD_NUMBER = 6;
+    private volatile java.lang.Object response_;
+    /**
+     * <code>string response = 6;</code>
+     */
+    public java.lang.String getResponse() {
+      java.lang.Object ref = response_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        response_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string response = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getResponseBytes() {
+      java.lang.Object ref = response_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        response_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -342,6 +393,9 @@ public final class BgKademliaQueryResponseItem {
       if (!getOwnerBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, owner_);
       }
+      if (!getResponseBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, response_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -366,6 +420,9 @@ public final class BgKademliaQueryResponseItem {
       }
       if (!getOwnerBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, owner_);
+      }
+      if (!getResponseBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, response_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -393,6 +450,8 @@ public final class BgKademliaQueryResponseItem {
           .equals(other.getNetwork());
       result = result && getOwner()
           .equals(other.getOwner());
+      result = result && getResponse()
+          .equals(other.getResponse());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -415,6 +474,8 @@ public final class BgKademliaQueryResponseItem {
       hash = (53 * hash) + getNetwork().hashCode();
       hash = (37 * hash) + OWNER_FIELD_NUMBER;
       hash = (53 * hash) + getOwner().hashCode();
+      hash = (37 * hash) + RESPONSE_FIELD_NUMBER;
+      hash = (53 * hash) + getResponse().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -558,6 +619,8 @@ public final class BgKademliaQueryResponseItem {
 
         owner_ = "";
 
+        response_ = "";
+
         return this;
       }
 
@@ -589,6 +652,7 @@ public final class BgKademliaQueryResponseItem {
         result.time_ = time_;
         result.network_ = network_;
         result.owner_ = owner_;
+        result.response_ = response_;
         onBuilt();
         return result;
       }
@@ -654,6 +718,10 @@ public final class BgKademliaQueryResponseItem {
         }
         if (!other.getOwner().isEmpty()) {
           owner_ = other.owner_;
+          onChanged();
+        }
+        if (!other.getResponse().isEmpty()) {
+          response_ = other.response_;
           onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -986,6 +1054,75 @@ public final class BgKademliaQueryResponseItem {
         onChanged();
         return this;
       }
+
+      private java.lang.Object response_ = "";
+      /**
+       * <code>string response = 6;</code>
+       */
+      public java.lang.String getResponse() {
+        java.lang.Object ref = response_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          response_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string response = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getResponseBytes() {
+        java.lang.Object ref = response_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          response_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string response = 6;</code>
+       */
+      public Builder setResponse(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        response_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string response = 6;</code>
+       */
+      public Builder clearResponse() {
+        
+        response_ = getDefaultInstance().getResponse();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string response = 6;</code>
+       */
+      public Builder setResponseBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        response_ = value;
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1054,10 +1191,11 @@ public final class BgKademliaQueryResponseItem {
   static {
     java.lang.String[] descriptorData = {
       "\n!BgKademliaQueryResponseItem.proto\022\'io." +
-      "hbt.bubblegum.core.kademlia.protobuf\"f\n\031" +
+      "hbt.bubblegum.core.kademlia.protobuf\"x\n\031" +
       "KademliaQueryResponseItem\022\n\n\002id\030\001 \001(\t\022\017\n" +
       "\007content\030\002 \001(\t\022\014\n\004time\030\003 \001(\003\022\017\n\007network\030" +
-      "\004 \001(\t\022\r\n\005owner\030\005 \001(\tb\006proto3"
+      "\004 \001(\t\022\r\n\005owner\030\005 \001(\t\022\020\n\010response\030\006 \001(\tb\006" +
+      "proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1076,7 +1214,7 @@ public final class BgKademliaQueryResponseItem {
     internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaQueryResponseItem_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaQueryResponseItem_descriptor,
-        new java.lang.String[] { "Id", "Content", "Time", "Network", "Owner", });
+        new java.lang.String[] { "Id", "Content", "Time", "Network", "Owner", "Response", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

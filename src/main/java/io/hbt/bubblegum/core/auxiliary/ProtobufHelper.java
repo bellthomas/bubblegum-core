@@ -138,6 +138,7 @@ public class ProtobufHelper {
         KademliaQueryResponseItem.Builder responseItem = KademliaQueryResponseItem.newBuilder();
         responseItem.setId(post.getID());
         responseItem.setContent(post.getContent());
+        responseItem.setResponse(post.getResponse());
         responseItem.setTime(post.getTimeCreated());
         responseItem.setNetwork(post.getNetwork());
         responseItem.setOwner(post.getOwner());

@@ -56,8 +56,11 @@ class ContentDatabase {
         }
     }
 
-
     private Post saveEntity(String id, BubblegumNode node, String content) {
+        return this.saveEntity(id, node, content, "");
+    }
+
+    private Post saveEntity(String id, BubblegumNode node, String content, String response) {
         if(content == null || node == null) return null;
 
         if(ContentDatabase.connection == null) this.openDatabaseConnection();
@@ -73,11 +76,12 @@ class ContentDatabase {
             ps.setString(2, owner);
             ps.setString(3, network);
             ps.setString(4, content);
-            ps.setLong(5, System.currentTimeMillis());
+            ps.setString(5, response);
+            ps.setLong(6, System.currentTimeMillis());
             int numInserted = ps.executeUpdate();
 
             if(numInserted == 1) {
-                return new Post(id, owner, network, content, System.currentTimeMillis());
+                return new Post(id, owner, network, content, response, System.currentTimeMillis());
             }
 
         } catch (SQLException e) {
@@ -110,8 +114,9 @@ class ContentDatabase {
             ResultSet rs = ps.executeQuery();
             if(rs.next()) {
                 String content = rs.getString("content");
+                String response = rs.getString("response");
                 long timeCreated = rs.getLong("time_created");
-                return new Post(id, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, timeCreated);
+                return new Post(id, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, response, timeCreated);
             }
 
         } catch (SQLException e) {
@@ -138,8 +143,9 @@ class ContentDatabase {
             while(rs.next()) {
                 String id = rs.getString("id");
                 String content = rs.getString("content");
+                String response = rs.getString("response");
                 long timeCreated = rs.getLong("time_created");
-                posts.add(new Post(id, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, timeCreated));
+                posts.add(new Post(id, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, response, timeCreated));
             }
 
             return posts;
@@ -172,9 +178,10 @@ class ContentDatabase {
             ArrayList<Post> posts = new ArrayList<>();
             while(rs.next()) {
                 String content = rs.getString("content");
+                String response = rs.getString("response");
                 long timeCreated = rs.getLong("time_created");
                 String postID = rs.getString("id");
-                posts.add(new Post(postID, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, timeCreated));
+                posts.add(new Post(postID, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, response, timeCreated));
             }
 
             return posts;
@@ -200,9 +207,10 @@ class ContentDatabase {
             ArrayList<Post> posts = new ArrayList<>();
             while(rs.next()) {
                 String content = rs.getString("content");
+                String response = rs.getString("response");
                 long timeCreated = rs.getLong("time_created");
                 String postID = rs.getString("id");
-                posts.add(new Post(postID, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, timeCreated));
+                posts.add(new Post(postID, node.getNodeIdentifier().toString(), node.getNetworkIdentifier(), content, response, timeCreated));
             }
 
             return posts;
@@ -223,6 +231,7 @@ class ContentDatabase {
         sb.append("owner VARCHAR(255) NOT NULL, ");
         sb.append("network VARCHAR(255) NOT NULL, ");
         sb.append("content TEXT NOT NULL, ");
+        sb.append("response TEXT NOT NULL, ");
         sb.append("time_created INTEGER NOT NULL, ");
         sb.append("PRIMARY KEY (id) ");
         sb.append(")");
@@ -232,8 +241,8 @@ class ContentDatabase {
     private String createPostSQL() {
         StringBuilder sb = new StringBuilder();
         sb.append("INSERT INTO _posts ");
-        sb.append("(id, owner, network, content, time_created) ");
-        sb.append("VALUES (?, ?, ?, ?, ?)");
+        sb.append("(id, owner, network, content, response, time_created) ");
+        sb.append("VALUES (?, ?, ?, ?, ?, ?)");
         return sb.toString();
     }
 
@@ -254,20 +263,20 @@ class ContentDatabase {
     }
 
     private String getPostSQL() {
-        return "SELECT content, time_created FROM _posts WHERE id=? AND owner=? AND network=? LIMIT 1";
+        return "SELECT content, response, time_created FROM _posts WHERE id=? AND owner=? AND network=? LIMIT 1";
     }
 
     private String getAllPostsSQL() {
-        return "SELECT id, content, time_created FROM _posts WHERE owner=? AND network=?";
+        return "SELECT id, content, response, time_created FROM _posts WHERE owner=? AND network=?";
     }
 
     private String queryPostsSQLByTime() {
-        return "SELECT id, content, time_created FROM _posts WHERE time_created >= ? AND time_created <= ?";
+        return "SELECT id, content, response, time_created FROM _posts WHERE time_created >= ? AND time_created <= ?";
     }
 
     private String queryPostsSQLByIDs(int params) {
         String[] paramString = new String[params];
         for(int i = 0; i < params; i++) paramString[i] = "?";
-        return "SELECT id, content, time_created FROM _posts WHERE id IN (" + String.join(",", paramString) + ")";
+        return "SELECT id, content, response, time_created FROM _posts WHERE id IN (" + String.join(",", paramString) + ")";
     }
 }

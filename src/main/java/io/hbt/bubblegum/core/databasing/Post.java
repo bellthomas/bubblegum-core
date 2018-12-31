@@ -11,21 +11,28 @@ public class Post {
     private final String owner;
     private final String network;
     private String content;
+    private String response;
     private final long timeCreated;
 
     public Post(BubblegumNode node, String content) {
+        this(node, content, "");
+    }
+
+    public Post(BubblegumNode node, String content, String response) {
         this.id = UUID.randomUUID().toString();
         this.owner = node.getNodeIdentifier().toString();
         this.network = node.getNetworkIdentifier();
         this.content = content;
+        this.response = response;
         this.timeCreated = System.currentTimeMillis();
     }
 
-    protected Post(String id, String owner, String network, String content, long timeCreated) {
+    protected Post(String id, String owner, String network, String content, String response, long timeCreated) {
         this.id = id;
         this.owner = owner;
         this.network = network;
         this.content = content;
+        this.response = response;
         this.timeCreated = timeCreated;
     }
 
@@ -49,22 +56,29 @@ public class Post {
         return this.content;
     }
 
+    public String getResponse() {
+        return this.response;
+    }
+
     public long getTimeCreated() {
         return this.timeCreated;
     }
 
-    public static Post fromKademliaQueryResponseItem(KademliaQueryResponseItem responseItem, BubblegumNode node) {
+    public static Post fromKademliaQueryResponseItem(KademliaQueryResponseItem responseItem) {
         return new Post(
             responseItem.getId(),
             responseItem.getOwner(),
             responseItem.getNetwork(),
             responseItem.getContent(),
+            responseItem.getResponse(),
             responseItem.getTime()
         );
     }
 
     @Override
     public String toString() {
-        return "Owner: "+ this.network +":"+ this.owner +"\nPost #"+ this.id +"\nTimestamp: " + this.timeCreated + "\nContent: " + this.content;
+        String val = "Owner: "+ this.network +":"+ this.owner +"\nPost #"+ this.id +"\nTimestamp: " + this.timeCreated + "\nContent: " + this.content;
+        if(this.response.length() > 0) val += "\n[In response to " + this.response + "]";
+        return val;
     }
 }

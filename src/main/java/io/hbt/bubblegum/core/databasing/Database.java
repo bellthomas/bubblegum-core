@@ -1,5 +1,7 @@
 package io.hbt.bubblegum.core.databasing;
 
+import io.hbt.bubblegum.core.Bubblegum;
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.ComparableBytePayload;
 import io.hbt.bubblegum.core.auxiliary.Pair;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -28,7 +30,7 @@ public class Database {
     protected static final String DB_FOLDER_PATH = ".databases/";
     protected static final long EXPIRY_AGE = 60; // seconds
 
-    private final ConcurrentHashMap<String, Pair<Long, Long>> lastNetworkUpdates;
+    private final ConcurrentHashMap<String, Pair<String, Long>> lastNetworkUpdates;
 
     private Database() {
         this.checkDatabasesDirectory();
@@ -124,11 +126,9 @@ public class Database {
         // TODO error on removeAll line?
         // If we have an old version, remove it
         ComparableBytePayload newPayload = new ComparableBytePayload(value);
-        synchronized (this.db) {
-            this.db.get(node).get(key).removeAll(
-                this.db.get(node).get(key).stream().filter((p) -> p.getFirst().equals(newPayload)).collect(Collectors.toList())
-            );
-        }
+        this.db.get(node).get(key).removeAll(
+            this.db.get(node).get(key).stream().filter((p) -> p.getFirst().equals(newPayload)).collect(Collectors.toList())
+        );
 
         // Save new version
         this.db.get(node).get(key).add(new Pair<>(new ComparableBytePayload(value), System.currentTimeMillis()));
@@ -141,19 +141,19 @@ public class Database {
         Database.cdbInstance.saveMeta("username", node, content);
     }
 
-    private void savePostMeta(BubblegumNode node, long epochBin, String globalPostIdentifier) {
-        if(node.store(NodeID.hash(epochBin), globalPostIdentifier.getBytes())) {
-            this.lastNetworkUpdates.put(globalPostIdentifier, new Pair<>(epochBin, System.currentTimeMillis()));
+    public void publishEntityMeta(BubblegumNode node, String key, String globalPostIdentifier) {
+        if(node.store(NodeID.hash(key), globalPostIdentifier.getBytes())) {
+            this.lastNetworkUpdates.put(globalPostIdentifier, new Pair<>(key, System.currentTimeMillis()));
         } else {
-            this.lastNetworkUpdates.put(globalPostIdentifier, new Pair<>(epochBin, 0L));
+            this.lastNetworkUpdates.put(globalPostIdentifier, new Pair<>(key, 0L));
         }
     }
 
     public Post savePost(BubblegumNode node, String content) {
         Post saved = Database.cdbInstance.savePost(node, content);
-        long epochBin = saved.getTimeCreated() / BubblegumNode.epochBinDuration;
-        String globalPostIdentifier = node.getNodeIdentifier().toString() + ":" + saved.getID();
-        this.savePostMeta(node, epochBin, globalPostIdentifier);
+        long epochBin = saved.getTimeCreated() / Configuration.BIN_EPOCH_DURATION;
+        String globalPostIdentifier = Database.globalIdentifierForPost(node, saved);
+        this.publishEntityMeta(node, Long.toString(epochBin), globalPostIdentifier);
 
         System.out.println(epochBin + " -> " + globalPostIdentifier);
         return saved;
@@ -191,16 +191,17 @@ public class Database {
 
     public void refreshExpiringPosts(BubblegumNode node, int margin) {
         long cutoff = System.currentTimeMillis() - (Database.EXPIRY_AGE * 1000) + margin;
-        List<Pair<String, Long>> ids = this.lastNetworkUpdates.entrySet()
+        List<Pair<String, String>> ids = this.lastNetworkUpdates.entrySet()
             .stream()
             .filter((e) -> e.getValue().getSecond() < cutoff && e.getKey().startsWith(node.getNodeIdentifier().toString()))
             .map((e) -> new Pair<>(e.getKey(), e.getValue().getFirst()))
             .collect(Collectors.toList());
 
-        if(ids.size() > 0) {
-            System.out.println("Refreshing " + ids.size() + " posts");
-        }
-        ids.forEach((p) -> this.savePostMeta(node, p.getSecond(), p.getFirst()));
+        ids.forEach((p) -> this.publishEntityMeta(node, p.getSecond(), p.getFirst()));
+    }
+
+    public static String globalIdentifierForPost(BubblegumNode node, Post post) {
+        return node.getNodeIdentifier().toString() + ":" + post.getID();
     }
 
     public void reset() {

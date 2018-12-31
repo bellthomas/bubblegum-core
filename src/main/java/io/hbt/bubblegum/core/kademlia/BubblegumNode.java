@@ -2,6 +2,7 @@ package io.hbt.bubblegum.core.kademlia;
 
 import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.BubblegumCellServer;
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.logging.Logger;
 import io.hbt.bubblegum.core.databasing.Database;
@@ -33,36 +34,29 @@ import java.util.concurrent.TimeUnit;
  */
 public class BubblegumNode {
     private String identifier, networkIdentifier;
-    private SocialIdentity socialIdentity;
     private NodeID nodeIdentifier;
     private RoutingTable routingTable;
     private BubblegumCellServer server;
     private ActivityExecutionContext executionContext;
     private Database db;
     private Logger logger;
-    private ScheduledExecutorService internalScheduler;
 
-    public static long epochBinDuration = 1000 * 60 * 15; // 15 minutes
-
+    // region Initialisation
     private BubblegumNode(
         String identifier,
         String networkIdentifier,
-        SocialIdentity socialIdentity,
         ActivityExecutionContext context,
         BubblegumCellServer server,
         Logger logger,
-        NodeID nid,
-        int port
+        NodeID nid
     ) {
         this.identifier = identifier;
         this.networkIdentifier = networkIdentifier;
-        this.socialIdentity = socialIdentity;
         this.nodeIdentifier = nid;
         this.executionContext = context;
         this.logger = logger;
         this.server = server;
         this.server.registerNewLocalNode(this);
-
         this.routingTable = new RoutingTable(this);
         this.db = Database.getInstance();
         this.db.saveUserMeta(this, "Harri");
@@ -99,20 +93,42 @@ public class BubblegumNode {
         }, 60, 30, TimeUnit.SECONDS);
 
     }
+    //endregion
 
-    public String getIdentifier() {
-        return this.identifier;
+    //region Primitive Operations
+    public Set<String> discover(InetAddress address, int port) {
+        RouterNode to = new RouterNode(new NodeID(), address, port);
+        DiscoveryActivity discoveryActivity = new DiscoveryActivity(this, to);
+        discoveryActivity.run();
+
+        if(discoveryActivity.getComplete() && discoveryActivity.getSuccess()) {
+            return discoveryActivity.getEntries();
+        }
+
+        return null;
     }
 
-    public NodeID getNodeIdentifier() {
-        return this.nodeIdentifier;
+    @Suspendable
+    public List<byte[]> lookup(NodeID id) {
+        LookupActivity lookupActivity = new LookupActivity(this, id, 5, true);
+        lookupActivity.run();
+
+        if(lookupActivity.getComplete() && lookupActivity.getSuccess()) {
+            return lookupActivity.getResult();
+        }
+        else {
+            return null;
+        }
     }
 
-    @Override
-    public String toString() {
-        return nodeIdentifier.toString();
+    public boolean store(NodeID id, byte[] value) {
+        StoreActivity storeActivity = new StoreActivity(this, id.toString(), value);
+        storeActivity.run();
+        return (storeActivity.getComplete() && storeActivity.getSuccess());
     }
+    //endregion
 
+    //region Compound Operations
     @Suspendable
     public boolean bootstrap(InetAddress address, int port, String foreignRecipient) {
 
@@ -131,36 +147,7 @@ public class BubblegumNode {
         }
     }
 
-    public Set<String> discover(InetAddress address, int port) {
-        RouterNode to = new RouterNode(new NodeID(), address, port);
-        DiscoveryActivity discoveryActivity = new DiscoveryActivity(this, to);
-        discoveryActivity.run();
-
-        if(discoveryActivity.getComplete() && discoveryActivity.getSuccess()) {
-            return discoveryActivity.getEntries();
-        }
-
-        return null;
-    }
-
-    public List<byte[]> lookup(NodeID id) {
-        LookupActivity lookupActivity = new LookupActivity(this, id, 5, true);
-        lookupActivity.run();
-
-        if(lookupActivity.getComplete() && lookupActivity.getSuccess()) {
-            return lookupActivity.getResult();
-        }
-        else {
-            return null;
-        }
-    }
-
-    public boolean store(NodeID id, byte[] value) {
-        StoreActivity storeActivity = new StoreActivity(this, id.toString(), value);
-        storeActivity.run();
-        return (storeActivity.getComplete() && storeActivity.getSuccess());
-    }
-
+    @Suspendable
     public List<Post> query(NodeID id, long start, long end, List<String> ids) {
 
         // Check for local query
@@ -202,6 +189,16 @@ public class BubblegumNode {
             return null;
         }
     }
+    //endregion
+
+    //region Getters
+    public String getIdentifier() {
+        return this.identifier;
+    }
+
+    public NodeID getNodeIdentifier() {
+        return this.nodeIdentifier;
+    }
 
     public String getNetworkIdentifier() {
         return this.networkIdentifier;
@@ -230,8 +227,9 @@ public class BubblegumNode {
     public void log(String message) {
         this.logger.logMessage(message);
     }
+    //endregion
 
-    /* Database */
+    //region Database
     public boolean databaseHasKey(String key) {
         return this.db.hasKey(this.identifier, key);
     }
@@ -241,7 +239,21 @@ public class BubblegumNode {
     }
 
     public Post savePost(String content) {
-        if(content != null) return this.db.savePost(this, content);
+        if(content != null && content.trim().length() > 0) return this.db.savePost(this, content);
+        return null;
+    }
+
+    public Post saveResponse(String content, String inReponseTo) {
+        if(inReponseTo == null || inReponseTo.trim().length() == 0) return this.savePost(content);
+
+        if(content != null && content.trim().length() > 0) {
+            Post saved = this.db.savePost(this, content);
+            String key = "responses_" + inReponseTo;
+            String globalIdentifier = Database.globalIdentifierForPost(this, saved);
+            this.db.publishEntityMeta(this, key, globalIdentifier);
+            return saved;
+        }
+
         return null;
     }
 
@@ -256,8 +268,9 @@ public class BubblegumNode {
     public List<Post> queryPosts(long start, long end, List<String> ids) {
         return this.db.queryPosts(this, start, end, ids);
     }
+    //endregion
 
-    /* Router */
+    //region Router
     public void restoreRouterFromSnapshot() {
 
     }
@@ -274,10 +287,9 @@ public class BubblegumNode {
         }
         return false;
     }
+    //endregion
 
-
-
-    /**  BubblegumNode.Builder **/
+    //region Builder
     public static class Builder {
         private String identifier, networkIdentifier;
         private SocialIdentity socialIdentity;
@@ -329,7 +341,7 @@ public class BubblegumNode {
 
         public BubblegumNode build() {
             // Check required
-            if(this.socialIdentity == null || this.executionContext == null || this.logger == null || this.server == null)
+            if(this.executionContext == null || this.logger == null || this.server == null)
                 return null;
 
             // Fill in optionals
@@ -338,10 +350,20 @@ public class BubblegumNode {
             if(this.nodeIdentifier == null) this.nodeIdentifier = new NodeID();
             if(!NetworkingHelper.validPort(this.port)) this.port = 0;
 
-            return new BubblegumNode(
-                this.identifier, this.networkIdentifier, this.socialIdentity,
-                this.executionContext, this.server, this.logger, this.nodeIdentifier, this.port
+            return new BubblegumNode (
+                this.identifier, this.networkIdentifier, this.executionContext,
+                this.server, this.logger, this.nodeIdentifier
             );
         }
     }
+    //endregion
+
+    //region Misc
+
+    @Override
+    public String toString() {
+        return nodeIdentifier.toString();
+    }
+
+    //endregion
 }
