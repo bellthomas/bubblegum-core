@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -16,19 +17,19 @@ import java.util.*;
 public final class RoutingTable {
 
     protected final BubblegumNode self;
-    protected final RouterBucket[] buckets;
+    private final RouterBucket[] buckets;
 
     public RoutingTable(BubblegumNode self) {
         this.self = self;
         this.buckets = new RouterBucket[NodeID.KEY_BIT_LENGTH];
-        for(int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) this.buckets[i] = new RouterBucket(i);
+//        for(int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) this.buckets[i] = new RouterBucket(i);
 
         // Try restore from snapshot
         Map<Integer, List<Set<RouterNode>>> snapshot = SnapshotDatabase.buildRoutingTableNodesFromSnapshot(self.getIdentifier());
         if(snapshot != null) {
             for (int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) {
                 if (snapshot.containsKey(i)) {
-                    this.buckets[i].loadInSnapshotNodes(snapshot.get(i));
+                    this.getBucket(i).loadInSnapshotNodes(snapshot.get(i));
                 }
             }
         }
@@ -39,14 +40,17 @@ public final class RoutingTable {
     }
 
     public RouterBucket getBucket(int index) {
-        if(index < this.buckets.length && index >= 0) return this.buckets[index];
-        else return null;
+        if(index < this.buckets.length && index >= 0) {
+            if(this.buckets[index] == null) this.buckets[index] = new RouterBucket(index);
+            return this.buckets[index];
+        }
+        return null;
     }
 
     public RouterBucket getBucketForNode(NodeID node) {
         int index = this.self.getNodeIdentifier().sharedPrefixLength(node) - 1;
-        if(index < 0) return this.buckets[0];
-        else return this.buckets[index];
+        if(index < 0) return this.getBucket(0);
+        else return this.getBucket(index);
     }
 
     public Set<RouterNode> getNodesClosestToKey(NodeID node, int nodesToGet) {
@@ -81,7 +85,9 @@ public final class RoutingTable {
 
     public int getGreatestNonEmptyBucket() {
         int index = this.buckets.length - 1;
-        while(this.buckets[index].getBucketSize() == 0 && index > 0) index--;
+        while(this.getBucket(index).getBucketSize() == 0 && index > 0) index--;
+//        int i = 0;
+//        while(this.buckets[i] != null) i++;
         return index;
     }
 
@@ -105,7 +111,7 @@ public final class RoutingTable {
 
     public void printBuckets() {
         for(RouterBucket bucket : this.buckets) {
-            this.self.log(bucket.toString());
+            if(bucket != null) this.self.log(bucket.toString());
         }
     }
 
@@ -113,7 +119,7 @@ public final class RoutingTable {
         TreeSet<RouterNode> nodeDistanceTree = new TreeSet<>(comparator);
 
         for(RouterBucket bucket : this.buckets) {
-            nodeDistanceTree.addAll(bucket.getNodes());
+            if(bucket != null) nodeDistanceTree.addAll(bucket.getNodes());
         }
 
         return nodeDistanceTree;
@@ -136,7 +142,9 @@ public final class RoutingTable {
 
     public int getSize() {
         int i = 0;
-        for(RouterBucket bucket : this.buckets) i += bucket.getBucketSize();
+        for(RouterBucket bucket : this.buckets) {
+            if(bucket != null) i += bucket.getBucketSize();
+        }
         return i;
     }
 
@@ -145,7 +153,7 @@ public final class RoutingTable {
             NodeID id = new NodeID(node.getHash());
             RouterNode result = this.getRouterNodeForID(id);
             if(result == null) {
-                InetAddress address = InetAddress.getByName(node.getIpAddress());
+                InetAddress address = NetworkingHelper.getInetAddress(node.getIpAddress());
                 result = new RouterNode(id, address, node.getPort());
             }
             return result;

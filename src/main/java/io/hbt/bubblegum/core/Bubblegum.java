@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 public class Bubblegum {
 
-    private InetAddress ipAddress;
+//    private InetAddress ipAddress;
     private SocialIdentity socialIdentity;
     private ActivityExecutionContext executionContext;
     private ArrayList<BubblegumCell> cells;
@@ -33,32 +33,31 @@ public class Bubblegum {
     private boolean isAlive = false;
     private boolean isShuttingDown = false;
 
-    public Bubblegum() {
+    public Bubblegum(boolean reload) {
 
-        try {
-            this.initialiseIPAddress();
-            this.initialiseSocialIdentity();
-            this.executionContext = new ActivityExecutionContext(0);
+//        try {
+//            this.initialiseIPAddress();
+//            this.initialiseSocialIdentity();
+            this.executionContext = new ActivityExecutionContext();
             this.cells = new ArrayList<>();
             this.nodes = new HashMap<>();
 
-            this.loadNodes();
+            if(reload) this.loadNodes();
             this.isAlive = true;
 
             Database.getInstance().initialiseExpiryScheduler(this.executionContext);
 
 //        } catch (AddressInitialisationException e) {
 //            System.out.println("Failed to start network");
-        }
-        catch (BubblegumException e) {
-            e.printStackTrace();
-        }
+//        }
+//        catch (BubblegumException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void loadNodes() {
         // TODO assert nodes and cells empty
         Map<Integer, List<NetworkDetails>> networks = Database.getInstance().loadNetworksFromDatabase();
-        int newProcesses = 0;
 
         for(Map.Entry<Integer, List<NetworkDetails>> networkEntry : networks.entrySet()) {
             for(NetworkDetails network : networkEntry.getValue()) {
@@ -75,8 +74,8 @@ public class Bubblegum {
                     reloadedNodeBuilder.setExecutionContext(this.executionContext);
                     reloadedNodeBuilder.setLogger(LoggingManager.getLogger(network.getID()));
                     BubblegumNode reloadedNode = this.forceInsertIntoCell(network.getPort(), reloadedNodeBuilder);
+                    reloadedNodeBuilder = null;
 
-                    newProcesses++;
                     this.nodes.put(network.getID(), reloadedNode);
                 } catch (MalformedKeyException e) {
                     System.out.println("Failed to load network - " + network.getHash());
@@ -84,22 +83,20 @@ public class Bubblegum {
                 }
             }
         }
-
-        this.executionContext.newProcessesInContext(newProcesses);
     }
 
-    private void initialiseIPAddress() throws AddressInitialisationException {
-        try {
-            this.ipAddress = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            throw new AddressInitialisationException();
-        }
-    }
+//    private void initialiseIPAddress() throws AddressInitialisationException {
+//        try {
+//            this.ipAddress = InetAddress.getLocalHost();
+//        } catch (UnknownHostException e) {
+//            throw new AddressInitialisationException();
+//        }
+//    }
 
 
-    private void initialiseSocialIdentity() {
-        this.socialIdentity = new SocialIdentity();
-    }
+//    private void initialiseSocialIdentity() {
+//        this.socialIdentity = new SocialIdentity();
+//    }
 
     private BubblegumNode insertIntoCell(BubblegumNode.Builder node) {
         BubblegumNode result = null;
@@ -183,13 +180,13 @@ public class Bubblegum {
 
     public BubblegumNode createNode() {
         UUID identifier = UUID.randomUUID();
-        this.executionContext.newProcessInContext();
         BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
         newNodeBuilder.setIdentifier(identifier.toString());
         newNodeBuilder.setSocialIdentity(this.socialIdentity);
         newNodeBuilder.setExecutionContext(this.executionContext);
         newNodeBuilder.setLogger(LoggingManager.getLogger(identifier.toString()));
         BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
+        newNodeBuilder = null;
 
         this.nodes.put(identifier.toString(), newNode);
         Database.getInstance().updateNodeInDatabase(newNode);

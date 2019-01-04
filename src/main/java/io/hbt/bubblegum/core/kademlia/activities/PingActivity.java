@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import co.paralleluniverse.fibers.Suspendable;
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -72,7 +73,7 @@ public class PingActivity extends NetworkActivity {
                 RouterNode responder = this.routingTable.getRouterNodeForID(new NodeID(kademliaMessage.getOriginHash()));
                 if(responder == null) responder = new RouterNode(
                     new NodeID(kademliaMessage.getOriginHash()),
-                    InetAddress.getByName(kademliaMessage.getOriginIP()),
+                    NetworkingHelper.getInetAddress(kademliaMessage.getOriginIP()),
                     kademliaMessage.getOriginPort()
                 );
 

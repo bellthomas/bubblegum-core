@@ -23,7 +23,8 @@ public class LoggingManager {
     }
 
     public static synchronized Logger getLogger(String id) {
-        if(!LoggingManager.getInstance().loggers.containsKey(id)) LoggingManager.getInstance().loggers.put(id, new Logger(id));
-        return LoggingManager.getInstance().loggers.get(id);
+        String idx = "asd";
+        if(!LoggingManager.getInstance().loggers.containsKey(idx)) LoggingManager.getInstance().loggers.put(idx, new Logger(idx));
+        return LoggingManager.getInstance().loggers.get(idx);
     }
 }

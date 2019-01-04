@@ -154,7 +154,7 @@ public class SnapshotDatabase {
         sb.append("bucket int NOT NULL, ");
         sb.append("replacement int NOT NULL ");
         sb.append(")");
-        return sb.toString();
+        return sb.toString().intern();
     }
 
     private static String insertRouterNodesInBucketSQL(RouterBucket bucket) {

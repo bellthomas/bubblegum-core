@@ -8,7 +8,7 @@ import java.util.HashSet;
 
 public class BubblegumCell {
 
-    private static final int MAX_CELLS = 300;
+    private static final int MAX_CELLS = 50;
     private static int cellSize = 1;
     private static int totalNodes = 0;
 

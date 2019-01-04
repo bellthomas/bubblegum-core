@@ -1,5 +1,7 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import co.paralleluniverse.fibers.Suspendable;
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
@@ -8,11 +10,11 @@ import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class KademliaServerWorker {
 
+    @Suspendable
     public static void accept(BubblegumNode node, KademliaMessage message) {
 
         if(message.hasPingMessage() && !message.getPingMessage().getReply()) {
@@ -21,7 +23,7 @@ public class KademliaServerWorker {
                 RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
                 if(sender == null) sender = new RouterNode(
                     new NodeID(message.getOriginHash()),
-                    InetAddress.getByName(message.getOriginIP()),
+                    NetworkingHelper.getInetAddress(message.getOriginIP()),
                     message.getOriginPort()
                 );
                 node.getRoutingTable().insert(sender);
@@ -45,7 +47,7 @@ public class KademliaServerWorker {
                 RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
                 if(sender == null) sender = new RouterNode(
                     new NodeID(message.getOriginHash()),
-                    InetAddress.getByName(message.getOriginIP()),
+                    NetworkingHelper.getInetAddress(message.getOriginIP()),
                     message.getOriginPort()
                 );
                 // TODO insert?
@@ -73,7 +75,7 @@ public class KademliaServerWorker {
                 RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
                 if(sender == null) sender = new RouterNode(
                     new NodeID(message.getOriginHash()),
-                    InetAddress.getByName(message.getOriginIP()),
+                    NetworkingHelper.getInetAddress(message.getOriginIP()),
                     message.getOriginPort()
                 );
                 // TODO insert?
@@ -96,7 +98,7 @@ public class KademliaServerWorker {
                 RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
                 if (sender == null) sender = new RouterNode(
                     new NodeID(message.getOriginHash()),
-                    InetAddress.getByName(message.getOriginIP()),
+                    NetworkingHelper.getInetAddress(message.getOriginIP()),
                     message.getOriginPort()
                 );
                 // TODO insert?

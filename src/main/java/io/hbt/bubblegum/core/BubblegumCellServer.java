@@ -3,6 +3,7 @@ package io.hbt.bubblegum.core;
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -33,7 +34,7 @@ public class BubblegumCellServer {
     private DatagramSocket listeningSocket;
     private ActivityExecutionContext executionContext;
 
-    private static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // 64KB
+    private static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // TODO 64KB
 
     private final ConcurrentHashMap<String, Consumer<KademliaMessage>> responses = new ConcurrentHashMap<>();
     private final HashMap<String, BubblegumNode> recipients = new HashMap<>();
@@ -74,20 +75,16 @@ public class BubblegumCellServer {
             throw new BubblegumException();
         }
 
-        try {
-            this.localAddress = InetAddress.getLocalHost();
-        }
-        catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+        this.localAddress = NetworkingHelper.getLocalInetAddress();
+        if(this.localAddress == null) System.err.println("Failed to initialise local address");
 
-        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
-        executor.scheduleAtFixedRate(
-            () -> this.print("Stats  ~  Sent: " + this.packetsSent + ",  Received: " + this.packetsReceived),
-            5,
-            5,
-            TimeUnit.SECONDS
-        );
+//        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
+//        executor.scheduleAtFixedRate(
+//            () -> this.print("Stats  ~  Sent: " + this.packetsSent + ",  Received: " + this.packetsReceived),
+//            5,
+//            5,
+//            TimeUnit.SECONDS
+//        );
     }
 
     public void registerNewLocalNode(BubblegumNode node) {
@@ -114,7 +111,7 @@ public class BubblegumCellServer {
                                 this.recipients.keySet();
                                 RouterNode sender = new RouterNode(
                                     new NodeID(message.getOriginHash()),
-                                    InetAddress.getByName(message.getOriginIP()),
+                                    NetworkingHelper.getInetAddress(message.getOriginIP()),
                                     message.getOriginPort()
                                 );
 
@@ -149,7 +146,7 @@ public class BubblegumCellServer {
 
                         // else: drop
                         else {
-                            System.out.println("Dropped message to " + message.getRecipient());
+//                            System.out.println("Dropped message to " + message.getRecipient());
                         }
 
                     } catch (InvalidProtocolBufferException ipbe) {

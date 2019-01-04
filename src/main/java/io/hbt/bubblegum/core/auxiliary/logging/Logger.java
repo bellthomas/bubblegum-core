@@ -14,7 +14,7 @@ public class Logger {
 //        this.f.getParentFile().mkdirs();
     }
 
-    public synchronized void logMessage(String message) {
+    public void logMessage(String message) {
 //        try (FileOutputStream fos = new FileOutputStream(this.f,true)) {
 //            try (PrintWriter out = new PrintWriter(fos)) {
 //                DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");

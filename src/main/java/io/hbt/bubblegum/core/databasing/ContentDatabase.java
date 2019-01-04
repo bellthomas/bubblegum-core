@@ -2,7 +2,6 @@ package io.hbt.bubblegum.core.databasing;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -10,7 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,6 +43,7 @@ class ContentDatabase {
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
             statement.executeUpdate(this.initContentDatabaseSQL());
+            statement = null;
 
             ContentDatabase.connection = connection;
 
@@ -91,8 +90,8 @@ class ContentDatabase {
         return null;
     }
 
-    public Post savePost(BubblegumNode node, String content) {
-        return this.saveEntity(UUID.randomUUID().toString(), node, content);
+    public Post savePost(BubblegumNode node, String content, String inResponseTo) {
+        return this.saveEntity(UUID.randomUUID().toString(), node, content, inResponseTo);
     }
 
     public Post saveMeta(String key, BubblegumNode node, String content) {

@@ -3,7 +3,6 @@ package io.hbt.bubblegum.cli;
 import co.paralleluniverse.fibers.Fiber;
 import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
-import io.hbt.bubblegum.core.auxiliary.AsyncNetworkQuery;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -33,7 +32,7 @@ import java.util.stream.Collectors;
 
 public class CLI {
 
-    private Bubblegum bb = new Bubblegum();
+    private Bubblegum bb = new Bubblegum(false);
     private int selectedNetwork = -1; // changes to indicate selected node
     private int currentIndex = 0; // count nodes
     private HashMap<Integer, String> networkIndicies;
@@ -183,6 +182,10 @@ public class CLI {
                             case "oneday":
                                 current = this.getCurrentNode();
                                 if(current != null) this.oneday(current, commandParts);
+                                break;
+                            case "reply":
+                                current = this.getCurrentNode();
+                                if(current != null) this.reply(current, commandParts);
                                 break;
                             default:
                                 this.print("Invalid command");
@@ -721,31 +724,39 @@ public class CLI {
         System.out.println(lowEpochBin);
         System.out.println(highEpochBin);
 
-        ArrayList<String> ids = new ArrayList<>();
+//        ArrayList<String> ids = new ArrayList<>();
         for(long i = highEpochBin; i >= lowEpochBin; i--) {
-            ids.add(Long.toString(i));
-//            List<byte[]> idBytes = node.lookup(NodeID.hash(i));
-//            List<String> ids = idBytes.stream().map((b) -> new String(b)).collect(Collectors.toList());
-//            for(String id : ids) {
-//                String[] idParts = id.split(":");
-//                if(idParts.length == 2) {
-//                    try {
-//                        NodeID nid = new NodeID(idParts[0]);
-//                        List<Post> posts = node.query(nid, -1, -1, new ArrayList<>() {{ add(idParts[1]); }});
-//                        if (posts == null) this.print("Failed to query remote posts");
-//                        else if (posts.size() == 0) this.print("No remote posts found");
-//                        else for (Post p : posts) this.print(p.toString() + "\n-----------");
-//                    } catch (MalformedKeyException e) {
-//                        this.print("Failed to parse node ID");
-//                    }
-//                }
-//                else {
-//                    System.out.println("Failed to retrieve: " + id);
-//                }
-//            }
+//            ids.add(Long.toString(i));
+            List<byte[]> idBytes = node.lookup(NodeID.hash(i));
+            List<String> ids = idBytes.stream().map((b) -> new String(b)).collect(Collectors.toList());
+            for(String id : ids) {
+                String[] idParts = id.split(":");
+                if(idParts.length == 2) {
+                    try {
+                        NodeID nid = new NodeID(idParts[0]);
+                        List<Post> posts = node.query(nid, -1, -1, new ArrayList<>() {{ add(idParts[1]); }});
+                        if (posts == null) this.print("Failed to query remote posts");
+                        else if (posts.size() == 0) this.print("No remote posts found");
+                        else for (Post p : posts) this.print(p.toString() + "\n-----------");
+                    } catch (MalformedKeyException e) {
+                        this.print("Failed to parse node ID");
+                    }
+                }
+                else {
+                    System.out.println("Failed to retrieve: " + id);
+                }
+            }
         }
 
-        new AsyncNetworkQuery(node, ids, () -> System.out.println("Change")).run();
+//        new AsyncNetworkQuery(node, ids, () -> System.out.println("Change")).run();
+    }
+
+    private void reply(BubblegumNode node, String[] command) {
+        if(command.length >= 3) {
+            String inResponseTo = command[1];
+            String content = String.join(" ", Arrays.copyOfRange(command, 2, command.length));
+            System.out.println(node.saveResponse(content, inResponseTo));
+        }
     }
 
 

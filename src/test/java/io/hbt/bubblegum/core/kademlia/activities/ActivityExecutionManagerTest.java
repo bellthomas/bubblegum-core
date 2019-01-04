@@ -8,24 +8,24 @@ class ActivityExecutionManagerTest {
 
     @Test
     void parallelism() {
-        ActivityExecutionManager manager = new ActivityExecutionManager(3, 2, 100);
-        Runnable threeSeconds = () -> {
-            try {
-                Thread.sleep(1000);
-                System.out.println("done");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        };
-
-        for(int i = 0; i < 10; i++) manager.addActivity("a", threeSeconds);
-
-        System.out.println();
-
-        try {
-            Thread.sleep(30000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        ActivityExecutionManager manager = new ActivityExecutionManager(3, 2, 100);
+//        Runnable threeSeconds = () -> {
+//            try {
+//                Thread.sleep(1000);
+//                System.out.println("done");
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        };
+//
+//        for(int i = 0; i < 10; i++) manager.addActivity("a", threeSeconds);
+//
+//        System.out.println();
+//
+//        try {
+//            Thread.sleep(30000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 }

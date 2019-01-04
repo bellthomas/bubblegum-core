@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class RouterBucket {
     protected final int prefixLength;
-    protected final ConcurrentSkipListSet<RouterNode> activeBucket;
-    protected final ConcurrentSkipListSet<RouterNode> replacements;
+    protected ConcurrentSkipListSet<RouterNode> activeBucket;
+    protected ConcurrentSkipListSet<RouterNode> replacements;
 
     protected int activeNodes, replacementNodes = 0;
 
@@ -21,16 +21,17 @@ public final class RouterBucket {
 
     public RouterBucket(int prefix) {
         this.prefixLength = prefix;
-        this.activeBucket = new ConcurrentSkipListSet<>();
-        this.replacements = new ConcurrentSkipListSet<>();
+//        this.activeBucket = new ConcurrentSkipListSet<>();
+//        this.replacements = new ConcurrentSkipListSet<>();
     }
 
     public synchronized void add(RouterNode node) {
-        if(this.activeBucket.contains(node)) {
+        if(this.activeBucket == null) this.activeBucket = new ConcurrentSkipListSet<>();
+        if(this.activeBucket.stream().anyMatch((n) -> n.equals(node))) {
             RouterNode existingNode = this.removeFromActiveTable(node);
             if(existingNode != null) {
                 existingNode.hasResponded();
-                this.activeBucket.add(existingNode); // force resort
+                this.activeBucket.add(existingNode); // force a re-sort
                 this.activeNodes++;
             }
         }
@@ -48,6 +49,7 @@ public final class RouterBucket {
                 else {
                     this.activeBucket.remove(mostStale);
                     if(this.replacementNodes < RouterBucket.BUCKET_SIZE) {
+                        if(this.replacements == null) this.replacements = new ConcurrentSkipListSet<>();
                         this.replacements.add(mostStale);
                         this.replacementNodes++;
                     }
@@ -62,7 +64,7 @@ public final class RouterBucket {
     }
 
     protected synchronized RouterNode removeFromActiveTable(RouterNode node) {
-
+        if(this.activeBucket == null) return null;
         Optional<RouterNode> activeNode = this.activeBucket.stream().filter((n) -> n.equals(node)).findFirst();
         if(activeNode.isPresent()) {
             this.activeBucket.remove(activeNode.get());
@@ -70,12 +72,14 @@ public final class RouterBucket {
             return activeNode.get();
         }
         else {
+            System.out.println("returned null");
             return null;
         }
     }
 
     protected synchronized void addToReplacements(RouterNode node) {
         // TODO investigate why this works and contains() doesn't
+        if(this.replacements == null) this.replacements = new ConcurrentSkipListSet<>();
         if(this.replacements.stream().anyMatch((n) -> n.equals(node))) {
             this.replacements.remove(node);
             node.hasResponded();
@@ -94,17 +98,17 @@ public final class RouterBucket {
     }
 
     public Set<RouterNode> getNodes() {
-        if(this.activeBucket.isEmpty()) return new HashSet<>();
+        if(this.activeBucket == null || this.activeBucket.isEmpty()) return new HashSet<>();
         else {
             HashSet<RouterNode> result = new HashSet<>();
             result.addAll(this.activeBucket);
-            result.addAll(this.replacements);
+            if(this.replacements != null) result.addAll(this.replacements);
             return result;
         }
     }
 
     public Set<RouterNode> getReplacementNodes() {
-        if(this.replacements.isEmpty()) return new HashSet<>();
+        if(this.replacements == null || this.replacements.isEmpty()) return new HashSet<>();
         else {
             HashSet<RouterNode> result = new HashSet<>();
             result.addAll(this.replacements);
@@ -113,8 +117,10 @@ public final class RouterBucket {
     }
 
     public RouterNode getRouterNodeWithID(NodeID id) {
-        for(RouterNode node : this.activeBucket) if(node.getNode().equals(id)) return node;
-        for(RouterNode node : this.replacements) if(node.getNode().equals(id)) return node;
+        if(this.activeBucket != null)
+            for(RouterNode node : this.activeBucket) if(node.getNode().equals(id)) return node;
+        if(this.replacements != null)
+            for(RouterNode node : this.replacements) if(node.getNode().equals(id)) return node;
         return null;
     }
 
@@ -131,6 +137,7 @@ public final class RouterBucket {
         if(active != null) {
             for(RouterNode node : active) {
                 if(this.activeNodes < BUCKET_SIZE) {
+                    if(this.activeBucket == null) this.activeBucket = new ConcurrentSkipListSet<>();
                     this.activeBucket.add(node);
                     this.activeNodes++;
                 }
@@ -141,6 +148,7 @@ public final class RouterBucket {
         if(replacements != null) {
             for(RouterNode node : replacements) {
                 if(this.replacementNodes < BUCKET_SIZE) {
+                    if(this.replacements == null) this.replacements = new ConcurrentSkipListSet<>();
                     this.replacements.add(node);
                     this.replacementNodes++;
                 }

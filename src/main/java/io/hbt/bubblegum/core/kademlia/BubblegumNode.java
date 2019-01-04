@@ -89,13 +89,14 @@ public class BubblegumNode {
 
         // Refresh/delete content as it expires
         this.getExecutionContext().scheduleTask(() -> {
-            this.db.refreshExpiringPosts(this, 15);
-        }, 60, 30, TimeUnit.SECONDS);
+            this.db.refreshExpiringPosts(this, 30);
+        }, 30, 60, TimeUnit.SECONDS);
 
     }
     //endregion
 
     //region Primitive Operations
+    @Suspendable
     public Set<String> discover(InetAddress address, int port) {
         RouterNode to = new RouterNode(new NodeID(), address, port);
         DiscoveryActivity discoveryActivity = new DiscoveryActivity(this, to);
@@ -121,6 +122,7 @@ public class BubblegumNode {
         }
     }
 
+    @Suspendable
     public boolean store(NodeID id, byte[] value) {
         StoreActivity storeActivity = new StoreActivity(this, id.toString(), value);
         storeActivity.run();
@@ -137,9 +139,9 @@ public class BubblegumNode {
         boostrapActivity.run(); // sync
 
         if(boostrapActivity.getSuccess()) {
-            this.saveRouterSnapshot();
+//            this.saveRouterSnapshot();
             Database.getInstance().updateNodeInDatabase(this);
-            SnapshotDatabase.saveRouterSnapshot(this, this.getRoutingTable());
+//            SnapshotDatabase.saveRouterSnapshot(this, this.getRoutingTable());
             return true;
         }
         else {
@@ -225,7 +227,7 @@ public class BubblegumNode {
     }
 
     public void log(String message) {
-        this.logger.logMessage(message);
+//        this.logger.logMessage(message);
     }
     //endregion
 
@@ -238,6 +240,7 @@ public class BubblegumNode {
         return this.db.valueForKey(this.identifier, key);
     }
 
+    @Suspendable
     public Post savePost(String content) {
         if(content != null && content.trim().length() > 0) return this.db.savePost(this, content);
         return null;
@@ -247,7 +250,7 @@ public class BubblegumNode {
         if(inReponseTo == null || inReponseTo.trim().length() == 0) return this.savePost(content);
 
         if(content != null && content.trim().length() > 0) {
-            Post saved = this.db.savePost(this, content);
+            Post saved = this.db.savePost(this, content, inReponseTo);
             String key = "responses_" + inReponseTo;
             String globalIdentifier = Database.globalIdentifierForPost(this, saved);
             this.db.publishEntityMeta(this, key, globalIdentifier);

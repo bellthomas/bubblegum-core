@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 
@@ -26,7 +27,7 @@ public class RouterNode implements Comparable<RouterNode> {
 
     public static RouterNode buildFromSnapshotNode(String nodeID, String address, int port, long latestResponse, int failedResponses) {
         try {
-            InetAddress ipAddress = InetAddress.getByName(address);
+            InetAddress ipAddress = NetworkingHelper.getInetAddress(address);
             NodeID id = new NodeID(nodeID);
 
             RouterNode node = new RouterNode(id, ipAddress, port);

@@ -14,7 +14,7 @@ import java.util.Random;
 public class NodeID {
     public static final int KEY_BIT_LENGTH = 64;
     public static final int KEY_BYTE_LENGTH = KEY_BIT_LENGTH >> 3;
-
+    private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
     private final byte[] key;
 
     public NodeID() {
@@ -62,7 +62,6 @@ public class NodeID {
     }
 
     public static String bytesToHex(byte[] bytes) {
-        char[] hexArray = "0123456789ABCDEF".toCharArray();
         char[] hexChars = new char[bytes.length << 1];
         int v;
         for (int j = 0; j < bytes.length; j++) {
@@ -70,7 +69,7 @@ public class NodeID {
             hexChars[j << 1] = hexArray[v >>> 4];
             hexChars[(j << 1)+1] = hexArray[v & 0x0F];
         }
-        return new String(hexChars);
+        return new String(hexChars).intern();
     }
 
     public byte[] xorDistance(NodeID node) {
@@ -126,7 +125,7 @@ public class NodeID {
         for (byte b : this.key) {
             sb.append(Integer.toBinaryString(b & 255 | 256).substring(1) + " ");
         }
-        return sb.toString();
+        return sb.toString().intern();
     }
 
     public static NodeID hash(String input) {

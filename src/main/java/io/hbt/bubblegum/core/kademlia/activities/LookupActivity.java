@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class LookupActivity extends SystemActivity {
 
     private final static int alpha = 5;
+    private final static int timeout = 10; // seconds
     private final NodeID nodeToLookup;
     private final int numResults;
     private final boolean getValue;
@@ -206,7 +207,8 @@ public class LookupActivity extends SystemActivity {
         closestNode = shortlist.first();
         ArrayList<FindActivity> currentActivities = new ArrayList<>();
 
-        while(opsWithoutNewClosest < 2 * alpha) {
+        long timeoutTime = System.currentTimeMillis() + timeout * 1000;
+        while(opsWithoutNewClosest < 2 * alpha && System.currentTimeMillis() < timeoutTime) {
             Iterator<FindActivity> activityIterator = currentActivities.iterator();
             while (activityIterator.hasNext()) {
                 FindActivity activity = activityIterator.next();
@@ -306,8 +308,10 @@ public class LookupActivity extends SystemActivity {
         for (int i = 0; i < this.numResults; i++) {
             if (!verifiedNodes.isEmpty()) this.closestNodes.add(verifiedNodes.pollFirst());
         }
-//
-        this.onSuccess();
+
+        if(this.getValue && this.getClosestNodes().size() > 0) this.onSuccess();
+        else if(this.closestNodes.size() > 0) this.onSuccess();
+        else this.onFail();
     }
 
     public List<byte[]> getResult() {

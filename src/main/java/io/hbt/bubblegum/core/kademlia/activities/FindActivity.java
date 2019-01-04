@@ -2,6 +2,7 @@ package io.hbt.bubblegum.core.kademlia.activities;
 
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.protobuf.ByteString;
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -146,7 +147,7 @@ public class FindActivity extends NetworkActivity {
             if(sender == null) {
                 sender = new RouterNode(
                     new NodeID(hash),
-                    InetAddress.getByName(ip),
+                    NetworkingHelper.getInetAddress(ip),
                     port
                 );
             }
