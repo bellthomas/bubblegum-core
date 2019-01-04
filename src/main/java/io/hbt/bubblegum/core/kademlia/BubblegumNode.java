@@ -22,6 +22,7 @@ import io.hbt.bubblegum.core.social.SocialIdentity;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -88,9 +89,10 @@ public class BubblegumNode {
 //        );
 
         // Refresh/delete content as it expires
+
         this.getExecutionContext().scheduleTask(() -> {
             this.db.refreshExpiringPosts(this, 30);
-        }, 30, 60, TimeUnit.SECONDS);
+        }, new Random().nextInt(60), 60, TimeUnit.SECONDS);
 
     }
     //endregion

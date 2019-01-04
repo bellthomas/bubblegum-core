@@ -144,12 +144,12 @@ public class Simulator {
         for(String id : backgroundNodes) {
             BubblegumNode node = this.bubblegum.getNode(id);
 
-            randomNum = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondsPerPost));
+            randomNum = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondsPerPost) * 1000);
             node.getExecutionContext().scheduleTask(() -> {
                 node.savePost(randomText(100));
-            }, randomNum, (long)Math.ceil(nodeSecondsPerPost), TimeUnit.SECONDS);
+            }, randomNum, (long)Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
 
-            randomNum2 = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondPerFeed));
+            randomNum2 = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondPerFeed) * 1000);
             node.getExecutionContext().scheduleTask(() -> {
                 System.out.println("Started ANQ for " + node.getNodeIdentifier().toString());
                 AsyncNetworkQuery q = new AsyncNetworkQuery(node);
@@ -157,7 +157,7 @@ public class Simulator {
                 q.addID(current);
                 q.run();
                 q.onChange(() -> System.out.println("ANQ change for " + node.getNodeIdentifier().toString()));
-            }, randomNum2, (long)Math.ceil(nodeSecondsPerPost), TimeUnit.SECONDS);
+            }, randomNum2, (long)Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
         }
     }
 
