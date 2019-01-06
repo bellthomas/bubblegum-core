@@ -1,12 +1,8 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import co.paralleluniverse.fibers.SuspendExecution;
-import co.paralleluniverse.fibers.Suspendable;
-import co.paralleluniverse.strands.Strand;
-import co.paralleluniverse.strands.SuspendableRunnable;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
-public abstract class SystemActivity implements SuspendableRunnable {
+public abstract class SystemActivity implements Runnable {
 
     protected final static int TIMEOUT = 50; // 5 seconds
 
@@ -23,16 +19,13 @@ public abstract class SystemActivity implements SuspendableRunnable {
         this.localNode.log(msg);
     }
 
-    @Suspendable
     protected void timeoutOnComplete() {
         int i = 0;
         long end = System.currentTimeMillis() + 5000;
         while(System.currentTimeMillis() < end && !this.complete) {
 
             try {
-                Strand.sleep(100);
-            } catch (SuspendExecution suspendExecution) {
-                suspendExecution.printStackTrace();
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

@@ -1,8 +1,6 @@
 package io.hbt.bubblegum.core;
 
-import co.paralleluniverse.fibers.Suspendable;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.MessageLite;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
@@ -22,9 +20,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class BubblegumCellServer {

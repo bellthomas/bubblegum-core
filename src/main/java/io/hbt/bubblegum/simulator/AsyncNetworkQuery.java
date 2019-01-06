@@ -1,8 +1,5 @@
 package io.hbt.bubblegum.simulator;
 
-import co.paralleluniverse.fibers.Fiber;
-import co.paralleluniverse.fibers.Suspendable;
-import co.paralleluniverse.strands.SuspendableRunnable;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -20,7 +17,7 @@ public class AsyncNetworkQuery {
 
     private BubblegumNode node;
     private List<String> ids;
-    private List<SuspendableRunnable> callbacks;
+    private List<Runnable> callbacks;
     private boolean completed = false;
 
     private final List<Post> results = new ArrayList<>();
@@ -38,7 +35,7 @@ public class AsyncNetworkQuery {
         this.callbacks = new ArrayList<>();
     }
 
-    public AsyncNetworkQuery(BubblegumNode node, List<String> ids, SuspendableRunnable r) {
+    public AsyncNetworkQuery(BubblegumNode node, List<String> ids, Runnable r) {
         this.node = node;
         this.ids = ids;
         this.callbacks = new ArrayList<>() {{ add(r); }};
@@ -56,7 +53,7 @@ public class AsyncNetworkQuery {
         this.ids.add(id + "");
     }
 
-    public void onChange(SuspendableRunnable r) {
+    public void onChange(Runnable r) {
         this.callbacks.add(r);
     }
 
@@ -64,10 +61,9 @@ public class AsyncNetworkQuery {
         return this.results.size();
     }
 
-    @Suspendable
     public void run() {
         final List<String> ids = this.ids;
-        node.getExecutionContext().addActivity("", () -> {
+        node.getExecutionContext().addActivity(node.getIdentifier(), () -> {
 
             List<byte[]> values;
             TreeSet<String> globalIdentifiers = new TreeSet<>();
@@ -95,18 +91,18 @@ public class AsyncNetworkQuery {
                         //
                         try {
                             NodeID nid = new NodeID(owner);
-//                            this.node.getExecutionContext().addActivity("", () -> {
-//                                this.retrieveMetadata(this.node, nid);
-//                                this.changeOccurred();
-//                            });
+                            this.node.getExecutionContext().addActivity(node.getIdentifier(), () -> {
+                                this.retrieveMetadata(this.node, nid);
+                                this.changeOccurred();
+                            });
 
-//                            this.node.getExecutionContext().addActivity("", () -> {
-//                                List<Post> posts = this.node.query(nid, -1, -1, foreignUsersPosts);
-//                                if(posts != null) {
-//                                    this.results.addAll(posts);
-//                                    this.changeOccurred();
-//                                }
-//                            });
+                            this.node.getExecutionContext().addActivity(node.getIdentifier(), () -> {
+                                List<Post> posts = this.node.query(nid, -1, -1, foreignUsersPosts);
+                                if(posts != null) {
+                                    this.results.addAll(posts);
+                                    this.changeOccurred();
+                                }
+                            });
 
                         } catch (MalformedKeyException e) {
                             e.printStackTrace();
@@ -117,7 +113,6 @@ public class AsyncNetworkQuery {
         });
     }
 
-    @Suspendable
     private void retrieveMetadata(BubblegumNode node, NodeID nid) {
         if(!this.meta.containsKey(nid.toString())) this.meta.put(nid.toString(), new HashMap<>());
 
@@ -125,11 +120,14 @@ public class AsyncNetworkQuery {
         metaKeys.add("_username_" + nid.toString());
 
         List<Post> payload = node.query(nid, -1, -1, metaKeys);
-        if(payload != null) payload.forEach((p) -> this.meta.get(nid.toString()).put(p.getID(), p.getContent()));
+        if(payload != null) {
+            for(Post p : payload) {
+                if(p != null) this.meta.get(nid.toString()).put(p.getID(), p.getContent());
+            }
+        }
     }
 
-    @Suspendable
     private void changeOccurred() {
-        for(SuspendableRunnable r : this.callbacks) node.getExecutionContext().addActivity("", r);
+        for(Runnable r : this.callbacks) r.run();
     }
 }

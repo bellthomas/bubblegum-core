@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import co.paralleluniverse.fibers.Suspendable;
 import com.google.protobuf.ByteString;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
@@ -14,7 +13,6 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -48,7 +46,6 @@ public class FindActivity extends NetworkActivity {
     }
 
     @Override
-    @Suspendable
     public void run() {
         KademliaMessage message = null;
 

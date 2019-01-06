@@ -1,10 +1,8 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
-import java.util.Set;
 import java.util.function.Consumer;
 
 public class BootstrapActivity extends NetworkActivity {
@@ -19,7 +17,6 @@ public class BootstrapActivity extends NetworkActivity {
 
 
     @Override
-    @Suspendable
     public void run() {
         // Ping
         this.print("Starting bootstrapping process...  ("+this.to.getIPAddress().getHostAddress()+":"+this.to.getPort()+")");

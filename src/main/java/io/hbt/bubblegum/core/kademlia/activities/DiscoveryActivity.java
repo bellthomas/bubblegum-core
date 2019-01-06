@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
@@ -24,7 +23,6 @@ public class DiscoveryActivity extends NetworkActivity {
     }
 
     @Override
-    @Suspendable
     public void run() {
         if(this.isResponse) {
             KademliaMessage message = ProtobufHelper.buildDiscoveryResponse(this.localNode, this.to, this.exchangeID, this.entries, this.foriegnRecipient);

@@ -10,6 +10,7 @@ public class ConcurrentBlockingQueue<T> {
      * No need for thread safety here as the getter and putter provide this.
      */
     private Queue<T> items = new LinkedList<>();
+    private long total = 0;
 
     /**
      * When set get() method will no longer accept any incoming threads, simply returning null.
@@ -24,6 +25,7 @@ public class ConcurrentBlockingQueue<T> {
      */
     public synchronized void put(T item) {
         this.items.add(item);
+        this.total++;
         notify();
     }
 
@@ -66,6 +68,14 @@ public class ConcurrentBlockingQueue<T> {
         LinkedList<T> copy = new LinkedList<>();
         for(T item : this.items) copy.add(item);
         return copy;
+    }
+
+    public synchronized int getItemCount() {
+        return this.items.size();
+    }
+
+    public synchronized  long getTotal() {
+        return this.total;
     }
 
 } // end ConcurrentBlockingQueue class

@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -129,7 +130,7 @@ public class Simulator {
     }
 
     private void backgroundChatter() {
-        System.out.println("[Background Network] Running chatter...");
+        System.out.println("\nRunning chatter...");
 
         Set<String> backgroundNodes = this.bubblegum.getNodeIdentifiers();
 
@@ -151,12 +152,12 @@ public class Simulator {
 
             randomNum2 = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondPerFeed) * 1000);
             node.getExecutionContext().scheduleTask(() -> {
-                System.out.println("Started ANQ for " + node.getNodeIdentifier().toString());
+//                System.out.println("Started ANQ for " + node.getNodeIdentifier().toString());
                 AsyncNetworkQuery q = new AsyncNetworkQuery(node);
                 long current = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;
                 q.addID(current);
                 q.run();
-                q.onChange(() -> System.out.println("ANQ change for " + node.getNodeIdentifier().toString()));
+//                q.onChange(() -> System.out.println("ANQ change for " + node.getNodeIdentifier().toString()));
             }, randomNum2, (long)Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
         }
     }
@@ -167,9 +168,21 @@ public class Simulator {
         return new String(array, Charsets.US_ASCII);
     }
 
+    public ActivityExecutionContext getExecutionContext() {
+        return this.bubblegum.getExecutionContext();
+    }
+
     public static void main(String[] args) {
         SimulationConfig config = new SimulationConfig("simulation.yml");
-        new Simulator(config);
-        while(true) {}
+        Simulator s = new Simulator(config);
+        long start = System.currentTimeMillis();
+        while(true) {
+            try {
+                System.out.print("\r [" + (System.currentTimeMillis() - start) + "ms] " + s.getExecutionContext().queueStates() + "                   \r");
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

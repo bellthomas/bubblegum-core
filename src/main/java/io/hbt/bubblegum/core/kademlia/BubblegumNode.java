@@ -1,12 +1,9 @@
 package io.hbt.bubblegum.core.kademlia;
 
-import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.BubblegumCellServer;
-import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.logging.Logger;
 import io.hbt.bubblegum.core.databasing.Database;
-import io.hbt.bubblegum.core.databasing.MasterDatabase;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
@@ -20,13 +17,10 @@ import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -98,7 +92,6 @@ public class BubblegumNode {
     //endregion
 
     //region Primitive Operations
-    @Suspendable
     public Set<String> discover(InetAddress address, int port) {
         RouterNode to = new RouterNode(new NodeID(), address, port);
         DiscoveryActivity discoveryActivity = new DiscoveryActivity(this, to);
@@ -111,7 +104,6 @@ public class BubblegumNode {
         return null;
     }
 
-    @Suspendable
     public List<byte[]> lookup(NodeID id) {
         LookupActivity lookupActivity = new LookupActivity(this, id, 5, true);
         lookupActivity.run();
@@ -124,7 +116,6 @@ public class BubblegumNode {
         }
     }
 
-    @Suspendable
     public boolean store(NodeID id, byte[] value) {
         StoreActivity storeActivity = new StoreActivity(this, id.toString(), value);
         storeActivity.run();
@@ -133,7 +124,6 @@ public class BubblegumNode {
     //endregion
 
     //region Compound Operations
-    @Suspendable
     public boolean bootstrap(InetAddress address, int port, String foreignRecipient) {
 
         RouterNode to = new RouterNode(new NodeID(), address, port);
@@ -151,7 +141,6 @@ public class BubblegumNode {
         }
     }
 
-    @Suspendable
     public List<Post> query(NodeID id, long start, long end, List<String> ids) {
 
         // Check for local query
@@ -242,7 +231,6 @@ public class BubblegumNode {
         return this.db.valueForKey(this.identifier, key);
     }
 
-    @Suspendable
     public Post savePost(String content) {
         if(content != null && content.trim().length() > 0) return this.db.savePost(this, content);
         return null;

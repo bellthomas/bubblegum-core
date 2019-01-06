@@ -1,7 +1,5 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import co.paralleluniverse.fibers.SuspendExecution;
-import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.BubblegumCellServer;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
@@ -42,23 +40,15 @@ public abstract class NetworkActivity extends SystemActivity {
     }
 
     @Override
-    @Suspendable
     protected void timeoutOnComplete() {
         super.timeoutOnComplete();
         if(!this.complete) {
             if (this.currentTry < RETRIES) {
                 this.currentTry++;
                 this.server.removeCallback(this.exchangeID);
-                try {
-                    this.run();
-                } catch (SuspendExecution suspendExecution) {
-                    RouterNode responder = this.routingTable.getRouterNodeForID(this.to.getNode());
-                    if (responder != null) responder.hasFailedToRespond();
-                    this.onFail("Failed: RPC to " + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
-                } catch (InterruptedException e) {
-                    RouterNode responder = this.routingTable.getRouterNodeForID(this.to.getNode());
-                    if (responder != null) responder.hasFailedToRespond();
-                    this.onFail("Failed: RPC to " + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());                }
+
+                this.run();
+
             } else {
                 // Timed-out
                 RouterNode responder = this.routingTable.getRouterNodeForID(this.to.getNode());

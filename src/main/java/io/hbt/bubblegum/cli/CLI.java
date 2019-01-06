@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.cli;
 
-import co.paralleluniverse.fibers.Fiber;
 import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.databasing.Post;
@@ -24,10 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class CLI {
@@ -277,13 +273,13 @@ public class CLI {
             if(i != null) {
                 if(this.networkIndicies.containsKey(i)) {
                     final BubblegumNode bootstrapTo = this.getNode(this.networkIndicies.get(i));
-                    new Fiber<>(() -> {
+                    current.getExecutionContext().addActivity(current.getIdentifier(), () -> {
                         if (current.bootstrap(bootstrapTo.getServer().getLocal(), bootstrapTo.getServer().getPort(), command[2])) {
                             this.print("Bootstrap successful");
                         } else {
                             this.print("Bootstrap failed");
                         }
-                    }).start();
+                    });
                 }
                 else {
                     this.print("Invalid network index");
@@ -490,101 +486,6 @@ public class CLI {
         }
     }
 
-
-    /*
-   int randomNum = ThreadLocalRandom.current().nextInt(0, currentIndex);
-   BubblegumNode randomNode = this.bb.getNode(this.networkIndicies.get(randomNum));
-   node.bootstrap(
-       randomNode.getServer().getLocal(),
-       randomNode.getServer().getPort(),
-       randomNode.getRecipientID()
-   );
-   this.networkIndicies.put(this.currentIndex++, node.getIdentifier());
-    */
-    private void construct_alt(String[] command) {
-        if(command.length >= 2) {
-            Integer i = this.toInt(command[1]);
-            if(i != null) {
-                List<BubblegumNode> nodes = this.bb.buildNodes(i);
-                int batch = 5;
-
-                Fiber[] fibers = new Fiber[batch];
-                String[] identifiers = new String[batch];
-                int fiberIndex = 0;
-
-                long start = System.currentTimeMillis();
-                for(BubblegumNode node : nodes) {
-                    if(this.currentIndex == 0) {
-                        this.networkIndicies.put(this.currentIndex++, node.getIdentifier());
-                        continue;
-                    }
-
-                    final int randomNum = ThreadLocalRandom.current().nextInt(0, currentIndex);
-                    final BubblegumNode randomNode = this.bb.getNode(this.networkIndicies.get(randomNum));
-                    final BubblegumNode currentNode = node;
-                    fibers[fiberIndex] = new Fiber<>(() -> {
-                        currentNode.bootstrap(
-                            randomNode.getServer().getLocal(),
-                            randomNode.getServer().getPort(),
-                            randomNode.getRecipientID()
-                        );
-                    });
-
-                    identifiers[fiberIndex] = node.getIdentifier();
-                    fiberIndex++;
-
-                    if(fiberIndex >= batch) {
-                        // batch full, run
-                        for(Fiber f : fibers) f.start();
-
-                        int y = 0;
-                        for(Fiber f : fibers) {
-                            try {
-                                f.join(20, TimeUnit.SECONDS);
-                                this.print("Node " + this.currentIndex);
-                                this.networkIndicies.put(this.currentIndex++, identifiers[y]);
-                                y++;
-
-                            } catch (ExecutionException e) {
-                                e.printStackTrace();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            } catch (TimeoutException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        fiberIndex = 0;
-                    }
-                }
-
-                // batch full, run
-                for(int z = 0; z < fiberIndex; z++) fibers[z].start();
-
-                for(int z = 0; z < fiberIndex; z++) {
-                    try {
-                        fibers[z].join(20, TimeUnit.SECONDS);
-                        this.networkIndicies.put(this.currentIndex++, identifiers[z]);
-                        this.print("Node " + this.currentIndex);
-
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (TimeoutException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                System.out.println("Time taken: " + (System.currentTimeMillis() - start) + "ms");
-
-            } else {
-                this.print("Invalid arguments");
-            }
-        }
-        else {
-            this.print("Invalid number of arguments");
-        }
-    }
 
 
     private void averageSizeOfBucket() {

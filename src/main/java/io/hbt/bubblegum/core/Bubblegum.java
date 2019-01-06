@@ -38,7 +38,7 @@ public class Bubblegum {
 //        try {
 //            this.initialiseIPAddress();
 //            this.initialiseSocialIdentity();
-            this.executionContext = new ActivityExecutionContext();
+            this.executionContext = new ActivityExecutionContext(1);
             this.cells = new ArrayList<>();
             this.nodes = new HashMap<>();
 
@@ -58,6 +58,7 @@ public class Bubblegum {
     private void loadNodes() {
         // TODO assert nodes and cells empty
         Map<Integer, List<NetworkDetails>> networks = Database.getInstance().loadNetworksFromDatabase();
+        int newProcesses = 0;
 
         for(Map.Entry<Integer, List<NetworkDetails>> networkEntry : networks.entrySet()) {
             for(NetworkDetails network : networkEntry.getValue()) {
@@ -76,6 +77,7 @@ public class Bubblegum {
                     BubblegumNode reloadedNode = this.forceInsertIntoCell(network.getPort(), reloadedNodeBuilder);
                     reloadedNodeBuilder = null;
 
+                    newProcesses++;
                     this.nodes.put(network.getID(), reloadedNode);
                 } catch (MalformedKeyException e) {
                     System.out.println("Failed to load network - " + network.getHash());
@@ -83,6 +85,8 @@ public class Bubblegum {
                 }
             }
         }
+
+        this.executionContext.newProcessesInContext(newProcesses);
     }
 
 //    private void initialiseIPAddress() throws AddressInitialisationException {
@@ -169,17 +173,18 @@ public class Bubblegum {
             nodes.add(this.createNode());
         }
 
-        Database.getInstance().updateNodesInDatabase(
-            this.nodes.entrySet().stream().map(
-                entry -> entry.getValue()
-            ).collect(Collectors.toList())
-        );
+//        Database.getInstance().updateNodesInDatabase(
+//            this.nodes.entrySet().stream().map(
+//                entry -> entry.getValue()
+//            ).collect(Collectors.toList())
+//        );
         return nodes;
     }
 
 
     public BubblegumNode createNode() {
         UUID identifier = UUID.randomUUID();
+        this.executionContext.newProcessInContext();
         BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
         newNodeBuilder.setIdentifier(identifier.toString());
         newNodeBuilder.setSocialIdentity(this.socialIdentity);
@@ -193,6 +198,9 @@ public class Bubblegum {
         return newNode;
     }
 
+    public ActivityExecutionContext getExecutionContext() {
+        return this.executionContext;
+    }
 }
 
 

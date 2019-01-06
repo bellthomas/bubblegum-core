@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.core.kademlia;
 
-import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
@@ -14,7 +13,6 @@ import java.net.UnknownHostException;
 
 public class KademliaServerWorker {
 
-    @Suspendable
     public static void accept(BubblegumNode node, KademliaMessage message) {
 
         if(message.hasPingMessage() && !message.getPingMessage().getReply()) {

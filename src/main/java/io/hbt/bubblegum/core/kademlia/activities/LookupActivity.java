@@ -1,17 +1,11 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import co.paralleluniverse.fibers.SuspendExecution;
-import co.paralleluniverse.fibers.Suspendable;
-import co.paralleluniverse.strands.Strand;
 import io.hbt.bubblegum.core.auxiliary.ComparableBytePayload;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaNode.KademliaNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
-import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -175,7 +169,6 @@ public class LookupActivity extends SystemActivity {
     }
 
     @Override
-    @Suspendable
     public void run() {
         this.print("Running lookup...");
 
@@ -295,11 +288,9 @@ public class LookupActivity extends SystemActivity {
 
             } else {
                 try {
-                    Strand.sleep(50);
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                } catch (SuspendExecution suspendExecution) {
-                    suspendExecution.printStackTrace();
                 }
             }
         }

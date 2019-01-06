@@ -1,7 +1,5 @@
 package io.hbt.bubblegum.core.databasing;
 
-import co.paralleluniverse.fibers.Suspendable;
-import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.ComparableBytePayload;
 import io.hbt.bubblegum.core.auxiliary.Pair;
@@ -9,7 +7,6 @@ import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
-import javax.xml.crypto.Data;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,30 +99,27 @@ public class Database {
         Database.cdbInstance.saveMeta("username", node, content);
     }
 
-    @Suspendable
     public void publishEntityMeta(BubblegumNode node, String key, String globalPostIdentifier) {
         String uniquifier = ":" + UUID.randomUUID().toString();
         if(node.store(NodeID.hash(key), globalPostIdentifier.getBytes())) {
             this.lastNetworkUpdates.put(globalPostIdentifier + uniquifier, new Pair<>(key, System.currentTimeMillis()));
         } else {
-            System.out.println("Failed to store value");
+//            System.out.println("Failed to store value");
             this.lastNetworkUpdates.put(globalPostIdentifier + uniquifier, new Pair<>(key, 0L));
         }
     }
 
-    @Suspendable
     public Post savePost(BubblegumNode node, String content) {
         return this.savePost(node, content, "");
     }
 
-    @Suspendable
     public Post savePost(BubblegumNode node, String content, String inResponseTo) {
         Post saved = Database.cdbInstance.savePost(node, content, inResponseTo);
         long epochBin = saved.getTimeCreated() / Configuration.BIN_EPOCH_DURATION;
         String globalPostIdentifier = Database.globalIdentifierForPost(node, saved);
         this.publishEntityMeta(node, Long.toString(epochBin), globalPostIdentifier);
 
-        System.out.println(epochBin + " -> " + globalPostIdentifier);
+//        System.out.println(epochBin + " -> " + globalPostIdentifier);
         return saved;
     }
 
@@ -146,7 +140,6 @@ public class Database {
         if (!directory.exists()) directory.mkdir();
     }
 
-    @Suspendable
     public void checkForExpiredPosts() {
         long current = System.currentTimeMillis();
         this.db.forEach((k1,v1) -> {
@@ -160,7 +153,6 @@ public class Database {
         });
     }
 
-    @Suspendable
     public void refreshExpiringPosts(BubblegumNode node, int margin) {
         long cutoff = System.currentTimeMillis() - (Database.EXPIRY_AGE * 1000) + margin;
         List<Pair<String, String>> ids = this.lastNetworkUpdates.entrySet()

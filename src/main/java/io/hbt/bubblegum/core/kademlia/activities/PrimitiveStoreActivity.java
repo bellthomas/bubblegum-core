@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
-import co.paralleluniverse.fibers.Suspendable;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
@@ -18,7 +17,6 @@ public class PrimitiveStoreActivity extends NetworkActivity {
     }
 
     @Override
-    @Suspendable
     public void run() {
         if(this.isResponse) {
             this.print("Responding to STORE("+this.key+") request to " + this.to.getNode().toString());
