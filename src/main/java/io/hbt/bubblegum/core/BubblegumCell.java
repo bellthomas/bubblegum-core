@@ -13,12 +13,10 @@ public class BubblegumCell {
     private static int totalNodes = 0;
 
     private BubblegumCellServer server;
-    private ActivityExecutionContext executionContext;
     private HashSet<BubblegumNode> nodes;
 
     public BubblegumCell(int port, ActivityExecutionContext executionContext) throws BubblegumException {
         this.server = new BubblegumCellServer(port, executionContext);
-        this.executionContext = executionContext;
         this.nodes = new HashSet<>();
     }
 

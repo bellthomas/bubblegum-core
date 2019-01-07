@@ -40,16 +40,6 @@ public class BootstrapActivity extends NetworkActivity {
             LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getNodeIdentifier(), 10, false);
             lookupActivity.run();
 
-//            Set<RouterNode> closestNodes = lookupActivity.getClosestNodes();
-//            if(closestNodes != null) {
-//                for(RouterNode closeNode : closestNodes) {
-//                    if(!closeNode.isFresh()) {
-//                        PingActivity pingActivity = new PingActivity(this.localNode, closeNode);
-//                        this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier(), pingActivity);
-//                    }
-//                }
-//            }
-
             this.complete = true;
             this.success = (lookupActivity.getComplete() && lookupActivity.getSuccess());
         }

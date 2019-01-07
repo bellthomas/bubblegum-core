@@ -86,6 +86,7 @@ public class Simulator {
         System.out.println("[Background Network] " + bootstrapActions.size() + " tasks prepared...");
 
         int threadPoolSize = 20;
+        final AtomicInteger progress = new AtomicInteger(0);
         Thread[] executors = new Thread[threadPoolSize];
         for(int i = 0; i < threadPoolSize; i++) {
             executors[i] = new Thread(() -> {
@@ -97,6 +98,8 @@ public class Simulator {
 
                     if(task == null) break;
                     else task.run();
+
+                    if(progress.incrementAndGet() % 100 == 0) System.gc();
                 }
             });
             executors[i].start();
@@ -111,7 +114,7 @@ public class Simulator {
         }
 
         long end = System.currentTimeMillis();
-        System.out.print("\r[Background Network] Completed " + totalBackgroundTasks + " nodes in " + (end - start) + "ms\n");
+        System.out.println("\r[Background Network] Completed " + totalBackgroundTasks + " nodes in " + (end - start) + "ms        ");
         System.gc();
         this.validateBootstrap();
         this.backgroundChatter();
@@ -146,12 +149,12 @@ public class Simulator {
             BubblegumNode node = this.bubblegum.getNode(id);
 
             randomNum = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondsPerPost) * 1000);
-            node.getExecutionContext().scheduleTask(() -> {
+            node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
                 node.savePost(randomText(100));
             }, randomNum, (long)Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
 
             randomNum2 = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondPerFeed) * 1000);
-            node.getExecutionContext().scheduleTask(() -> {
+            node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
 //                System.out.println("Started ANQ for " + node.getNodeIdentifier().toString());
                 AsyncNetworkQuery q = new AsyncNetworkQuery(node);
                 long current = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;

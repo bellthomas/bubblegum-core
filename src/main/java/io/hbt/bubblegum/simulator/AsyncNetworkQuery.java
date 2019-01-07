@@ -91,12 +91,12 @@ public class AsyncNetworkQuery {
                         //
                         try {
                             NodeID nid = new NodeID(owner);
-                            this.node.getExecutionContext().addActivity(node.getIdentifier(), () -> {
+                            this.node.getExecutionContext().addCompoundActivity(node.getIdentifier(), () -> {
                                 this.retrieveMetadata(this.node, nid);
                                 this.changeOccurred();
                             });
 
-                            this.node.getExecutionContext().addActivity(node.getIdentifier(), () -> {
+                            this.node.getExecutionContext().addCompoundActivity(node.getIdentifier(), () -> {
                                 List<Post> posts = this.node.query(nid, -1, -1, foreignUsersPosts);
                                 if(posts != null) {
                                     this.results.addAll(posts);

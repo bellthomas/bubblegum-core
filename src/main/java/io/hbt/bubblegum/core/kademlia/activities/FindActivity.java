@@ -169,13 +169,4 @@ public class FindActivity extends NetworkActivity {
     public RouterNode getDestination() {
         return this.to;
     }
-
-    public void pingToValidate() {
-        if(this.resultNodes != null) {
-            for(RouterNode node : this.resultNodes) {
-                PingActivity nodePing = new PingActivity(this.localNode, node); // kademliaMessage.getOriginNetwork() + ":" + node.getHash()
-                this.localNode.getExecutionContext().addPingActivity(this.localNode.getIdentifier(), nodePing);
-            }
-        }
-    }
 }

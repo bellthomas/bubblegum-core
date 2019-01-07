@@ -84,7 +84,7 @@ public class BubblegumNode {
 
         // Refresh/delete content as it expires
 
-        this.getExecutionContext().scheduleTask(() -> {
+        this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
             this.db.refreshExpiringPosts(this, 30);
         }, new Random().nextInt(60), 60, TimeUnit.SECONDS);
 

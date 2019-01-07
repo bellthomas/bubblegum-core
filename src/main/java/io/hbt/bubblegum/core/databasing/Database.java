@@ -27,7 +27,7 @@ public class Database {
     private static MasterDatabase masterDatabase;
 
     protected static final String DB_FOLDER_PATH = ".databases/";
-    protected static final long EXPIRY_AGE = 5 * 60; // seconds
+    protected static final long EXPIRY_AGE = 30 * 60; // seconds
 
     private final ConcurrentHashMap<String, Pair<String, Long>> lastNetworkUpdates;
 
@@ -46,7 +46,7 @@ public class Database {
 
     public void initialiseExpiryScheduler(ActivityExecutionContext context) {
         if(context != null) {
-            context.scheduleTask(() -> this.checkForExpiredPosts(), 30, 30, TimeUnit.SECONDS);
+            context.scheduleTask("system", () -> this.checkForExpiredPosts(), 30, 30, TimeUnit.SECONDS);
         }
     }
 
@@ -100,13 +100,15 @@ public class Database {
     }
 
     public void publishEntityMeta(BubblegumNode node, String key, String globalPostIdentifier) {
-        String uniquifier = ":" + UUID.randomUUID().toString();
-        if(node.store(NodeID.hash(key), globalPostIdentifier.getBytes())) {
-            this.lastNetworkUpdates.put(globalPostIdentifier + uniquifier, new Pair<>(key, System.currentTimeMillis()));
-        } else {
-//            System.out.println("Failed to store value");
-            this.lastNetworkUpdates.put(globalPostIdentifier + uniquifier, new Pair<>(key, 0L));
-        }
+        node.getExecutionContext().addCompoundActivity(node.getIdentifier(), () -> {
+            String uniquifier = ":" + UUID.randomUUID().toString();
+            if(node.store(NodeID.hash(key), globalPostIdentifier.getBytes())) {
+                this.lastNetworkUpdates.put(globalPostIdentifier + uniquifier, new Pair<>(key, System.currentTimeMillis()));
+            } else {
+//                System.out.println("Failed to store value");
+                this.lastNetworkUpdates.put(globalPostIdentifier + uniquifier, new Pair<>(key, 0L));
+            }
+        });
     }
 
     public Post savePost(BubblegumNode node, String content) {

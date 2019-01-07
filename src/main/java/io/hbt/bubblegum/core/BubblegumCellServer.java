@@ -97,7 +97,7 @@ public class BubblegumCellServer {
                 byte[] data = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
 
-                this.executionContext.addCallbackActivity("server", () -> {
+                this.executionContext.addCallbackActivity("system", () -> {
                     try {
                         KademliaMessage message = KademliaMessage.parseFrom(data);
 
@@ -117,7 +117,7 @@ public class BubblegumCellServer {
                                     DiscoveryActivity discover = new DiscoveryActivity(firstLocal, sender);
                                     discover.setResponse(message.getExchangeID(), this.recipients.keySet(), message.getOriginNetwork() + ":" + message.getOriginHash());
                                     firstLocal.getExecutionContext().addCallbackActivity(
-                                        "server",
+                                        "system",
                                         () -> discover.run()
                                     );
                                 }

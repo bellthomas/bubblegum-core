@@ -3,13 +3,14 @@ package io.hbt.bubblegum.core.auxiliary;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class ConcurrentBlockingQueue<T> {
+public class ConcurrentBlockingQueue<T> implements Comparable<ConcurrentBlockingQueue<T>> {
 
     /**
      * Internal data store.
      * No need for thread safety here as the getter and putter provide this.
      */
     private Queue<T> items = new LinkedList<>();
+    private int itemCountEstimate = 0;
     private long total = 0;
 
     /**
@@ -26,6 +27,7 @@ public class ConcurrentBlockingQueue<T> {
     public synchronized void put(T item) {
         this.items.add(item);
         this.total++;
+        this.itemCountEstimate++;
         notify();
     }
 
@@ -46,6 +48,7 @@ public class ConcurrentBlockingQueue<T> {
             wait();
         }
 
+        this.itemCountEstimate--;
         return this.items.poll();
     }
 
@@ -70,12 +73,20 @@ public class ConcurrentBlockingQueue<T> {
         return copy;
     }
 
+
+
+
     public synchronized int getItemCount() {
-        return this.items.size();
+        return this.itemCountEstimate;
     }
 
     public synchronized  long getTotal() {
         return this.total;
+    }
+
+    @Override
+    public int compareTo(ConcurrentBlockingQueue<T> o) {
+        return this.itemCountEstimate - o.itemCountEstimate;
     }
 
 } // end ConcurrentBlockingQueue class

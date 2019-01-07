@@ -1,10 +1,8 @@
 package io.hbt.bubblegum.core;
 
+import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.NetworkDetails;
-import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
-import io.hbt.bubblegum.core.databasing.MasterDatabase;
-import io.hbt.bubblegum.core.exceptions.AddressInitialisationException;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -12,15 +10,12 @@ import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.social.SocialIdentity;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class Bubblegum {
 

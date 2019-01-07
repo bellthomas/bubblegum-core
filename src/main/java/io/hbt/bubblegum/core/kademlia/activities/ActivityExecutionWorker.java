@@ -23,11 +23,24 @@ public class ActivityExecutionWorker {
 
     private void start() {
         WorkItem item;
+        long start, elapsed;
         while(this.alive) {
             try {
                 item = this.queue.get();
-                if(item.getOperation() != null) item.getOperation().run();
-                this.manager.callback(item.getOwner());
+                if(item != null) {
+                    if (item.getOperation() != null) {
+                        start = System.currentTimeMillis();
+                        item.getOperation().run();
+                        if(!item.getOwner().equals("system")) {
+                            elapsed = System.currentTimeMillis() - start;
+                            this.manager.declareExecutionTime(elapsed);
+                        }
+                    }
+                    this.manager.callback(item.getOwner());
+                }
+                else {
+                    break;
+                }
 
             } catch (InterruptedException e) {
                 this.alive = false;

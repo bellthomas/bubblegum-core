@@ -5,7 +5,7 @@ import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ActivityExecutionManager {
 
@@ -29,24 +29,25 @@ public class ActivityExecutionManager {
     private int maximumNumberOfThreads;
     private int numberOfProcesses;
     private int workerPoolSize;
-    private final ConcurrentBlockingQueue<WorkItem> queue;
-    private final List<ActivityExecutionWorker> workers;
-    private final ScheduledExecutorService executor;
+    private List<ActivityExecutionWorker> workers;
+    private ConcurrentBlockingQueue<WorkItem> queue;
 
-    private final int parallelism;
-    private final HashMap<String, Integer> parallelismMatrix;
-    private final HashMap<String, ConcurrentLinkedQueue<WorkItem>> backlog;
+    private int parallelism;
+    private HashMap<String, Integer> parallelismMatrix;
+    private HashMap<String, ConcurrentLinkedQueue<WorkItem>> backlog;
+
+    private long totalExecutionTimes = 0;
+    private long totalExecuted = 0;
 
     public ActivityExecutionManager(int numProcesses, int parallelism, int maximum) {
         this.numberOfProcesses = numProcesses;
         this.maximumNumberOfThreads = maximum;
         this.workerPoolSize = Math.min(maximumNumberOfThreads, numProcesses * parallelism);
-        this.queue = new ConcurrentBlockingQueue<>();
         this.workers = new ArrayList<>(this.workerPoolSize);
-        this.executor = new ScheduledThreadPoolExecutor(2);
         this.parallelism = parallelism;
         this.parallelismMatrix = new HashMap<>();
         this.backlog = new HashMap<>();
+        this.queue = new ConcurrentBlockingQueue<>();
         this.initialiseWorkers();
     }
 
@@ -88,10 +89,6 @@ public class ActivityExecutionManager {
         }
     }
 
-    public void addDelayedActivity(String owner, Runnable r, long milliseconds) {
-        this.executor.schedule(() -> this.addActivity(owner, r), milliseconds, TimeUnit.MILLISECONDS);
-    }
-
     protected void callback(String owner) {
         if(this.parallelismMatrix.containsKey(owner)) {
             synchronized (this.parallelismMatrix) {
@@ -105,11 +102,21 @@ public class ActivityExecutionManager {
         }
     }
 
+    protected synchronized void declareExecutionTime(long time) {
+        this.totalExecuted++;
+        this.totalExecutionTimes += time;
+    }
+
     public int getQueueSize() {
         return this.queue.getItemCount();
     }
 
     public long getTotalActivities() {
         return this.queue.getTotal();
+    }
+
+    public String getAverageExecutionTime() {
+        if(this.totalExecuted == 0) return "-";
+        else return "" + (this.totalExecutionTimes / this.totalExecuted);
     }
 }
