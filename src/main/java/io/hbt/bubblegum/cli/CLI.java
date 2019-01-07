@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.cli;
 
+import com.google.common.base.Charsets;
 import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.databasing.Post;
@@ -175,6 +176,10 @@ public class CLI {
                             case "queryid":
                                 current = this.getCurrentNode();
                                 if(current != null) this.queryid(current, commandParts);
+                                break;
+                            case "thread":
+                                current = this.getCurrentNode();
+                                if(current != null) this.thread(current, commandParts);
                                 break;
                             case "feed":
                                 current = this.getCurrentNode();
@@ -606,7 +611,7 @@ public class CLI {
                 try {
                     NodeID id = new NodeID(idParts[0]);
                     List<Post> posts = node.query(id, -1, -1, new ArrayList<>() {{ add(idParts[1]); }});
-                    if (posts == null) this.print("Failed to query remote posts");
+                    if (posts == null) this.print("Fail / Node offline");
                     else if (posts.size() == 0) this.print("No remote posts found");
                     else for (Post p : posts) this.print(p.toString());
                 }
@@ -674,6 +679,45 @@ public class CLI {
         }
     }
 
+    private void thread(BubblegumNode node, String[] command) {
+        if(command.length >= 2) {
+            String post = command[1];
+            String[] idParts = post.split(":");
+            if(idParts.length == 2) {
+                try {
+                    NodeID id = new NodeID(idParts[0]);
+                    List<Post> posts = node.query(id, -1, -1, new ArrayList<>() {{ add(idParts[1]); }});
+                    if (posts == null) this.print("Fail / Node offline");
+                    else if (posts.size() == 0) this.print("No remote posts found");
+                    else {
+                        for (Post p : posts) {
+                            this.print(p.toString());
+                            this.getReplies(node, p.getOwner() + ":" + p.getID(), 1);
+                        }
+                    }
+                }
+                catch (MalformedKeyException e) {
+                    this.print("Failed to parse node ID");
+                }
+            }
+            else {
+                this.print("Invalid post ID");
+            }
+        }
+    }
+
+
+    private void getReplies(BubblegumNode node, String globalID, int indent) {
+        List<byte[]> results = node.lookup(NodeID.hash("responses_" + globalID));
+        if(results.size() == 0) return;
+
+        this.print(this.indent(results.size() + " replies: ", indent) + "\n");
+        for(byte[] result : results) {
+            this.print(this.indent("-" + new String(result, Charsets.US_ASCII), indent) + "\n");
+            this.getReplies(node, new String(result, Charsets.US_ASCII), indent+1);
+        }
+    }
+
 
     private void refreshBuckets(BubblegumNode node) {
         node.getRoutingTable().refreshBuckets();
@@ -716,6 +760,14 @@ public class CLI {
             this.print("Long conversion failed");
             return null;
         }
+    }
+
+
+    private String indent(String str, int indent) {
+        String indentStr = "";
+        for(int i = 0; i < indent; i++) indentStr += ">>>";
+        String[] parts = str.split("\n");
+        return indentStr + String.join("\n" + indentStr, parts);
     }
 
 
