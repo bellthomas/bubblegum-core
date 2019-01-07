@@ -170,6 +170,7 @@ public class LookupActivity extends SystemActivity {
 
     @Override
     public void run() {
+        super.run();
         this.print("Running lookup...");
 
         // Check if we have a value locally first
@@ -201,7 +202,7 @@ public class LookupActivity extends SystemActivity {
         ArrayList<FindActivity> currentActivities = new ArrayList<>();
 
         long timeoutTime = System.currentTimeMillis() + timeout * 1000;
-        while(opsWithoutNewClosest < alpha && System.currentTimeMillis() < timeoutTime) {
+        while(opsWithoutNewClosest < 2 * alpha && System.currentTimeMillis() < timeoutTime) {
             Iterator<FindActivity> activityIterator = currentActivities.iterator();
             while (activityIterator.hasNext()) {
                 FindActivity activity = activityIterator.next();

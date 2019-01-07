@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+ 
+<!-- Author:  Crunchify.com  -->
+	<Appenders>
+		<RollingFile name="RollingFile" filename="log/metrics.log"
+			filepattern="${logPath}/%d{yyyyMMddHHmmss}-fargo.log">
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %msg%n" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="100 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="20" />
+		</RollingFile>
+ 
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="RollingFile" />
+		</Root>
+	</Loggers>
+</Configuration>

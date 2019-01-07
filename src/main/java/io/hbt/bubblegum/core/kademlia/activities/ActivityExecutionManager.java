@@ -78,7 +78,7 @@ public class ActivityExecutionManager {
         synchronized (this.parallelismMatrix) {
             if(!this.parallelismMatrix.containsKey(owner)) this.parallelismMatrix.put(owner, 0);
             int current = this.parallelismMatrix.get(owner);
-            if(current >= this.parallelism) {
+            if(current >= this.parallelism * 2) {
                 if(!this.backlog.containsKey(owner)) this.backlog.put(owner, new ConcurrentLinkedQueue<>());
                 this.backlog.get(owner).add(new WorkItem(owner, r));
             }

@@ -6,6 +6,7 @@ import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -33,6 +34,7 @@ public class Simulator {
 
     public Simulator(SimulationConfig config) {
         this.config = config;
+        Metrics.startRecording();
         this.bubblegum = new Bubblegum(false);
         this.setupBackgroundNetwork();
     }
@@ -66,6 +68,7 @@ public class Simulator {
     }
 
     private void setupBackgroundNetwork() {
+        System.out.println("[Background Network] " + LocalDateTime.now());
         System.out.println("[Background Network] Initialising...");
 
         this.backgroundTasksCompleted = new AtomicInteger(0);
@@ -75,6 +78,9 @@ public class Simulator {
         List<Runnable> tasks = new ArrayList<>();
         for(int i = 0; i < this.config.getNumNetworks(); i++) {
             BubblegumNode node = this.bubblegum.createNode();
+            System.out.println("[Background Network] Network Genesis Node: " +
+                node.getServer().getLocal().getHostAddress() + " " +
+                node.getServer().getPort() + " " + node.getRecipientID());
             for (int j = 1; j < this.config.getNumNetworkNodes(); j++) {
                 tasks.add(() -> runBootstrap(node));
             }

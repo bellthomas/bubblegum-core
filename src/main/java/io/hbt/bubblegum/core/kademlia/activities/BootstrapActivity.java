@@ -18,6 +18,8 @@ public class BootstrapActivity extends NetworkActivity {
 
     @Override
     public void run() {
+        super.run();
+
         // Ping
         this.print("Starting bootstrapping process...  ("+this.to.getIPAddress().getHostAddress()+":"+this.to.getPort()+")");
         PingActivity ping = new PingActivity(this.localNode, this.to, this.foreignRecipient);

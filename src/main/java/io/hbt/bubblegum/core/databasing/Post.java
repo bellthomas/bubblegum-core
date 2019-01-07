@@ -14,19 +14,6 @@ public class Post {
     private String response;
     private final long timeCreated;
 
-    public Post(BubblegumNode node, String content) {
-        this(node, content, "");
-    }
-
-    public Post(BubblegumNode node, String content, String response) {
-        this.id = UUID.randomUUID().toString();
-        this.owner = node.getNodeIdentifier().toString();
-        this.network = node.getNetworkIdentifier();
-        this.content = content;
-        this.response = response;
-        this.timeCreated = System.currentTimeMillis();
-    }
-
     protected Post(String id, String owner, String network, String content, String response, long timeCreated) {
         this.id = id;
         this.owner = owner;
@@ -77,7 +64,7 @@ public class Post {
 
     @Override
     public String toString() {
-        String val = "Owner: "+ this.network +":"+ this.owner +"\nPost #"+ this.id +"\nTimestamp: " + this.timeCreated + "\nContent: " + this.content;
+        String val = "Origin: "+ this.network +":"+ this.owner +"\nPost: "+ this.owner +":"+ this.id +"\nTimestamp: " + this.timeCreated + "\nContent: " + this.content;
         if(this.response.length() > 0) val += "\n[In response to " + this.response + "]";
         return val;
     }

@@ -1,6 +1,11 @@
 package io.hbt.bubblegum.core.auxiliary;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +15,7 @@ import java.util.stream.Collectors;
 public class NetworkingHelper {
 
     private static final Set<InetAddress> inetAddressRepository = new HashSet<>();
+
 
     private NetworkingHelper() { }
 
@@ -40,26 +46,34 @@ public class NetworkingHelper {
 
     public static InetAddress getLocalInetAddress() {
         try {
-            InetAddress actual = InetAddress.getLocalHost();
-            return NetworkingHelper.getInetAddress(actual);
-
+            String externalIP = null;//NetworkingHelper.lookupExternalIP();
+            if(externalIP == null) return NetworkingHelper.getInetAddress(InetAddress.getLocalHost());
+            else return NetworkingHelper.getInetAddress(externalIP);
         } catch (UnknownHostException e) {
             return null;
         }
     }
 
-    public static void main(String[] args) {
+    private static String lookupExternalIP() {
+        BufferedReader in = null;
         try {
-            InetAddress local = InetAddress.getByName("192.168.0.1");
-            inetAddressRepository.add(local);
-            System.out.println(local.getHostName());
-
-            InetAddress local2 = getInetAddress("192.168.0.1");
-            InetAddress local3 = getInetAddress("192.168.0.1");
-            InetAddress local4 = getInetAddress("192.168.0.1");
-
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+            URL whatismyip = new URL("http://checkip.amazonaws.com");
+            in = new BufferedReader(new InputStreamReader(
+                whatismyip.openStream()));
+            String ip = in.readLine();
+            return ip;
+        } catch (MalformedURLException e) {
+            return null;
+        } catch (IOException e) {
+            return null;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    in = null;
+                }
+            }
         }
     }
 }

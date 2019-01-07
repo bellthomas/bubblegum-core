@@ -91,7 +91,7 @@ class ContentDatabase {
     }
 
     public Post savePost(BubblegumNode node, String content, String inResponseTo) {
-        return this.saveEntity(UUID.randomUUID().toString(), node, content, inResponseTo);
+        return this.saveEntity("post-"+UUID.randomUUID().toString(), node, content, inResponseTo);
     }
 
     public Post saveMeta(String key, BubblegumNode node, String content) {

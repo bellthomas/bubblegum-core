@@ -35,18 +35,11 @@ public class PingActivity extends NetworkActivity {
 
     @Override
     public void run() {
+        super.run();
 
         // Get real RouterNode if we have one
         RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
-        if(destination == null) {
-            destination = this.to;
-//            if(!isResponse) this.print("-------- No node in routing table");
-//            else this.print("-------- Must reply to pings");
-        }
-        else {
-//            if (!isResponse) this.print("-------- Found node in routing table, fresh: " + destination.isFresh());
-//            else this.print("-------- Must reply to pings");
-        }
+        if(destination == null) destination = this.to;
 
         // dest and to with different ip/port?
 

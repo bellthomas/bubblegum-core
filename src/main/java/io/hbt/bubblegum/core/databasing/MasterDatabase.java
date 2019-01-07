@@ -43,19 +43,20 @@ public class MasterDatabase {
             statement.executeUpdate(this.setupMasterTableSQL());
 
             for(BubblegumNode network : networks) {
-                ResultSet rs = statement.executeQuery(this.rowExistencecheckSQL(network));
-                if(rs.next() && rs.getInt(1) == 1) {
-                    // The network already exists, update
-                    int result = statement.executeUpdate(this.updateNetworkDetailsSQL(network));
-                    if(result == 1) {
-                        // success
-                    }
-                }
-                else {
-                    // Network is new, create new entry
-                    int result = statement.executeUpdate(this.insertNewNetworkSQL(network));
-                    if(result == 1) {
-                        // success
+                if(network != null) {
+                    ResultSet rs = statement.executeQuery(this.rowExistenceCheckSQL(network));
+                    if (rs.next() && rs.getInt(1) == 1) {
+                        // The network already exists, update
+                        int result = statement.executeUpdate(this.updateNetworkDetailsSQL(network));
+                        if (result == 1) {
+                            // success
+                        }
+                    } else {
+                        // Network is new, create new entry
+                        int result = statement.executeUpdate(this.insertNewNetworkSQL(network));
+                        if (result == 1) {
+                            // success
+                        }
                     }
                 }
             }
@@ -150,7 +151,7 @@ public class MasterDatabase {
         return sb.toString();
     }
 
-    private String rowExistencecheckSQL(BubblegumNode network) {
+    private String rowExistenceCheckSQL(BubblegumNode network) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT EXISTS( ");
         sb.append("SELECT 1 FROM networks WHERE ");

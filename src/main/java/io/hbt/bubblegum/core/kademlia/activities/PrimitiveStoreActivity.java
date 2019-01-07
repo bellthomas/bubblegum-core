@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
+import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
@@ -18,11 +19,13 @@ public class PrimitiveStoreActivity extends NetworkActivity {
 
     @Override
     public void run() {
+        super.run();
         if(this.isResponse) {
             this.print("Responding to STORE("+this.key+") request to " + this.to.getNode().toString());
-            boolean accepted = this.localNode.getDatabase().add(this.localNode.getIdentifier(), this.key, this.payload);
+            boolean accepted = Database.getInstance().add(this.localNode.getIdentifier(), this.key, this.payload);
             KademliaMessage message = ProtobufHelper.buildStoreResponse(this.localNode, this.to, this.exchangeID, accepted);
             this.server.sendDatagram(this.localNode, this.to, message, null);
+            this.onSuccess();
         }
         else {
             this.print("Sending STORE("+this.key+") request to " + this.to.getNode().toString());

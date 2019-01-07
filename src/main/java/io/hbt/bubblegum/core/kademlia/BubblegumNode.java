@@ -34,7 +34,6 @@ public class BubblegumNode {
     private BubblegumCellServer server;
     private ActivityExecutionContext executionContext;
     private Database db;
-    private Logger logger;
 
     // region Initialisation
     private BubblegumNode(
@@ -42,14 +41,12 @@ public class BubblegumNode {
         String networkIdentifier,
         ActivityExecutionContext context,
         BubblegumCellServer server,
-        Logger logger,
         NodeID nid
     ) {
         this.identifier = identifier;
         this.networkIdentifier = networkIdentifier;
         this.nodeIdentifier = nid;
         this.executionContext = context;
-        this.logger = logger;
         this.server = server;
         this.server.registerNewLocalNode(this);
         this.routingTable = new RoutingTable(this);
@@ -285,11 +282,9 @@ public class BubblegumNode {
     //region Builder
     public static class Builder {
         private String identifier, networkIdentifier;
-        private SocialIdentity socialIdentity;
         private NodeID nodeIdentifier;
         private ActivityExecutionContext executionContext;
         private BubblegumCellServer server;
-        private Logger logger;
         private int port = 0;
 
         public Builder setIdentifier(String identifier) {
@@ -299,11 +294,6 @@ public class BubblegumNode {
 
         public Builder setNetworkIdentifier(String networkIdentifier) {
             this.networkIdentifier = networkIdentifier;
-            return this;
-        }
-
-        public Builder setSocialIdentity(SocialIdentity socialIdentity) {
-            this.socialIdentity = socialIdentity;
             return this;
         }
 
@@ -322,11 +312,6 @@ public class BubblegumNode {
             return this;
         }
 
-        public Builder setLogger(Logger logger) {
-            this.logger = logger;
-            return this;
-        }
-
         public Builder setPort(int port) {
             this.port = port;
             return this;
@@ -334,18 +319,17 @@ public class BubblegumNode {
 
         public BubblegumNode build() {
             // Check required
-            if(this.executionContext == null || this.logger == null || this.server == null)
+            if(this.executionContext == null || this.server == null)
                 return null;
 
             // Fill in optionals
-            if(this.identifier == null) this.identifier = UUID.randomUUID().toString();
-            if(this.networkIdentifier == null) this.networkIdentifier = UUID.randomUUID().toString();
+            if(this.identifier == null) this.identifier = "local-" + UUID.randomUUID().toString();
+            if(this.networkIdentifier == null) this.networkIdentifier = "network-" + UUID.randomUUID().toString();
             if(this.nodeIdentifier == null) this.nodeIdentifier = new NodeID();
             if(!NetworkingHelper.validPort(this.port)) this.port = 0;
 
             return new BubblegumNode (
-                this.identifier, this.networkIdentifier, this.executionContext,
-                this.server, this.logger, this.nodeIdentifier
+                this.identifier, this.networkIdentifier, this.executionContext, this.server, this.nodeIdentifier
             );
         }
     }

@@ -77,15 +77,16 @@ public class Database {
         if(!this.db.containsKey(node)) this.db.put(node, new HashMap<>());
         if(!this.db.get(node).containsKey(key)) this.db.get(node).put(key, new ArrayList<>());
 
-        // TODO error on removeAll line?
         ComparableBytePayload newPayload = new ComparableBytePayload(value);
-        synchronized (this.db) {
+        synchronized (this.db.get(node).get(key)) {
             // If we have an old version, remove it
-            List<Pair> toRemove = this.db.get(node).get(key)
-                .stream()
-                .filter((p) -> p.getFirst().equals(newPayload))
-                .collect(Collectors.toList());
-            this.db.get(node).get(key).removeAll(toRemove);
+
+            this.db.get(node).get(key).removeIf(p -> p.getFirst().equals(newPayload));
+//            List<Pair> toRemove = this.db.get(node).get(key)
+//                .stream()
+//                .filter((p) -> p.getFirst().equals(newPayload))
+//                .collect(Collectors.toList());
+//            this.db.get(node).get(key).removeAll(toRemove);
 
             // Save new version
             this.db.get(node).get(key).add(new Pair<>(new ComparableBytePayload(value), System.currentTimeMillis()));

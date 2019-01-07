@@ -11,6 +11,7 @@ import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.DiscoveryActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
+import io.hbt.bubblegum.simulator.Metrics;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -98,6 +99,8 @@ public class BubblegumCellServer {
                 System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
 
                 this.executionContext.addCallbackActivity("system", () -> {
+
+                    if(Metrics.isRecording()) Metrics.serverSubmission(data.length, true);
                     try {
                         KademliaMessage message = KademliaMessage.parseFrom(data);
 
@@ -181,7 +184,9 @@ public class BubblegumCellServer {
                 }
                 this.sendingSocket.send(packet);
 //                new DatagramSocket().send(packet);
-                this.packetsSent++;
+
+                if(Metrics.isRecording()) Metrics.serverSubmission(packet.getLength(), false);
+//                this.packetsSent++;
 
             } catch (SocketException e) {
                 System.out.println("[Socket Failure] " + e.getMessage());

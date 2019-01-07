@@ -47,6 +47,8 @@ public class FindActivity extends NetworkActivity {
 
     @Override
     public void run() {
+        super.run();
+
         KademliaMessage message = null;
 
         if(this.isResponse) {

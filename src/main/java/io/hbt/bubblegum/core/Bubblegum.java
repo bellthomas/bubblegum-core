@@ -66,14 +66,12 @@ public class Bubblegum {
                     reloadedNodeBuilder.setNetworkIdentifier(network.getNetwork());
                     reloadedNodeBuilder.setNodeIdentifier(id);
                     reloadedNodeBuilder.setPort(network.getPort());
-                    reloadedNodeBuilder.setSocialIdentity(this.socialIdentity);
                     reloadedNodeBuilder.setExecutionContext(this.executionContext);
-                    reloadedNodeBuilder.setLogger(LoggingManager.getLogger(network.getID()));
                     BubblegumNode reloadedNode = this.forceInsertIntoCell(network.getPort(), reloadedNodeBuilder);
                     reloadedNodeBuilder = null;
 
                     newProcesses++;
-                    this.nodes.put(network.getID(), reloadedNode);
+                    this.nodes.put(reloadedNode.getIdentifier(), reloadedNode);
                 } catch (MalformedKeyException e) {
                     System.out.println("Failed to load network - " + network.getHash());
                     continue;
@@ -178,17 +176,13 @@ public class Bubblegum {
 
 
     public BubblegumNode createNode() {
-        UUID identifier = UUID.randomUUID();
         this.executionContext.newProcessInContext();
         BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
-        newNodeBuilder.setIdentifier(identifier.toString());
-        newNodeBuilder.setSocialIdentity(this.socialIdentity);
         newNodeBuilder.setExecutionContext(this.executionContext);
-        newNodeBuilder.setLogger(LoggingManager.getLogger(identifier.toString()));
         BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
         newNodeBuilder = null;
 
-        this.nodes.put(identifier.toString(), newNode);
+        this.nodes.put(newNode.getIdentifier(), newNode);
         Database.getInstance().updateNodeInDatabase(newNode);
         return newNode;
     }
@@ -214,6 +208,16 @@ public class Bubblegum {
  * FIND NODE takes a 160-bit key as an argument, the recipient of the FIND_NODE RPC returns information for the k nodes closest to the target id.
  *
  * FIND VALUE behaves like FIND_NODE returning the k nodes closest to the target Identifier with one exception – if the RPC recipient has received a STORE for the key, it just returns the stored value
+ *
+ */
+
+
+/**
+ *
+ * TODO
+ * Recursive post/comment lookup - threads off of post x
+ * Better lookup - not "oneday", eg "feed 5" to0 get last 5 minutes
+ * Clean up CLI - most commands not used. Maybe prefix with "dev-"?
  *
  */
 

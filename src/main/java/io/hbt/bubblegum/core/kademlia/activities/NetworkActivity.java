@@ -30,6 +30,11 @@ public abstract class NetworkActivity extends SystemActivity {
     }
 
     @Override
+    public void run() {
+        super.run();
+    }
+
+    @Override
     protected void print(String msg) {
         if(!isResponse) super.print(msg);
     }
@@ -37,6 +42,10 @@ public abstract class NetworkActivity extends SystemActivity {
     public void setResponse(String responseID) {
         this.isResponse = true;
         this.exchangeID = responseID;
+    }
+
+    public boolean isResponse() {
+        return this.isResponse;
     }
 
     @Override

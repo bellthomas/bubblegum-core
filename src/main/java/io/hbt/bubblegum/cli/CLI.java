@@ -63,6 +63,7 @@ public class CLI {
                         if(commandParts.length == 0) continue;
                         switch (commandParts[0].trim().toLowerCase()) {
                             case "q":
+                                this.reset();
                                 running = false;
                                 break;
                             case "help":
@@ -175,9 +176,9 @@ public class CLI {
                                 current = this.getCurrentNode();
                                 if(current != null) this.queryid(current, commandParts);
                                 break;
-                            case "oneday":
+                            case "feed":
                                 current = this.getCurrentNode();
-                                if(current != null) this.oneday(current, commandParts);
+                                if(current != null) this.feed(current, commandParts);
                                 break;
                             case "reply":
                                 current = this.getCurrentNode();
@@ -619,33 +620,46 @@ public class CLI {
         }
     }
 
-    private void oneday(BubblegumNode node, String[] command) {
-        long lowEpochBin = (System.currentTimeMillis() - (24*60*60*1000)) / Configuration.BIN_EPOCH_DURATION;
-        long highEpochBin = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;
-        System.out.println(lowEpochBin);
-        System.out.println(highEpochBin);
+    private void feed(BubblegumNode node, String[] command) {
+        int minutes = 5;
+        if(command.length >= 2) {
+            Integer newMinutes = toInt(command[1]);
+            if(newMinutes != null) minutes = newMinutes.intValue();
+        }
 
-//        ArrayList<String> ids = new ArrayList<>();
+        long lowEpochBin = (System.currentTimeMillis() - (minutes*60*1000)) / Configuration.BIN_EPOCH_DURATION;
+        long highEpochBin = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;
+        this.print("Epochs: " + lowEpochBin + " -> " + highEpochBin);
+        this.print("-----------");
+
         for(long i = highEpochBin; i >= lowEpochBin; i--) {
-//            ids.add(Long.toString(i));
             List<byte[]> idBytes = node.lookup(NodeID.hash(i));
-            List<String> ids = idBytes.stream().map((b) -> new String(b)).collect(Collectors.toList());
-            for(String id : ids) {
-                String[] idParts = id.split(":");
-                if(idParts.length == 2) {
-                    try {
-                        NodeID nid = new NodeID(idParts[0]);
-                        List<Post> posts = node.query(nid, -1, -1, new ArrayList<>() {{ add(idParts[1]); }});
-                        if (posts == null) this.print("Failed to query remote posts");
-                        else if (posts.size() == 0) this.print("No remote posts found");
-                        else for (Post p : posts) this.print(p.toString() + "\n-----------");
-                    } catch (MalformedKeyException e) {
-                        this.print("Failed to parse node ID");
+            if(idBytes != null) {
+                List<String> ids = idBytes.stream().map((b) -> new String(b)).collect(Collectors.toList());
+                if(ids != null) {
+                    for (String id : ids) {
+                        String[] idParts = id.split(":");
+                        if (idParts.length == 2) {
+                            try {
+                                NodeID nid = new NodeID(idParts[0]);
+                                List<Post> posts = node.query(nid, -1, -1, new ArrayList<>() {{
+                                    add(idParts[1]);
+                                }});
+                                if (posts == null) this.print("Fail / Node offline");
+                                else if (posts.size() == 0) this.print("No remote posts found");
+                                else for (Post p : posts) this.print(p.toString() + "\n-----------");
+                            } catch (MalformedKeyException e) {
+                                this.print("Failed to parse node ID");
+                            }
+                        } else {
+                            System.out.println("Failed to retrieve: " + id);
+                        }
                     }
+                } else {
+                    System.out.println("Failed to retrieve epoch " + i);
                 }
-                else {
-                    System.out.println("Failed to retrieve: " + id);
-                }
+            } else {
+                System.out.println("Failed to retrieve epoch " + i);
             }
         }
 

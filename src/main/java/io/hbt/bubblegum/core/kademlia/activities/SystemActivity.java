@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.simulator.Metrics;
 
 public abstract class SystemActivity implements Runnable {
 
@@ -9,11 +10,18 @@ public abstract class SystemActivity implements Runnable {
     protected final BubblegumNode localNode;
     protected boolean complete, success;
 
+    private long init, start;
+
     public SystemActivity(BubblegumNode self) {
         this.localNode = self;
         this.complete = false;
+        this.init = System.currentTimeMillis();
     }
 
+    @Override
+    public void run() {
+        this.start = System.currentTimeMillis();
+    }
 
     protected void print(String msg) {
         this.localNode.log(msg);
@@ -23,27 +31,18 @@ public abstract class SystemActivity implements Runnable {
         int i = 0;
         long end = System.currentTimeMillis() + 5000;
         while(System.currentTimeMillis() < end && !this.complete) {
-
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-//        while(i < NetworkActivity.TIMEOUT && !this.complete) {
-//            try { Strand.sleep(100); }
-//            catch (InterruptedException e) {
-//                e.printStackTrace();
-//            } catch (SuspendExecution suspendExecution) {
-//                suspendExecution.printStackTrace();
-//            }
-//            i++;
-//        }
     }
 
     protected void onSuccess() {
         this.complete = true;
         this.success = true;
+        this.recordMetrics();
     }
 
     protected void onSuccess(String message) {
@@ -54,11 +53,17 @@ public abstract class SystemActivity implements Runnable {
     protected void onFail() {
         this.complete = true;
         this.success = false;
+        this.recordMetrics();
     }
 
     protected void onFail(String message) {
         this.print(message);
         this.onFail();
+    }
+
+    private void recordMetrics() {
+        if(Metrics.isRecording())
+            Metrics.activitySubmission(this, this.init, this.start, System.currentTimeMillis(), this.success);
     }
 
     public boolean getComplete() {

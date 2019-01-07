@@ -21,6 +21,7 @@ public class StoreActivity extends SystemActivity {
 
     @Override
     public void run() {
+        super.run();
         this.print("\n\nStarting STORE");
         try {
             NodeID storeIdentifier = new NodeID(key);

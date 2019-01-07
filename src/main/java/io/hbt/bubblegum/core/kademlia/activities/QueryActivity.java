@@ -37,6 +37,7 @@ public class QueryActivity extends NetworkActivity {
 
     @Override
     public void run() {
+        super.run();
         if(this.periodStart < 0 && this.periodEnd < 0 && (this.ids == null || this.ids.size() == 0)) {
             this.onFail();
             return;
