@@ -691,8 +691,8 @@ public class CLI {
                     else if (posts.size() == 0) this.print("No remote posts found");
                     else {
                         for (Post p : posts) {
-                            this.print(p.toString());
-                            this.getReplies(node, p.getOwner() + ":" + p.getID(), 1);
+                            this.print("\n" + this.indent(p.toString() + "\n---------------------", 1));
+                            this.getReplies(node, p.getOwner() + ":" + p.getID(), 2);
                         }
                     }
                 }
@@ -709,12 +709,25 @@ public class CLI {
 
     private void getReplies(BubblegumNode node, String globalID, int indent) {
         List<byte[]> results = node.lookup(NodeID.hash("responses_" + globalID));
-        if(results.size() == 0) return;
+        if(results != null) {
+            for (byte[] result : results) {
+                String[] idParts = new String(result, Charsets.US_ASCII).split(":");
+                if (idParts.length == 2) {
+                    try {
+                        NodeID id = new NodeID(idParts[0]);
+                        List<Post> posts = node.query(id, -1, -1, new ArrayList<>() {{
+                            add(idParts[1]);
+                        }});
+                        if (posts == null) this.print("Fail / Node offline");
+                        else if (posts.size() == 0) this.print("Post not found");
 
-        this.print(this.indent(results.size() + " replies: ", indent) + "\n");
-        for(byte[] result : results) {
-            this.print(this.indent("-" + new String(result, Charsets.US_ASCII), indent) + "\n");
-            this.getReplies(node, new String(result, Charsets.US_ASCII), indent+1);
+                        this.print(this.indent(posts.get(0).toString() + "\n---------------------", indent));
+                        this.getReplies(node, new String(result, Charsets.US_ASCII), indent + 1);
+                    } catch (MalformedKeyException e) {
+                        this.print("Invalid NodeID");
+                    }
+                }
+            }
         }
     }
 
@@ -765,7 +778,9 @@ public class CLI {
 
     private String indent(String str, int indent) {
         String indentStr = "";
-        for(int i = 0; i < indent; i++) indentStr += ">>>";
+        for(int i = 0; i < indent; i++) indentStr += ">>>>";
+        indentStr += "  ";
+
         String[] parts = str.split("\n");
         return indentStr + String.join("\n" + indentStr, parts);
     }
