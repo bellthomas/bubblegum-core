@@ -71,16 +71,12 @@ public class BubblegumNode {
 //        );
 
         // Setup bucket refreshes
-//        this.internalScheduler.scheduleAtFixedRate(
-//            () -> {
-//                this.log("[Scheduled] Saving router snapshot");
-//                this.executionContext.addActivity(this.getNodeIdentifier().toString(), () -> this.routingTable.refreshBuckets());
-//            },
-//            1, 1, TimeUnit.MINUTES
-//        );
+        this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
+            this.routingTable.refreshBuckets();
+        }, new Random().nextInt(5*60*1000), 5*60*1000, TimeUnit.MILLISECONDS);
+        
 
         // Refresh/delete content as it expires
-
         this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
             this.db.refreshExpiringPosts(this, 30000);
         }, new Random().nextInt(60000), 60000, TimeUnit.MILLISECONDS);

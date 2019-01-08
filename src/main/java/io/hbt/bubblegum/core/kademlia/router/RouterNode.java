@@ -75,8 +75,8 @@ public class RouterNode implements Comparable<RouterNode> {
     }
 
     public boolean isFresh() {
-        boolean override = (new Random().nextInt(100) >= 10);
-        return (override && System.currentTimeMillis() - this.getLatestResponse() < 5000);
+        boolean override = (new Random().nextInt(100) >= 5);
+        return (override && System.currentTimeMillis() - this.getLatestResponse() < 60*1000);
     }
 
     @Override

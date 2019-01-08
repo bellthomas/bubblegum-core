@@ -85,9 +85,7 @@ public final class RoutingTable {
 
     public int getGreatestNonEmptyBucket() {
         int index = this.buckets.length - 1;
-        while(this.getBucket(index).getBucketSize() == 0 && index > 0) index--;
-//        int i = 0;
-//        while(this.buckets[i] != null) i++;
+        while(this.buckets[index] == null && index > 0) index--;
         return index;
     }
 
@@ -101,7 +99,7 @@ public final class RoutingTable {
         NodeID searchKey;
         for(int i = 0; i < maximumNonEmptyBucket; i++) {
             searchKey = this.self.getNodeIdentifier().generateIDWithSharedPrefixLength(i);
-            Set<RouterNode> nodesToSearch = this.self.getRoutingTable().getNodesClosestToKey(searchKey, 8);
+            Set<RouterNode> nodesToSearch = this.self.getRoutingTable().getNodesClosestToKey(searchKey, 3);
             for(RouterNode node : nodesToSearch) {
                 LookupActivity lookupActivity1 = new LookupActivity(this.self, searchKey, 5, false);
                 this.self.getExecutionContext().addActivity(this.self.getIdentifier(), lookupActivity1);
