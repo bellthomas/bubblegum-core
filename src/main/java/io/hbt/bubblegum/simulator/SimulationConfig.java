@@ -2,16 +2,25 @@ package io.hbt.bubblegum.simulator;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Map;
 
 public class SimulationConfig {
     private boolean loadedSuccessfully = false;
 
     // Simulation Details
+
+    // Bootstrap
+    boolean doingBootstrap = false;
+    InetAddress addr;
+    int port;
+    String recipient;
 
     // Background
     int numNetworks = 1;
@@ -65,21 +74,56 @@ public class SimulationConfig {
         }
     }
 
+    protected void runningBootstrap(String address, String port, String recipient) {
+        System.out.println("[SimulationConfig] Bootstrapping network to " + address + ":" + port + " ~ " + recipient);
+        try {
+            InetAddress addr = NetworkingHelper.getInetAddress(address);
+            Integer p = this.toInt(port);
+            if(p != null) {
+                this.addr = addr;
+                this.port = p;
+                this.recipient = recipient;
+                this.doingBootstrap = true;
+            }
+            else {
+                System.out.println("[SimulationConfig] Failed to parse port, ignoring bootstrap");
+            }
+        } catch (UnknownHostException e) {
+            System.out.println("[SimulationConfig] Failed to parse address, ignoring bootstrap");
+        }
+    }
 
     public int getNumNetworks() {
-        return this.numNetworks;
+        if(this.doingBootstrap) return 1;
+        else return this.numNetworks;
     }
 
     public int getNumNetworkNodes() {
-        return this.numNetworkNodes;
+        return (this.numNetworkNodes < 1) ? 1 : this.numNetworkNodes;
     }
 
     public int getNewPostsEveryHour() {
-        return newPostsEveryHour;
+        return (this.newPostsEveryHour < 0) ? 0 : this.newPostsEveryHour;
     }
 
     public int getFeedRetrievalsEveryHour() {
-        return feedRetrievalsEveryHour;
+        return (this.feedRetrievalsEveryHour < 0) ? 0 : this.feedRetrievalsEveryHour;
+    }
+
+    public InetAddress getAddr() {
+        return addr;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getRecipient() {
+        return recipient;
+    }
+
+    public boolean isDoingBootstrap() {
+        return doingBootstrap;
     }
 
     public Integer toInt(String s) {

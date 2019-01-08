@@ -15,12 +15,12 @@ public abstract class SystemActivity implements Runnable {
     public SystemActivity(BubblegumNode self) {
         this.localNode = self;
         this.complete = false;
-        this.init = System.currentTimeMillis();
+        this.init = System.nanoTime();
     }
 
     @Override
     public void run() {
-        this.start = System.currentTimeMillis();
+        this.start = System.nanoTime();
     }
 
     protected void print(String msg) {
@@ -63,7 +63,7 @@ public abstract class SystemActivity implements Runnable {
 
     private void recordMetrics() {
         if(Metrics.isRecording())
-            Metrics.activitySubmission(this, this.init, this.start, System.currentTimeMillis(), this.success);
+            Metrics.activitySubmission(this, this.init, this.start, System.nanoTime(), this.success);
     }
 
     public boolean getComplete() {

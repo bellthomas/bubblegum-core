@@ -6,6 +6,7 @@ import io.hbt.bubblegum.core.kademlia.NodeID;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Random;
 
 /**
  * this is for other nodes, not us
@@ -74,7 +75,8 @@ public class RouterNode implements Comparable<RouterNode> {
     }
 
     public boolean isFresh() {
-        return (System.currentTimeMillis() - this.getLatestResponse() < 60000);
+        boolean override = (new Random().nextInt(100) >= 10);
+        return (override && System.currentTimeMillis() - this.getLatestResponse() < 5000);
     }
 
     @Override

@@ -78,9 +78,20 @@ public class Simulator {
         List<Runnable> tasks = new ArrayList<>();
         for(int i = 0; i < this.config.getNumNetworks(); i++) {
             BubblegumNode node = this.bubblegum.createNode();
+
+            if(this.config.isDoingBootstrap()) {
+                if(!node.bootstrap(this.config.getAddr(), this.config.getPort(), this.config.getRecipient())) {
+                    System.out.println("[Background Network] Bootstrap failed! Exiting.");
+                    System.exit(-1);
+                }
+
+                System.out.println("[Background Network] Bootstrap successful.");
+            }
+
             System.out.println("[Background Network] Network Genesis Node: " +
                 node.getServer().getLocal().getHostAddress() + " " +
                 node.getServer().getPort() + " " + node.getRecipientID());
+
             for (int j = 1; j < this.config.getNumNetworkNodes(); j++) {
                 tasks.add(() -> runBootstrap(node));
             }
@@ -182,7 +193,10 @@ public class Simulator {
     }
 
     public static void main(String[] args) {
+
         SimulationConfig config = new SimulationConfig("simulation.yml");
+        if(args.length >= 3) config.runningBootstrap(args[0], args[1], args[2]);
+
         Simulator s = new Simulator(config);
         long start = System.currentTimeMillis();
         while(true) {

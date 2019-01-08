@@ -22,9 +22,9 @@ class RoutingTableTest {
     @BeforeAll
     static void setup() {
         localNode = new BubblegumNode.Builder()
-                .setSocialIdentity(new SocialIdentity())
+//                .setSocialIdentity(new SocialIdentity())
                 .setExecutionContext(new ActivityExecutionContext(1))
-                .setLogger(LoggingManager.getLogger("_tests"))
+//                .setLogger(LoggingManager.getLogger("_tests"))
                 .build();
         try { localAddress = InetAddress.getLocalHost(); }
         catch (UnknownHostException e) {
