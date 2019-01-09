@@ -36,36 +36,36 @@ public class MasterDatabase {
             this.checkDatabasesDirectory();
 
             // create a databasing connection
-            connection = DriverManager.getConnection("jdbc:sqlite:" + Database.DB_FOLDER_PATH + MASTER_DB_NAME);
-            Statement statement = connection.createStatement();
-            statement.setQueryTimeout(30);  // set timeout to 30 sec.
-
-            statement.executeUpdate(this.setupMasterTableSQL());
-
-            for(BubblegumNode network : networks) {
-                if(network != null) {
-                    ResultSet rs = statement.executeQuery(this.rowExistenceCheckSQL(network));
-                    if (rs.next() && rs.getInt(1) == 1) {
-                        // The network already exists, update
-                        int result = statement.executeUpdate(this.updateNetworkDetailsSQL(network));
-                        if (result == 1) {
-                            // success
-                        }
-                    } else {
-                        // Network is new, create new entry
-                        int result = statement.executeUpdate(this.insertNewNetworkSQL(network));
-                        if (result == 1) {
-                            // success
-                        }
-                    }
-                }
-            }
-
-        } catch (SQLException e) {
-            // if the error message is "out of memory",
-            // it probably means no databasing file is found
-            System.err.println(e.getMessage());
-            e.printStackTrace();
+//            connection = DriverManager.getConnection("jdbc:sqlite:" + Database.DB_FOLDER_PATH + MASTER_DB_NAME);
+//            Statement statement = connection.createStatement();
+//            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+//
+//            statement.executeUpdate(this.setupMasterTableSQL());
+//
+//            for(BubblegumNode network : networks) {
+//                if(network != null) {
+//                    ResultSet rs = statement.executeQuery(this.rowExistenceCheckSQL(network));
+//                    if (rs.next() && rs.getInt(1) == 1) {
+//                        // The network already exists, update
+//                        int result = statement.executeUpdate(this.updateNetworkDetailsSQL(network));
+//                        if (result == 1) {
+//                            // success
+//                        }
+//                    } else {
+//                        // Network is new, create new entry
+//                        int result = statement.executeUpdate(this.insertNewNetworkSQL(network));
+//                        if (result == 1) {
+//                            // success
+//                        }
+//                    }
+//                }
+//            }
+//
+//        } catch (SQLException e) {
+//            // if the error message is "out of memory",
+//            // it probably means no databasing file is found
+//            System.err.println(e.getMessage());
+//            e.printStackTrace();
         } finally {
             try {
                 if(connection != null) connection.close();

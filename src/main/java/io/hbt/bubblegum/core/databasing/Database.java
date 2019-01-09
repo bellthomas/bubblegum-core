@@ -79,16 +79,8 @@ public class Database {
 
         ComparableBytePayload newPayload = new ComparableBytePayload(value);
         synchronized (this.db.get(node).get(key)) {
-            // If we have an old version, remove it
-
+            // If we have an old version, remove it and save the new one
             this.db.get(node).get(key).removeIf(p -> p.getFirst().equals(newPayload));
-//            List<Pair> toRemove = this.db.get(node).get(key)
-//                .stream()
-//                .filter((p) -> p.getFirst().equals(newPayload))
-//                .collect(Collectors.toList());
-//            this.db.get(node).get(key).removeAll(toRemove);
-
-            // Save new version
             this.db.get(node).get(key).add(new Pair<>(new ComparableBytePayload(value), System.currentTimeMillis()));
         }
 
