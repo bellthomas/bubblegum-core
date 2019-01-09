@@ -3,6 +3,7 @@ package io.hbt.bubblegum.simulator;
 import com.google.common.base.Charsets;
 import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Simulator {
 
     private SimulationConfig config;
+    protected static boolean currentlySimulating = false;
 
     // Simulation details
     private Bubblegum bubblegum;
@@ -33,10 +35,12 @@ public class Simulator {
     private List<String> backgroundNetworks = new ArrayList<>();
 
     public Simulator(SimulationConfig config) {
+        Simulator.currentlySimulating = true;
         this.config = config;
         Metrics.startRecording();
         this.bubblegum = new Bubblegum(false);
         this.setupBackgroundNetwork();
+        Simulator.currentlySimulating = false;
     }
 
     private void runBootstrap(BubblegumNode oldNode, BubblegumNode newNode, int attempt) {
@@ -102,7 +106,7 @@ public class Simulator {
         tasks.clear();
         System.out.println("[Background Network] " + bootstrapActions.size() + " tasks prepared...");
 
-        int threadPoolSize = 20;
+        int threadPoolSize = 50;
         final AtomicInteger progress = new AtomicInteger(0);
         Thread[] executors = new Thread[threadPoolSize];
         for(int i = 0; i < threadPoolSize; i++) {
@@ -192,8 +196,12 @@ public class Simulator {
         return this.bubblegum.getExecutionContext();
     }
 
-    public static void main(String[] args) {
+    public static boolean isCurrentlySimulating() {
+        return Simulator.currentlySimulating;
+    }
 
+    public static void main(String[] args) {
+        NetworkingHelper.setLookupExternalIP(false);
         SimulationConfig config = new SimulationConfig("simulation.yml");
         if(args.length >= 3) config.runningBootstrap(args[0], args[1], args[2]);
 

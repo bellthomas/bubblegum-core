@@ -15,6 +15,8 @@ import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.core.social.SocialIdentity;
+import io.hbt.bubblegum.simulator.Metrics;
+import io.hbt.bubblegum.simulator.Simulator;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -71,10 +73,11 @@ public class BubblegumNode {
 //        );
 
         // Setup bucket refreshes
-        this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
-            this.routingTable.refreshBuckets();
-        }, new Random().nextInt(5*60*1000), 5*60*1000, TimeUnit.MILLISECONDS);
-        
+        if(!Simulator.isCurrentlySimulating()) {
+            this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
+                this.routingTable.refreshBuckets();
+            }, new Random().nextInt(5 * 60 * 1000), 5 * 60 * 1000, TimeUnit.MILLISECONDS);
+        }
 
         // Refresh/delete content as it expires
         this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {

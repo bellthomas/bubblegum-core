@@ -48,14 +48,24 @@ public class MeasurementNode {
         Metrics.startInternalLogging();
 
         System.out.println("\nStarting tests...");
-        this.runPingTest();
-        this.runFindNodeTest();
-        this.runFindValueTest();
-        this.runPrimitiveStoreTest();
-        this.runLookupTest(false);
-        this.runLookupTest(true);
-        this.runStoreTest();
-        this.runQueryTest();
+
+        for(int i = 0; i < 3; i++) {
+            System.out.println("[Run "+i+"]-----------------------------------------------");
+            this.runPingTest();
+            this.runFindNodeTest();
+            this.runFindValueTest();
+            this.runPrimitiveStoreTest();
+            this.runLookupTest(false);
+            this.runLookupTest(true);
+            this.runStoreTest();
+            this.runQueryTest();
+            System.out.println("\n");
+        }
+
+        Metrics.stopRecording();
+        Metrics.clearEvents();
+        this.bubblegum = null;
+        System.exit(0);
     }
 
     private void runTests(BiFunction<Integer, RouterNode, Metrics.Event> f) {
@@ -222,25 +232,30 @@ public class MeasurementNode {
         });
     }
 
+
     private void runQueryTest() {
         System.out.println("\n--[ Query ]--");
 
         this.runTests((i, candidate) -> {
+            QueryActivity queryActivity = new QueryActivity(this.node, candidate, System.currentTimeMillis() - 5*60*100, System.currentTimeMillis(), null);
             long start = System.nanoTime();
-            this.node.query(this.helperNodes[i].getNodeIdentifier(), System.currentTimeMillis() - 5*60*1000, System.currentTimeMillis(), null);
+            queryActivity.run();
             long duration = System.nanoTime() - start;
+            if (queryActivity.getComplete() && queryActivity.getSuccess()) {
+                List<Metrics.Event> events = Metrics.getEvents();
+                Metrics.Event qa = null;
+                long bytes = 0;
+                for (Metrics.Event event : events) {
+                    if(event.title.equals("QueryActivity")) qa = event;
+                    if(event.title.equals("Server")) bytes += event.delay;
+                }
 
-            List<Metrics.Event> events = Metrics.getEvents();
-            Metrics.Event sa = null;
-            int other = 0;
-            for (Metrics.Event event : events) {
-                if(event.title.equals("QueryActivity")) sa = event;
-                else other++;
+                if(qa == null) return null;
+                else return new Metrics.Event("Find", duration, bytes, false);
+            } else {
+                System.out.println("["+i+"] Aborted - find failed");
             }
-
-            if(sa == null) return null;
-            else return new Metrics.Event("Query", duration, other, false);
-
+            return null;
         });
     }
 

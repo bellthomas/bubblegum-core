@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class NetworkingHelper {
 
     private static final Set<InetAddress> inetAddressRepository = new HashSet<>();
-
+    private static boolean lookupExternalIP = true;
 
     private NetworkingHelper() { }
 
@@ -46,12 +46,16 @@ public class NetworkingHelper {
 
     public static InetAddress getLocalInetAddress() {
         try {
-            String externalIP = null;//NetworkingHelper.lookupExternalIP();
+            String externalIP = lookupExternalIP ? NetworkingHelper.lookupExternalIP() : null;
             if(externalIP == null) return NetworkingHelper.getInetAddress(InetAddress.getLocalHost());
             else return NetworkingHelper.getInetAddress(externalIP);
         } catch (UnknownHostException e) {
             return null;
         }
+    }
+
+    public static void setLookupExternalIP(boolean external) {
+        NetworkingHelper.lookupExternalIP = external;
     }
 
     private static String lookupExternalIP() {
