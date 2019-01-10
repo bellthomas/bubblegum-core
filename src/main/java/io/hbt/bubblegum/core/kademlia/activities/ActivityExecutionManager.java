@@ -116,7 +116,7 @@ public class ActivityExecutionManager {
     }
 
     public String getAverageExecutionTime() {
-        if(this.totalExecuted == 0) return "-";
-        else return "" + (this.totalExecutionTimes / this.totalExecuted);
+        if(this.totalExecuted == 0) return "0.0";
+        else return "" + ((double)this.totalExecutionTimes / this.totalExecuted);
     }
 }

@@ -89,9 +89,27 @@ public class ActivityExecutionContext {
         return
             "Pending ~ Activities: " + this.activityManager.getQueueSize() +
             ", Compound: " + this.compoundManager.getQueueSize() +
-            ", Callbacks: " + this.callbackManager.getQueueSize() +
-            "  --  Total ~ Activities: " + this.activityManager.getTotalActivities() + " (" + this.activityManager.getAverageExecutionTime() + "ms)" +
-            ", Compound: " + this.compoundManager.getTotalActivities() + " (" + this.compoundManager.getAverageExecutionTime() + "ms)" +
-            ", Callback: " + this.callbackManager.getTotalActivities() + " (" + this.callbackManager.getAverageExecutionTime() + "ms)";
+            ", Callbacks: " + this.callbackManager.getQueueSize(); //+
+//            "  --  Total ~ Activities: " + this.activityManager.getTotalActivities() + " (" + this.activityManager.getAverageExecutionTime() + "ms)" +
+//            ", Compound: " + this.compoundManager.getTotalActivities() + " (" + this.compoundManager.getAverageExecutionTime() + "ms)" +
+//            ", Callback: " + this.callbackManager.getTotalActivities() + " (" + this.callbackManager.getAverageExecutionTime() + "ms)";
+    }
+
+    public String queueLogHeader() {
+        return "pendingActivities,pendingCompounds,pendingCallbacks,totalActivities,totalCompounds,totalCallbacks,avgActivityDuration,avgCompoundDuration,avgCallbackDuration";
+    }
+
+    public String queueLogInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.activityManager.getQueueSize() + ",");
+        sb.append(this.compoundManager.getQueueSize() + ",");
+        sb.append(this.callbackManager.getQueueSize() + ",");
+        sb.append(this.activityManager.getTotalActivities() + ",");
+        sb.append(this.compoundManager.getTotalActivities() + ",");
+        sb.append(this.callbackManager.getTotalActivities() + ",");
+        sb.append(this.activityManager.getAverageExecutionTime() + ",");
+        sb.append(this.compoundManager.getAverageExecutionTime() + ",");
+        sb.append(this.callbackManager.getAverageExecutionTime());
+        return sb.toString();
     }
 }

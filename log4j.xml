@@ -1,21 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
- 
-<!-- Author:  Crunchify.com  -->
-	<Appenders>
-		<RollingFile name="RollingFile" filename="log/metrics.log"
-			filepattern="${logPath}/%d{yyyyMMddHHmmss}-fargo.log">
-			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %msg%n" />
-			<Policies>
-				<SizeBasedTriggeringPolicy size="100 MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="20" />
-		</RollingFile>
- 
-	</Appenders>
-	<Loggers>
-		<Root level="info">
-			<AppenderRef ref="RollingFile" />
-		</Root>
-	</Loggers>
+<Appenders>
+    <Routing name="MyRoutingAppender">
+        <Routes pattern="$${marker:}">
+            <Route>
+                <File fileName="logs/${marker:}.csv" name="appender-${marker:}">
+                    <PatternLayout>
+                        <Pattern>%m%n</Pattern>
+                    </PatternLayout>
+                </File>
+            </Route>
+        </Routes>
+    </Routing>
+    <Console name="STDOUT" target="SYSTEM_OUT">
+        <PatternLayout pattern="%m%n" />
+    </Console>
+</Appenders>
+<Loggers>
+    <Logger name="example" level="TRACE" additivity="false">
+        <!--<AppenderRef ref="STDOUT" />-->
+        <AppenderRef ref="MyRoutingAppender" />
+    </Logger>
+    <Root level="INFO">
+        <AppenderRef ref="MyRoutingAppender" />
+    </Root>
+</Loggers>
 </Configuration>
+
+
+
+

@@ -92,6 +92,7 @@ public class Database {
         Database.cdbInstance.saveMeta("username", node, content);
     }
 
+    // TODO broken
     public void publishEntityMeta(BubblegumNode node, String key, String globalPostIdentifier) {
         node.getExecutionContext().addCompoundActivity(node.getIdentifier(), () -> {
             String uniquifier = ":" + UUID.randomUUID().toString();

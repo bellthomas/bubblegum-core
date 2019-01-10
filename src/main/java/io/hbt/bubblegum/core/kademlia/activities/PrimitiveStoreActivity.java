@@ -20,6 +20,11 @@ public class PrimitiveStoreActivity extends NetworkActivity {
     @Override
     public void run() {
         super.run();
+        if(this.aborted) {
+            this.onFail();
+            return;
+        }
+
         if(this.isResponse) {
             this.print("Responding to STORE("+this.key+") request to " + this.to.getNode().toString());
             boolean accepted = Database.getInstance().add(this.localNode.getIdentifier(), this.key, this.payload);

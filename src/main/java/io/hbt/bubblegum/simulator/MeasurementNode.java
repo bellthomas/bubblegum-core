@@ -45,7 +45,6 @@ public class MeasurementNode {
         }
 
         Metrics.startRecording();
-        Metrics.startInternalLogging();
 
         System.out.println("\nStarting tests...");
 

@@ -19,6 +19,10 @@ public class BootstrapActivity extends NetworkActivity {
     @Override
     public void run() {
         super.run();
+        if(this.aborted) {
+            this.onFail();
+            return;
+        }
 
         // Ping
         this.print("Starting bootstrapping process...  ("+this.to.getIPAddress().getHostAddress()+":"+this.to.getPort()+")");
@@ -30,24 +34,24 @@ public class BootstrapActivity extends NetworkActivity {
         if(ping.getSuccess()) {
             // Was a success, now bootstrapped. getNodes from bootstrapped node
             if(ping.getNetworkID() != null) {
+                String oldNetworkID = this.localNode.getNetworkIdentifier();
                 this.networkIDUpdate.accept(ping.getNetworkID());
-                this.server.registerNewLocalNode(this.localNode);
+                this.server.registerNewLocalNode(this.localNode, oldNetworkID);
             }
             else {
                 this.print("Network ID from PING null");
             }
-            // TODO delete old one
 
             this.print("Starting lookup");
             LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getNodeIdentifier(), 10, false);
             lookupActivity.run();
 
-            this.complete = true;
-            this.success = (lookupActivity.getComplete() && lookupActivity.getSuccess());
+            if(lookupActivity.getComplete() && lookupActivity.getSuccess()) this.onSuccess();
+            else this.onFail();
         }
 
         else {
-            this.print("No response from bootstrap node.");
+            this.onFail("No response from bootstrap node.");
         }
     }
 }

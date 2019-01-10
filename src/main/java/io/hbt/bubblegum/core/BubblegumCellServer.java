@@ -87,6 +87,13 @@ public class BubblegumCellServer {
         this.recipients.put(node.getNetworkIdentifier() + ":" + node.getNodeIdentifier().toString(), node);
     }
 
+    public void registerNewLocalNode(BubblegumNode node, String oldID) {
+        if(this.recipients.containsKey(oldID + ":" + node.getNodeIdentifier().toString())) {
+            this.recipients.remove(oldID + ":" + node.getNodeIdentifier().toString());
+        }
+        this.registerNewLocalNode(node);
+    }
+
     private void listen() {
         while(this.alive) {
             try {
@@ -189,10 +196,11 @@ public class BubblegumCellServer {
 //                this.packetsSent++;
 
             } catch (SocketException e) {
-                System.out.println("[Socket Failure] " + e.getMessage());
+                // TODO Message too long
+//                System.out.println("[Socket Failure] " + e.getMessage());
 //                e.printStackTrace();
             } catch (IOException e) {
-                System.out.println("[Socket Failure] " + e.getMessage());
+//                System.out.println("[Socket Failure] " + e.getMessage());
 //                e.printStackTrace();
             }
         }

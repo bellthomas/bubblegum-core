@@ -37,7 +37,6 @@ public class Simulator {
     public Simulator(SimulationConfig config) {
         Simulator.currentlySimulating = true;
         this.config = config;
-        Metrics.startRecording();
         this.bubblegum = new Bubblegum(false);
         this.setupBackgroundNetwork();
         Simulator.currentlySimulating = false;
@@ -138,6 +137,8 @@ public class Simulator {
         System.out.println("\r[Background Network] Completed " + totalBackgroundTasks + " nodes in " + (end - start) + "ms        ");
         System.gc();
         this.validateBootstrap();
+
+        Metrics.startRecording();
         this.backgroundChatter();
     }
 
@@ -207,9 +208,12 @@ public class Simulator {
 
         Simulator s = new Simulator(config);
         long start = System.currentTimeMillis();
+        Metrics.addLogMessage("time,totalRPC,localSuccess,localFailures,localSuccessRate,localBytesIn,localBytesOut," + s.getExecutionContext().queueLogHeader());
         while(true) {
             try {
-                System.out.print("\r [" + (System.currentTimeMillis() - start) + "ms] " + s.getExecutionContext().queueStates() + "                   \r");
+                Metrics.runPeriodicCalls(s.getExecutionContext().queueLogInfo());
+                String output = " [" + (System.currentTimeMillis() - start) + "ms] " + s.getExecutionContext().queueStates();
+                System.out.print(output + "\r");
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();

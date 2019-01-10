@@ -1,6 +1,5 @@
-foreground: hello
 background:
   networks: 1
-  nodesPerNetwork: 10000
-  newPostsEveryHour: 500 # network sees n new posts every hour
-  feedRetrievalsEveryHour: 60 # get posts every n seconds
+  nodesPerNetwork: 200
+  newPostsEveryHour: 50000 # network sees n new posts every hour
+  feedRetrievalsEveryHour: 600 # get posts every n seconds

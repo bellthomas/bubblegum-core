@@ -25,10 +25,15 @@ public class DiscoveryActivity extends NetworkActivity {
     @Override
     public void run() {
         super.run();
+        if(this.aborted) {
+            this.onFail();
+            return;
+        }
 
         if(this.isResponse) {
             KademliaMessage message = ProtobufHelper.buildDiscoveryResponse(this.localNode, this.to, this.exchangeID, this.entries, this.foriegnRecipient);
             this.server.sendDatagram(this.localNode, this.to, message, null);
+            this.onSuccess();
         }
         else {
             KademliaMessage message = ProtobufHelper.buildDiscoveryRequest(this.localNode, this.to, this.exchangeID);

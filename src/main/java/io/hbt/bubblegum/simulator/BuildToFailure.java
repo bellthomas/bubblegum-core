@@ -35,7 +35,7 @@ public class BuildToFailure {
             });
         }
 
-        int threadPoolSize = 30;
+        int threadPoolSize = 20;
         Thread[] executors = new Thread[threadPoolSize];
         for(int i = 0; i < threadPoolSize; i++) {
             executors[i] = new Thread(() -> {

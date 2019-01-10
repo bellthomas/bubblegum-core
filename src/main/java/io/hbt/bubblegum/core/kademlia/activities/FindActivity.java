@@ -48,6 +48,10 @@ public class FindActivity extends NetworkActivity {
     @Override
     public void run() {
         super.run();
+        if(this.aborted) {
+            this.onFail();
+            return;
+        }
 
         KademliaMessage message = null;
 
@@ -135,6 +139,7 @@ public class FindActivity extends NetworkActivity {
         };
 
         if(message != null) this.server.sendDatagram(this.localNode, this.to, message, callback);
+        else this.onFail();
 
         if(!this.isResponse) this.timeoutOnComplete();
         else this.onSuccess();

@@ -36,6 +36,10 @@ public class PingActivity extends NetworkActivity {
     @Override
     public void run() {
         super.run();
+        if(this.aborted) {
+            this.onFail();
+            return;
+        }
 
         // Get real RouterNode if we have one
         RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
@@ -45,7 +49,7 @@ public class PingActivity extends NetworkActivity {
 
 
         if(this.isResponse) {
-            this.print("["+this.exchangeID+"] Replying to PING from " + this.networkID + ":" + destination.getNode());
+            this.onSuccess("["+this.exchangeID+"] Replying to PING from " + this.networkID + ":" + destination.getNode());
         }
         else if(destination.isFresh()) {
             this.onSuccess("Node fresh, PING not required for " + this.networkID + ":" + destination.getNode());

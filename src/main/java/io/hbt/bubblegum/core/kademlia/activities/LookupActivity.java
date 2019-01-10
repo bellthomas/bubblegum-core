@@ -46,6 +46,11 @@ public class LookupActivity extends SystemActivity {
     @Override
     public void run() {
         super.run();
+        if(this.aborted) {
+            this.onFail();
+            return;
+        }
+
         this.print("Running lookup...");
 
         // Check if we have a value locally first
