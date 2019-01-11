@@ -95,11 +95,18 @@ public class ActivityExecutionContext {
 //            ", Callback: " + this.callbackManager.getTotalActivities() + " (" + this.callbackManager.getAverageExecutionTime() + "ms)";
     }
 
+
     public String queueLogHeader() {
-        return "pendingActivities,pendingCompounds,pendingCallbacks,totalActivities,totalCompounds,totalCallbacks,avgActivityDuration,avgCompoundDuration,avgCallbackDuration";
+        return "pendingActivities,pendingCompounds,pendingCallbacks,totalActivities,totalCompounds,totalCallbacks,avgActivityLoad,avgCompoundLoad,avgCallbackLoad,avgLoad";
     }
 
     public String queueLogInfo() {
+        float activityLoad = this.activityManager.flushMetrics();
+        float compoundLoad = this.compoundManager.flushMetrics();
+        float callbackLoad = this.callbackManager.flushMetrics();
+        float systemLoad = Math.max(activityLoad, Math.max(compoundLoad, callbackLoad));
+        System.out.print(" [Load: " + String.format("%.2f", (systemLoad * 100)) + "%]");
+
         StringBuilder sb = new StringBuilder();
         sb.append(this.activityManager.getQueueSize() + ",");
         sb.append(this.compoundManager.getQueueSize() + ",");
@@ -107,9 +114,10 @@ public class ActivityExecutionContext {
         sb.append(this.activityManager.getTotalActivities() + ",");
         sb.append(this.compoundManager.getTotalActivities() + ",");
         sb.append(this.callbackManager.getTotalActivities() + ",");
-        sb.append(this.activityManager.getAverageExecutionTime() + ",");
-        sb.append(this.compoundManager.getAverageExecutionTime() + ",");
-        sb.append(this.callbackManager.getAverageExecutionTime());
+        sb.append(activityLoad + ",");
+        sb.append(compoundLoad + ",");
+        sb.append(callbackLoad + ",");
+        sb.append(systemLoad);
         return sb.toString();
     }
 }

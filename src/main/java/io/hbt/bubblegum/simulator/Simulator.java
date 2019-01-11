@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Simulator {
 
@@ -208,11 +209,18 @@ public class Simulator {
 
         Simulator s = new Simulator(config);
         long start = System.currentTimeMillis();
-        Metrics.addLogMessage("time,totalRPC,localSuccess,localFailures,localSuccessRate,localBytesIn,localBytesOut," + s.getExecutionContext().queueLogHeader());
+        long current = start;
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Metrics.runPeriodicCalls(s.getExecutionContext().queueLogInfo());
+        }));
+
+        Metrics.addLogMessage(Metrics.getStatusLogHeader() + "," + s.getExecutionContext().queueLogHeader());
         while(true) {
             try {
+                current = System.currentTimeMillis();
                 Metrics.runPeriodicCalls(s.getExecutionContext().queueLogInfo());
-                String output = " [" + (System.currentTimeMillis() - start) + "ms] " + s.getExecutionContext().queueStates();
+                String output = " [" + (current - start) + "ms] " + s.getExecutionContext().queueStates() + "          ";
                 System.out.print(output + "\r");
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

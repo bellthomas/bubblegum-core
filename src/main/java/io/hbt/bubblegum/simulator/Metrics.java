@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +23,7 @@ public class Metrics {
 
     private static List<Event> events = new ArrayList<>();
 
-    private static AtomicInteger numCalls = new AtomicInteger(0);
+    private static AtomicLong numCalls = new AtomicLong(0L);
     private static AtomicInteger atomicSuccesses = new AtomicInteger(0);
     private static AtomicInteger atomicFailures = new AtomicInteger(0);
     private static AtomicLong atomicBytesIn = new AtomicLong(0L);
@@ -78,6 +80,7 @@ public class Metrics {
     }
 
     private static String sfFlush() {
+        long totalActivityTime = numCalls.getAndSet(0L);
         int successes = atomicSuccesses.getAndSet(0);
         int failures = atomicFailures.getAndSet(0);
         long bytesIn = atomicBytesIn.getAndSet(0L);
@@ -87,7 +90,7 @@ public class Metrics {
         if(successes > 0 || failures > 0) successRatio = (double) successes / (successes + failures);
         else successRatio = 1.0;
 
-        return successes + "," + failures + "," + successRatio + "," + bytesIn + "," + bytesOut;
+        return totalActivityTime + "," + successes + "," + failures + "," + successRatio + "," + bytesIn + "," + bytesOut;
     }
 
 //    public static void checkForSFFlush(long callTime) {
@@ -151,12 +154,35 @@ public class Metrics {
         if(System.currentTimeMillis() > lastFlush + flushEvery) flushLogMessages();
     }
 
+    public static String getStatusLogHeader() {
+        return "time,rpcs,successes,failures,successRate,bytesIn,bytesOut,numProcessors,systemLoadAvg,processCPULoad,systemCPULoad,freeMemory,maxMemory,totalMemory";
+    }
+
     public static void writeStatusToLog(String additional) {
         // time,totalRPC,localSuccess,localFailures,localSuccessRatio,localBytesIn,localBytesOut
         StringBuilder toWrite = new StringBuilder();
-        toWrite.append((System.currentTimeMillis() - Metrics.startOfRecording) + ",");
-        toWrite.append(numCalls.get() + ",");
-        toWrite.append(sfFlush());
+        long timeHeader = System.currentTimeMillis() - Metrics.startOfRecording;
+        OperatingSystemMXBean operatingSystemMXBeanJLang = ManagementFactory.getOperatingSystemMXBean();
+        com.sun.management.OperatingSystemMXBean operatingSystemMXBeanSun =
+            ManagementFactory.getPlatformMXBean(com.sun.management.OperatingSystemMXBean.class);
+        Runtime runtime = Runtime.getRuntime();
+
+        toWrite.append(timeHeader + ",");
+        toWrite.append(sfFlush() + ",");
+
+        toWrite.append(operatingSystemMXBeanJLang.getAvailableProcessors() + ",");
+        double sysLoadAvg = operatingSystemMXBeanJLang.getSystemLoadAverage();
+        toWrite.append(sysLoadAvg < 0 ? 0 : sysLoadAvg + ",");
+
+        double processCPULoad = operatingSystemMXBeanSun.getProcessCpuLoad();
+        toWrite.append(processCPULoad < 0 ? 0 : processCPULoad + ",");
+        double sysCPULoad = operatingSystemMXBeanSun.getSystemCpuLoad();
+        toWrite.append(sysCPULoad < 0 ? 0 : sysCPULoad + ",");
+
+        toWrite.append(runtime.freeMemory() + ",");
+        toWrite.append(runtime.maxMemory() + ",");
+        toWrite.append(runtime.totalMemory());
+
         if(additional.length() > 0) toWrite.append("," + additional);
         addLogMessage(toWrite.toString());
     }
