@@ -30,7 +30,7 @@ public class BubblegumCellServer {
     private DatagramSocket listeningSocket;
     private ActivityExecutionContext executionContext;
 
-    private static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // TODO 64KB
+    public static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // TODO 64KB
 
     private final ConcurrentHashMap<String, Consumer<KademliaMessage>> responses = new ConcurrentHashMap<>();
     private final HashMap<String, BubblegumNode> recipients = new HashMap<>();

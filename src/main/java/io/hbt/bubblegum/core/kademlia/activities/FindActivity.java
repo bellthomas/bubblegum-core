@@ -49,7 +49,7 @@ public class FindActivity extends NetworkActivity {
     public void run() {
         super.run();
         if(this.aborted) {
-            this.onFail();
+            this.onFail("aborted");
             return;
         }
 

@@ -2,7 +2,6 @@ package io.hbt.bubblegum.core.kademlia;
 
 import io.hbt.bubblegum.core.BubblegumCellServer;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
-import io.hbt.bubblegum.core.auxiliary.logging.Logger;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
@@ -14,8 +13,6 @@ import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
 import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
-import io.hbt.bubblegum.core.social.SocialIdentity;
-import io.hbt.bubblegum.simulator.Metrics;
 import io.hbt.bubblegum.simulator.Simulator;
 
 import java.net.InetAddress;
@@ -24,6 +21,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * This is local node
@@ -53,7 +51,8 @@ public class BubblegumNode {
         this.server.registerNewLocalNode(this);
         this.routingTable = new RoutingTable(this);
         this.db = Database.getInstance();
-        this.db.saveUserMeta(this, "Harri");
+        this.db.saveUserMeta(this, "username", "Harri");
+        this.db.saveUserMeta(this, "username", "Harri2");
 
         this.setupInternalScheduling();
 
@@ -178,6 +177,11 @@ public class BubblegumNode {
             return null;
         }
     }
+
+    public List<Post> queryMeta(NodeID id, List<String> keys) {
+        List<String> metakeys = keys.stream().map((k) -> "_" + k + "_" + id.toString()).collect(Collectors.toList());
+        return this.query(id, -1, -1, metakeys);
+    }
     //endregion
 
     //region Getters
@@ -256,6 +260,10 @@ public class BubblegumNode {
 
     public List<Post> queryPosts(long start, long end, List<String> ids) {
         return this.db.queryPosts(this, start, end, ids);
+    }
+
+    public void updateMeta(String key, String value) {
+        this.db.saveUserMeta(this, key, value);
     }
     //endregion
 

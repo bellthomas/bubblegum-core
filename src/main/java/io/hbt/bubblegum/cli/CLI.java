@@ -3,6 +3,7 @@ package io.hbt.bubblegum.cli;
 import com.google.common.base.Charsets;
 import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -41,6 +42,20 @@ public class CLI {
     public CLI() {
 
         System.out.println("Starting Bubblegum...");
+
+//        new Thread(() -> {
+//            while (true) {
+//                if (this.currentIndex > 0) {
+//                    System.out.println(this.bb.getNode(this.networkIndicies.get(0)).getExecutionContext().queueStates());
+//                }
+//
+//                try {
+//                    Thread.sleep(5000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }).start();
 
         networkIndicies = new HashMap<>();
         for(String network : bb.getNodeIdentifiers()) {
@@ -188,6 +203,14 @@ public class CLI {
                             case "reply":
                                 current = this.getCurrentNode();
                                 if(current != null) this.reply(current, commandParts);
+                                break;
+                            case "meta":
+                                current = this.getCurrentNode();
+                                if(current != null) this.meta(current, commandParts);
+                                break;
+                            case "updatemeta":
+                                current = this.getCurrentNode();
+                                if(current != null) this.updatemeta(current, commandParts);
                                 break;
                             default:
                                 this.print("Invalid command");
@@ -460,17 +483,18 @@ public class CLI {
                         this.addNode(node);
                     }
                     else {
-                        int randomNum = Math.max(currentIndex - 10, 0);
+                        int randomNum = Math.max(this.currentIndex - 20, 0);
                         if(randomNum > 0) randomNum = ThreadLocalRandom.current().nextInt(0, randomNum);
                         BubblegumNode randomNode = this.bb.getNode(this.networkIndicies.get(randomNum));
 
-                        node.bootstrap(
+                        boolean success = node.bootstrap(
                             randomNode.getServer().getLocal(),
                             randomNode.getServer().getPort(),
                             randomNode.getRecipientID()
                         );
 
-                        this.addNode(node);
+                        if(success) this.addNode(node);
+                        else System.out.println("Failed to bootstrap node");
                     }
                 }
 
@@ -625,6 +649,34 @@ public class CLI {
         }
     }
 
+    private void meta(BubblegumNode node, String[] command) {
+        if(command.length >= 3) {
+            try {
+                NodeID id = new NodeID(command[1]);
+                List<String> keys = new ArrayList<>();
+                for(int i = 2; i < command.length; i++) keys.add(command[i]);
+                List<Post> posts = node.queryMeta(id, keys);
+                if (posts == null) this.print("Fail / Node offline");
+                else if (posts.size() == 0) this.print("No remote posts found");
+                else for (Post p : posts) {
+                    String[] keyParts = p.getID().split("_");
+                    if(keyParts.length == 3) this.print(keyParts[1] + " -> " + p.getContent());
+                    else this.print(p.getID() + " -> " + p.getContent());
+                }
+            }
+            catch (MalformedKeyException e) {
+                this.print("Failed to parse node ID");
+            }
+        }
+    }
+
+    private void updatemeta(BubblegumNode node, String[] command) {
+        if(command.length >= 3) {
+            node.updateMeta(command[1], command[2]);
+            this.print("Meta updated");
+        }
+    }
+
     private void feed(BubblegumNode node, String[] command) {
         int minutes = 5;
         if(command.length >= 2) {
@@ -664,7 +716,8 @@ public class CLI {
                     System.out.println("Failed to retrieve epoch " + i);
                 }
             } else {
-                System.out.println("Failed to retrieve epoch " + i);
+                // Error OR no content for key
+                System.out.println("Nothing found for epoch " + i + "\n-----------");
             }
         }
 
@@ -787,6 +840,7 @@ public class CLI {
 
 
     public static void main(String[] args) {
+        NetworkingHelper.setLookupExternalIP(false);
         new CLI();
     }
 }

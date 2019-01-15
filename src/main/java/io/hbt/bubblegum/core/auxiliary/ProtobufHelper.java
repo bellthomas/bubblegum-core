@@ -1,7 +1,7 @@
 package io.hbt.bubblegum.core.auxiliary;
 
-import com.google.common.primitives.Bytes;
 import com.google.protobuf.ByteString;
+import io.hbt.bubblegum.core.BubblegumCellServer;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaDiscoveryRequest.KademliaDiscoveryRequest;
@@ -19,7 +19,8 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreRequest.KademliaSt
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreResponse.KademliaStoreResponse;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
-import java.awt.event.KeyAdapter;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -69,7 +70,18 @@ public class ProtobufHelper {
         KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
         KademliaFindValueResponse.Builder findValueResponse = KademliaFindValueResponse.newBuilder();
         findValueResponse.setRequest(request);
-        values.forEach((v) -> findValueResponse.addValue(ByteString.copyFrom(v)));
+
+        // Ensure no packet overflow
+        int maxSize = Math.max(0, BubblegumCellServer.DATAGRAM_BUFFER_SIZE - 1000);
+        int currentSize = 0;
+        Collections.shuffle(values);
+        for(byte[] v : values) {
+            if(currentSize + v.length < maxSize) {
+                currentSize += v.length;
+                findValueResponse.addValue(ByteString.copyFrom(v));
+            }
+        }
+
         message.setFindValueResponse(findValueResponse);
         return message.build();
     }

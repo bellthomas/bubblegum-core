@@ -88,8 +88,8 @@ public class Database {
         return true;
     }
 
-    public void saveUserMeta(BubblegumNode node, String content) {
-        Database.cdbInstance.saveMeta("username", node, content);
+    public void saveUserMeta(BubblegumNode node, String metaName, String content) {
+        Database.cdbInstance.saveMeta(metaName, node, content);
     }
 
     // TODO broken

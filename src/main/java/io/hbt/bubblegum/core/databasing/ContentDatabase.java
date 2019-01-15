@@ -239,7 +239,7 @@ class ContentDatabase {
 
     private String createPostSQL() {
         StringBuilder sb = new StringBuilder();
-        sb.append("INSERT INTO _posts ");
+        sb.append("REPLACE INTO _posts ");
         sb.append("(id, owner, network, content, response, time_created) ");
         sb.append("VALUES (?, ?, ?, ?, ?, ?)");
         return sb.toString();

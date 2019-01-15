@@ -5,7 +5,7 @@ import io.hbt.bubblegum.simulator.Metrics;
 
 public abstract class SystemActivity implements Runnable {
 
-    protected final static int TIMEOUT = 5000; // ms
+    protected final static int TIMEOUT = 10000; // ms
     protected final static int MAX_START_DELAY = 10000; // ms
 
     protected final BubblegumNode localNode;
@@ -23,7 +23,9 @@ public abstract class SystemActivity implements Runnable {
     @Override
     public void run() {
         this.start = System.nanoTime();
-        if(this.start > (MAX_START_DELAY * 1000000 + this.start)) this.aborted = true;
+        if(this.start > (MAX_START_DELAY * 1_000_000 + this.init)) {
+            this.aborted = true;
+        }
     }
 
     protected void print(String msg) {
@@ -56,13 +58,14 @@ public abstract class SystemActivity implements Runnable {
     }
 
     protected void onFail() {
+//        System.out.println("Failed: " + this.getClass().getSimpleName());
         this.complete = true;
         this.success = false;
         this.recordMetrics();
     }
 
     protected void onFail(String message) {
-        this.print(message);
+//        System.out.println(message);
         this.onFail();
     }
 
