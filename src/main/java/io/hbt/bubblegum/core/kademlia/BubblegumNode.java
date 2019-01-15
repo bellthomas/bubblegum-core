@@ -51,8 +51,7 @@ public class BubblegumNode {
         this.server.registerNewLocalNode(this);
         this.routingTable = new RoutingTable(this);
         this.db = Database.getInstance();
-        this.db.saveUserMeta(this, "username", "Harri");
-        this.db.saveUserMeta(this, "username", "Harri2");
+        this.db.saveUserMeta(this, "username", this.nodeIdentifier.toString());
 
         this.setupInternalScheduling();
 

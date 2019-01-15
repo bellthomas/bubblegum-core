@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class Simulator {
 
@@ -173,7 +172,7 @@ public class Simulator {
 
             randomNum = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondsPerPost) * 1000);
             node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
-                node.savePost(randomText(100));
+                node.savePost(randomText(500));
             }, randomNum, (long)Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
 
             randomNum2 = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondPerFeed) * 1000);
@@ -189,9 +188,17 @@ public class Simulator {
     }
 
     private String randomText(int length) {
-        byte[] array = new byte[length];
-        new Random().nextBytes(array);
-        return new String(array, Charsets.US_ASCII);
+//        byte[] array = new byte[length];
+//        new Random().nextBytes(array);
+//        return new String(array, Charsets.US_ASCII);
+
+        Random r = new Random();
+        String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@£$%^&*(){}[]?/~-_       ";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            sb.append(alphabet.charAt(r.nextInt(alphabet.length())));
+        }
+        return sb.toString();
     }
 
     public ActivityExecutionContext getExecutionContext() {
