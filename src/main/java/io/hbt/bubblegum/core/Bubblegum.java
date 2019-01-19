@@ -1,6 +1,5 @@
 package io.hbt.bubblegum.core;
 
-import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.NetworkDetails;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
@@ -8,47 +7,147 @@ import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
-import io.hbt.bubblegum.core.social.SocialIdentity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
+/**
+ * The core Bubblegum management class.
+ */
 public class Bubblegum {
-
-//    private InetAddress ipAddress;
-    private SocialIdentity socialIdentity;
     private ActivityExecutionContext executionContext;
     private ArrayList<BubblegumCell> cells;
     private HashMap<String, BubblegumNode> nodes;
 
-    private boolean isAlive = false;
-    private boolean isShuttingDown = false;
-
+    /**
+     * Constructor.
+     * @param reload Whether to attempt to reload the previous saved session from disk (experimental).
+     */
     public Bubblegum(boolean reload) {
+        this.executionContext = new ActivityExecutionContext(1);
+        this.cells = new ArrayList<>();
+        this.nodes = new HashMap<>();
 
-//        try {
-//            this.initialiseIPAddress();
-//            this.initialiseSocialIdentity();
-            this.executionContext = new ActivityExecutionContext(1);
-            this.cells = new ArrayList<>();
-            this.nodes = new HashMap<>();
-
-            if(reload) this.loadNodes();
-            this.isAlive = true;
-
-            Database.getInstance().initialiseExpiryScheduler(this.executionContext);
-
-//        } catch (AddressInitialisationException e) {
-//            System.out.println("Failed to start network");
-//        }
-//        catch (BubblegumException e) {
-//            e.printStackTrace();
-//        }
+        if(reload) this.loadNodes();
+        Database.getInstance().initialiseExpiryScheduler(this.executionContext);
     }
+
+
+    //region API
+
+    /**
+     * Generate and initialise a new local BubblegumNode.
+     * @return The BubblegumNode instance.
+     */
+    public BubblegumNode createNode() {
+        this.executionContext.newProcessInContext();
+        BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
+        newNodeBuilder.setExecutionContext(this.executionContext);
+        BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
+        newNodeBuilder = null;
+
+        this.nodes.put(newNode.getIdentifier(), newNode);
+        // Database.getInstance().updateNodeInDatabase(newNode);
+        return newNode;
+    }
+
+
+    /**
+     * Generate and initialise multiple new local BubblegumNodes.
+     * @param numNodes The number of nodes to create.
+     * @return The BubblegumNode instances created.
+     */
+    public List<BubblegumNode> buildNodes(int numNodes) {
+        List<BubblegumNode> nodes = new ArrayList<>();
+        for(int i = 0; i < numNodes; i++) {
+            nodes.add(this.createNode());
+        }
+
+        /* Database.getInstance().updateNodesInDatabase(
+            this.nodes.entrySet().stream().map(
+                entry -> entry.getValue()
+            ).collect(Collectors.toList())
+        ); */
+
+        return nodes;
+    }
+
+
+    /**
+     * Retrieve all the identifiers of the nodes managed by this Bubblegum instance.
+     * @return The BubblegumNode identifiers.
+     */
+    public Set<String> getNodeIdentifiers() {
+        return this.nodes.keySet();
+    }
+
+
+    /**
+     * Get the BubblegumNode instance associated with an ID.
+     * @param identifier The ID to resolve.
+     * @return The BubblegumNode instance or null for an invalid ID.
+     */
+    public BubblegumNode getNode(String identifier) {
+        return this.nodes.get(identifier);
+    }
+
+
+    /**
+     * Reset the instance, deleting all nodes.
+     */
+    public void reset() {
+        Database.getInstance().reset();
+        this.nodes.clear();
+    }
+
+
+    /**
+     * Retrieve the ActivityExecutionContext shared by all entities in this Bubblegum instance.
+     * @return The ActivityExecutionContext instance.
+     */
+    public ActivityExecutionContext getExecutionContext() {
+        return this.executionContext;
+    }
+
+    //endregion
+
+    //region Internal
+
+    /**
+     * Internal management method.
+     * Given a partially build BubblegumNode instance, register and build it within a system BubblegumCell instance.
+     * @param node The partially built BubblegumNode.Builder node.
+     * @return The fully built and registered BubblegumNode.
+     */
+    private BubblegumNode insertIntoCell(BubblegumNode.Builder node) {
+        BubblegumNode result = null;
+        int i = 0;
+        while(result == null && i < this.cells.size()) {
+            result = this.cells.get(i).registerNode(node);
+            i++;
+        }
+
+        if(result == null) {
+            // Need to create new cell
+            try {
+                BubblegumCell newCell = new BubblegumCell(0, this.executionContext);
+                this.cells.add(newCell);
+                result = newCell.registerNode(node);
+
+            } catch (BubblegumException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return result;
+    }
+
+    //endregion
+
+    /** EXPERIMENTAL **/
 
     private void loadNodes() {
         // TODO assert nodes and cells empty
@@ -82,41 +181,6 @@ public class Bubblegum {
         this.executionContext.newProcessesInContext(newProcesses);
     }
 
-//    private void initialiseIPAddress() throws AddressInitialisationException {
-//        try {
-//            this.ipAddress = InetAddress.getLocalHost();
-//        } catch (UnknownHostException e) {
-//            throw new AddressInitialisationException();
-//        }
-//    }
-
-
-//    private void initialiseSocialIdentity() {
-//        this.socialIdentity = new SocialIdentity();
-//    }
-
-    private BubblegumNode insertIntoCell(BubblegumNode.Builder node) {
-        BubblegumNode result = null;
-        int i = 0;
-        while(result == null && i < this.cells.size()) {
-            result = this.cells.get(i).registerNode(node);
-            i++;
-        }
-
-        if(result == null) {
-            // Need to create new cell
-            try {
-                BubblegumCell newCell = new BubblegumCell(0, this.executionContext);
-                this.cells.add(newCell);
-                result = newCell.registerNode(node);
-
-            } catch (BubblegumException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return result;
-    }
 
     private BubblegumNode forceInsertIntoCell(int port, BubblegumNode.Builder node) {
 
@@ -145,81 +209,6 @@ public class Bubblegum {
         return result;
     }
 
-    /* API */
+    //endregion
 
-    public Set<String> getNodeIdentifiers() {
-        return this.nodes.keySet();
-    }
-
-    public BubblegumNode getNode(String identifier) {
-        return this.nodes.get(identifier);
-    }
-
-    public void reset() {
-        Database.getInstance().reset();
-        this.nodes.clear();
-    }
-
-    public List<BubblegumNode> buildNodes(int numNodes) {
-        List<BubblegumNode> nodes = new ArrayList<>();
-        for(int i = 0; i < numNodes; i++) {
-            nodes.add(this.createNode());
-        }
-
-//        Database.getInstance().updateNodesInDatabase(
-//            this.nodes.entrySet().stream().map(
-//                entry -> entry.getValue()
-//            ).collect(Collectors.toList())
-//        );
-        return nodes;
-    }
-
-
-    public BubblegumNode createNode() {
-        this.executionContext.newProcessInContext();
-        BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
-        newNodeBuilder.setExecutionContext(this.executionContext);
-        BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
-        newNodeBuilder = null;
-
-        this.nodes.put(newNode.getIdentifier(), newNode);
-        Database.getInstance().updateNodeInDatabase(newNode);
-        return newNode;
-    }
-
-    public ActivityExecutionContext getExecutionContext() {
-        return this.executionContext;
-    }
-}
-
-
-
-
-/**
- *
- * https://stackoverflow.com/questions/19329682/adding-new-nodes-to-kademlia-building-kademlia-routing-tables
- *
- * http://gleamly.com/article/introduction-kademlia-dht-how-it-works
- *
- * PING probes a node to see if it’s online.
- *
- * STORE instructs a node to store a [key, value] pair for later retrieval
- *
- * FIND NODE takes a 160-bit key as an argument, the recipient of the FIND_NODE RPC returns information for the k nodes closest to the target id.
- *
- * FIND VALUE behaves like FIND_NODE returning the k nodes closest to the target Identifier with one exception – if the RPC recipient has received a STORE for the key, it just returns the stored value
- *
- */
-
-
-/**
- *
- * TODO
- * Recursive post/comment lookup - threads off of post x
- * Better lookup - not "oneday", eg "feed 5" to0 get last 5 minutes
- * Clean up CLI - most commands not used. Maybe prefix with "dev-"?
- *
- */
-
-
-
+} // end Bubblegum class

@@ -23,33 +23,38 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-public class BubblegumCellServer {
+import static io.hbt.bubblegum.core.Configuration.DATAGRAM_BUFFER_SIZE;
 
+/**
+ * Sending/Receiving Server attributed to a BubblegumCell.
+ */
+public class BubblegumCellServer {
+    private boolean alive;
     private int port;
     private InetAddress localAddress;
     private DatagramSocket listeningSocket;
     private ActivityExecutionContext executionContext;
-
-    public static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // TODO 64KB
+    private Thread listenerThread;
+    private static DatagramSocket sendingSocket;
 
     private final ConcurrentHashMap<String, Consumer<KademliaMessage>> responses = new ConcurrentHashMap<>();
     private final HashMap<String, BubblegumNode> recipients = new HashMap<>();
 
-    private boolean alive = false;
-    private Thread listenerThread;
-    private static DatagramSocket sendingSocket;
-
-    private long packetsSent = 0;
-    private long packetsReceived = 0;
-
+    /**
+     * Constructor.
+     * @param port The port number to attempt to use.
+     * @param executionContext The ActivityExecutionContext to use for async server operations.
+     * @throws BubblegumException
+     */
     public BubblegumCellServer(int port, ActivityExecutionContext executionContext) throws BubblegumException {
 
+        // Initialise a socket to listen on.
         try {
             this.listeningSocket = new DatagramSocket(port);
         } catch (SocketException e) {
             try {
-                System.out.println("Having to change port...");
                 this.listeningSocket = new DatagramSocket(0);
+                System.out.println("[BubblegumCellServer] Forced to change port from " + port + " to " + this.listeningSocket.getPort());
             } catch (SocketException e1) {
                 throw new BubblegumException();
             }
@@ -58,13 +63,13 @@ public class BubblegumCellServer {
         this.port = this.listeningSocket.getLocalPort();
         this.executionContext = executionContext;
 
+        // Initialise a socket to send on.
         try {
             if(this.sendingSocket == null) this.sendingSocket = new DatagramSocket();
             this.alive = true;
             this.listenerThread = new Thread(() -> this.listen());
             this.listenerThread.setDaemon(true);
             this.listenerThread.start();
-            this.print("BubblegumServer started on port " + this.port);
 
         } catch (SocketException e) {
             e.printStackTrace();
@@ -72,21 +77,22 @@ public class BubblegumCellServer {
         }
 
         this.localAddress = NetworkingHelper.getLocalInetAddress();
-        if(this.localAddress == null) System.err.println("Failed to initialise local address");
-
-//        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
-//        executor.scheduleAtFixedRate(
-//            () -> this.print("Stats  ~  Sent: " + this.packetsSent + ",  Received: " + this.packetsReceived),
-//            5,
-//            5,
-//            TimeUnit.SECONDS
-//        );
+        if(this.localAddress == null) System.err.println("[BubblegumCellServer] Failed to initialise local address");
     }
 
+    /**
+     * Populate internal lookup table mapping recipient IDs to BubblegumNode instances.
+     * @param node The BubblegumNode to be registered.
+     */
     public void registerNewLocalNode(BubblegumNode node) {
         this.recipients.put(node.getNetworkIdentifier() + ":" + node.getNodeIdentifier().toString(), node);
     }
 
+    /**
+     * Repopulate internal node lookup table to update IDs after bootstrap operation.
+     * @param node The BubblegumNode instance.
+     * @param oldID The node's old ID.
+     */
     public void registerNewLocalNode(BubblegumNode node, String oldID) {
         if(this.recipients.containsKey(oldID + ":" + node.getNodeIdentifier().toString())) {
             this.recipients.remove(oldID + ":" + node.getNodeIdentifier().toString());
@@ -94,23 +100,29 @@ public class BubblegumCellServer {
         this.registerNewLocalNode(node);
     }
 
+    /**
+     * Worker method for the receiving process.
+     * Blocking, so needs to be spawned on a dedicated thread.
+     */
     private void listen() {
         while(this.alive) {
             try {
                 byte[] buffer = new byte[DATAGRAM_BUFFER_SIZE];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 this.listeningSocket.receive(packet);
-                this.packetsReceived++;
 
+                // Copy required as incorrect byte[] length will result in Protobuf failing to unpack the data.
                 byte[] data = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
 
+                // Create async task for the bulk of the operation.
                 this.executionContext.addCallbackActivity("system", () -> {
 
                     if(Metrics.isRecording()) Metrics.serverSubmission(data.length, true);
                     try {
                         KademliaMessage message = KademliaMessage.parseFrom(data);
 
+                        // Detect Discovery process request (deprecated)
                         if (message.hasDiscoveryRequest()) {
                             if (this.recipients.size() > 0) {
                                 this.recipients.keySet();
@@ -134,53 +146,55 @@ public class BubblegumCellServer {
                             }
                         }
 
+                        // Pass the message to the node the message is addressed to or drop if recipient unknown.
                         else if (this.recipients.containsKey(message.getRecipient())) {
-                            // Pass to them
                             BubblegumNode localRecipient = this.recipients.get(message.getRecipient());
-
                             if (this.responses.containsKey(localRecipient.getIdentifier() + ":" + message.getExchangeID())) {
                                 Consumer<KademliaMessage> callback = this.responses.remove(localRecipient.getIdentifier() + ":" + message.getExchangeID());
                                 if (callback != null) {
+                                    // We're expecting this packet, so pass to the method waiting on it.
                                     callback.accept(message);
                                 }
                             } else {
-                                // Create worker to handle
+                                // Invoke message handler.
                                 KademliaServerWorker.accept(localRecipient, message);
                             }
                         }
 
-                        // else: drop
-                        else {
-//                            System.out.println("Dropped message to " + message.getRecipient());
-                        }
+                        // Unknown recipient, drop.
+                        // else {
+                        //     System.out.println("Dropped message to " + message.getRecipient());
+                        // }
 
                     } catch (InvalidProtocolBufferException ipbe) {
-//                        MessageLite ml = ipbe.getUnfinishedMessage();
-////                        ipbe.printStackTrace();
-                        System.out.println("Corrupted packet");
+                        // This is a corrupted packet.
+                        // No action necessary, fault tolerance is inherent further up the stack.
                     } catch (MalformedKeyException e) {
-                        e.printStackTrace();
+                        // This is a corrupted packet.
+                        // Invalid recipient information.
                     } catch (UnknownHostException e) {
-                        e.printStackTrace();
+                        // This is a corrupted packet.
+                        // Invalid recipient address information.
                     }
                 });
 
             } catch (IOException e) {
-                e.printStackTrace();
+                // Network library failure on receiving a packet.
             }
         }
     }
 
-
+    /**
+     * General purpose DHT network sending function.
+     * @param localNode The local node responsible for this transmission.
+     * @param node The node instance the send the payload to.
+     * @param payload The payload to be transmitted.
+     * @param callback A callback function to be triggered when a response with the same exchange ID is received. May be null.
+     */
     public void sendDatagram(BubblegumNode localNode, RouterNode node, KademliaMessage payload, Consumer<KademliaMessage> callback) {
         synchronized (this.sendingSocket) {
             try {
                 if (callback != null) {
-//                    System.out.println(this.responses == null);
-//                    System.out.println(localNode == null);
-//                    System.out.println(localNode.getIdentifier() == null);
-//                    System.out.println(payload == null);
-//                    System.out.println(payload.getExchangeID() == null);
                     this.responses.put(localNode.getIdentifier() + ":" + payload.getExchangeID(), callback);
                 }
 
@@ -190,36 +204,41 @@ public class BubblegumCellServer {
                     this.sendingSocket = new DatagramSocket();
                 }
                 this.sendingSocket.send(packet);
-//                new DatagramSocket().send(packet);
 
                 if(Metrics.isRecording()) Metrics.serverSubmission(packet.getLength(), false);
-//                this.packetsSent++;
 
             } catch (SocketException e) {
-                // TODO Message too long
-//                System.out.println("[Socket Failure] " + e.getMessage());
-//                e.printStackTrace();
+                // Network library exception.
+                // Failure is handled further up the stack.
             } catch (IOException e) {
-//                System.out.println("[Socket Failure] " + e.getMessage());
-//                e.printStackTrace();
+                // Network library exception.
+                // Failure is handled further up the stack.
             }
         }
     }
 
+    /**
+     * Deregister a declared callback.
+     * @param exchangeID The exchange ID to look for.
+     */
     public void removeCallback(String exchangeID) {
-        // TODO fix for new ID ^
         if(this.responses.containsKey(exchangeID)) this.responses.remove(exchangeID);
     }
 
+    /**
+     * Getter for this server's InetAddress instance.
+     * @return The server's InetAddress instance.
+     */
     public InetAddress getLocal() {
         return this.localAddress;
     }
 
+    /**
+     * Getter for the port this server is running on.
+     * @return The server port.
+     */
     public int getPort() {
         return this.port;
     }
 
-    private void print(String msg) {
-        //this.localNode.log(msg);
-    }
-}
+} // end BubblegumCellServer class
