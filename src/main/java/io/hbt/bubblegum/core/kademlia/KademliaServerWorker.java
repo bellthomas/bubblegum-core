@@ -11,106 +11,92 @@ import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.net.UnknownHostException;
 
+/**
+ * Static KademliaMessage acceptor functions.
+ */
 public class KademliaServerWorker {
 
+    /**
+     * BubblegumNode specific KademliaMessage acceptor.
+     * @param node The BubblegumNode recipient.
+     * @param message The KademliaMessage received.
+     */
     public static void accept(BubblegumNode node, KademliaMessage message) {
 
+        // PING RPC received.
         if(message.hasPingMessage() && !message.getPingMessage().getReply()) {
-//            node.log("PING received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]");
-            try {
-                RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
-                if(sender == null) sender = new RouterNode(
-                    new NodeID(message.getOriginHash()),
-                    NetworkingHelper.getInetAddress(message.getOriginIP()),
-                    message.getOriginPort()
-                );
+            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+            if(sender != null) {
                 node.getRoutingTable().insert(sender);
 
                 PingActivity pingReply = new PingActivity(node, sender, message.getOriginNetwork() + ":" + message.getOriginHash());
                 pingReply.setResponse(message);
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), pingReply);
-
-            } catch (MalformedKeyException e) {
-                e.printStackTrace();
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
             }
         }
 
+        // FIND RPC received.
         else if(message.hasFindRequest()) {
-            boolean returnValue = message.getFindRequest().getReturnValue();
-//            node.log((returnValue ? "FIND_VALUE" : "FIND_NODE") + " received [" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getFindRequest().getSearchHash());
-
-            try {
-                RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
-                if(sender == null) sender = new RouterNode(
-                    new NodeID(message.getOriginHash()),
-                    NetworkingHelper.getInetAddress(message.getOriginIP()),
-                    message.getOriginPort()
-                );
-                // TODO insert?
+            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+            if(sender != null) {
                 node.getRoutingTable().insert(sender);
 
                 FindActivity findNodeReply = new FindActivity(
                     node,
                     sender,
                     message.getFindRequest().getSearchHash(),
-                    returnValue
+                    message.getFindRequest().getReturnValue()
                 );
                 findNodeReply.setResponse(message.getExchangeID(), message.getFindRequest(), message.getOriginHash());
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), findNodeReply);
-
-            } catch (MalformedKeyException e) {
-                e.printStackTrace();
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
             }
         }
 
+        // STORE RPC received.
         else if(message.hasStoreRequest()) {
-//            node.log("STORE received[" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getStoreRequest().getKey());
-            try {
-                RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
-                if(sender == null) sender = new RouterNode(
-                    new NodeID(message.getOriginHash()),
-                    NetworkingHelper.getInetAddress(message.getOriginIP()),
-                    message.getOriginPort()
-                );
-                // TODO insert?
+            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+            if(sender != null) {
                 node.getRoutingTable().insert(sender);
 
                 PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(node, sender, message.getStoreRequest().getKey(), message.getStoreRequest().getValue().toByteArray());
                 storeActivity.setResponse(message.getExchangeID());
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), storeActivity);
-
-            } catch (MalformedKeyException e) {
-                e.printStackTrace();
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
             }
         }
 
+        // QUERY RPC received.
         else if(message.hasQueryRequest()) {
-            //            node.log("STORE received[" + message.getOriginIP() + ":" + message.getOriginPort() + "]: " + message.getStoreRequest().getKey());
-            try {
-                RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
-                if (sender == null) sender = new RouterNode(
-                    new NodeID(message.getOriginHash()),
-                    NetworkingHelper.getInetAddress(message.getOriginIP()),
-                    message.getOriginPort()
-                );
-                // TODO insert?
+            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+            if(sender != null) {
                 node.getRoutingTable().insert(sender);
 
                 QueryActivity queryActivity = new QueryActivity(node, sender, 0, 0, null);
                 queryActivity.setResponse(message.getExchangeID(), message.getQueryRequest());
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), queryActivity);
-
-            } catch (MalformedKeyException e) {
-                e.printStackTrace();
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
             }
         }
     }
-}
+
+    /**
+     * Helper method to retrieve or generate the RouterNode instance for the sender information from a KademliaMessage.
+     * @param node The BubblegumNode instance to retrieve/build the RouterNode in the context of.
+     * @param message The KademliaMessage object received.
+     * @return The generated RouterNode instance or null if the information in the KademliaMessage is invalid.
+     */
+    private static RouterNode getFromOriginHash(BubblegumNode node, KademliaMessage message) {
+        try {
+            RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
+            if (sender == null) sender = new RouterNode(
+                new NodeID(message.getOriginHash()),
+                NetworkingHelper.getInetAddress(message.getOriginIP()),
+                message.getOriginPort()
+            );
+            return sender;
+        } catch (MalformedKeyException e) {
+            return null;
+        } catch (UnknownHostException e) {
+            return null;
+        }
+    }
+
+} // end KademliaServerWorker class
