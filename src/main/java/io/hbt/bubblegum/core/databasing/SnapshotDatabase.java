@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.databasing;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.router.RouterBucket;
@@ -83,7 +84,7 @@ public class SnapshotDatabase {
 
         // Initialise return structure
         HashMap<Integer, List<Set<RouterNode>>> result = new HashMap<>();
-        for(int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) {
+        for(int i = 0; i < Configuration.KEY_BIT_LENGTH; i++) {
             result.put(i, new ArrayList<Set<RouterNode>>() {{ add(new HashSet<>()); add(new HashSet<>()); }});
         }
 
@@ -115,7 +116,7 @@ public class SnapshotDatabase {
                     rs.getInt(5)
                 );
 
-                if(node != null && bucket >= 0 && bucket < NodeID.KEY_BIT_LENGTH && (replacement == 0 || replacement == 1)) {
+                if(node != null && bucket >= 0 && bucket < Configuration.KEY_BIT_LENGTH && (replacement == 0 || replacement == 1)) {
                     result.get(bucket).get(replacement).add(node);
                 }
             }

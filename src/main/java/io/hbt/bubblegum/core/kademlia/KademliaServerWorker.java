@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 
 /**
  * Static KademliaMessage acceptor functions.
+ * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 public class KademliaServerWorker {
 
@@ -29,7 +30,11 @@ public class KademliaServerWorker {
             if(sender != null) {
                 node.getRoutingTable().insert(sender);
 
-                PingActivity pingReply = new PingActivity(node, sender, message.getOriginNetwork() + ":" + message.getOriginHash());
+                PingActivity pingReply = new PingActivity(
+                    node,
+                    sender,
+                    message.getOriginNetwork() + ":" + message.getOriginHash()
+                );
                 pingReply.setResponse(message);
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), pingReply);
             }
@@ -58,7 +63,12 @@ public class KademliaServerWorker {
             if(sender != null) {
                 node.getRoutingTable().insert(sender);
 
-                PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(node, sender, message.getStoreRequest().getKey(), message.getStoreRequest().getValue().toByteArray());
+                PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(
+                    node,
+                    sender,
+                    message.getStoreRequest().getKey(),
+                    message.getStoreRequest().getValue().toByteArray()
+                );
                 storeActivity.setResponse(message.getExchangeID());
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), storeActivity);
             }

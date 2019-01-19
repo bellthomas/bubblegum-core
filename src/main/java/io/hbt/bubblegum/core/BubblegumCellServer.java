@@ -27,6 +27,7 @@ import static io.hbt.bubblegum.core.Configuration.DATAGRAM_BUFFER_SIZE;
 
 /**
  * Sending/Receiving Server attributed to a BubblegumCell.
+ * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 public class BubblegumCellServer {
     private boolean alive;

@@ -1,6 +1,12 @@
 package io.hbt.bubblegum.core;
 
+/**
+ * System Configuration.
+ * @author Harri Bell-Thomas, ahb36@cam.ac.uk
+ */
 public class Configuration {
+
+    public static final int KEY_BIT_LENGTH = 80;
 
     public static final int BIN_EPOCH_DURATION = 1000 * 60 * 5; // 5 minutes
 

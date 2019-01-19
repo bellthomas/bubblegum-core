@@ -2,6 +2,7 @@ package io.hbt.bubblegum.core.auxiliary;
 
 import com.google.protobuf.ByteString;
 import io.hbt.bubblegum.core.BubblegumCellServer;
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaDiscoveryRequest.KademliaDiscoveryRequest;
@@ -72,7 +73,7 @@ public class ProtobufHelper {
         findValueResponse.setRequest(request);
 
         // Ensure no packet overflow
-        int maxSize = Math.max(0, BubblegumCellServer.DATAGRAM_BUFFER_SIZE - 1000);
+        int maxSize = Math.max(0, Configuration.DATAGRAM_BUFFER_SIZE - 1000);
         int currentSize = 0;
         Collections.shuffle(values);
         for(byte[] v : values) {
