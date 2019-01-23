@@ -1,12 +1,10 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.simulator.Metrics;
 
 public abstract class SystemActivity implements Runnable {
-
-    protected final static int TIMEOUT = 10000; // ms
-    protected final static int MAX_START_DELAY = 10000; // ms
 
     protected final BubblegumNode localNode;
     protected boolean complete, success, aborted;
@@ -23,7 +21,7 @@ public abstract class SystemActivity implements Runnable {
     @Override
     public void run() {
         this.start = System.nanoTime();
-        if(this.start > (MAX_START_DELAY * 1_000_000 + this.init)) {
+        if(this.start > (Configuration.ACTIVITY_MAX_DELAY * 1_000_000 + this.init)) {
             this.aborted = true;
         }
     }
@@ -34,7 +32,7 @@ public abstract class SystemActivity implements Runnable {
 
     protected void timeoutOnComplete() {
         int i = 0;
-        long end = System.currentTimeMillis() + TIMEOUT;
+        long end = System.currentTimeMillis() + Configuration.ACTIVITY_TIMEOUT;
         while(System.currentTimeMillis() < end && !this.complete) {
             try {
                 Thread.sleep(100);

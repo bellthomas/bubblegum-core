@@ -27,7 +27,7 @@ public class Database {
     private static MasterDatabase masterDatabase;
 
     protected static final String DB_FOLDER_PATH = ".databases/";
-    protected static final long EXPIRY_AGE = 30 * 60; // seconds
+    protected static final long EXPIRY_AGE = 30 * 60 * 1000; // ms
 
     private final ConcurrentHashMap<String, Pair<String, Long>> lastNetworkUpdates;
 
@@ -142,7 +142,7 @@ public class Database {
             v1.forEach((k2,v2) -> {
                 v2.removeAll(
                     v2.stream()
-                        .filter((p) -> ((p.getSecond() + Database.EXPIRY_AGE * 1000) < current)) // older than the expiry age
+                        .filter((p) -> ((p.getSecond() + Database.EXPIRY_AGE) < current)) // older than the expiry age
                         .collect(Collectors.toList())
                 );
             });
@@ -150,7 +150,7 @@ public class Database {
     }
 
     public void refreshExpiringPosts(BubblegumNode node, int margin) {
-        long cutoff = System.currentTimeMillis() - (Database.EXPIRY_AGE * 1000) + margin;
+        long cutoff = System.currentTimeMillis() - Database.EXPIRY_AGE + margin;
         List<Pair<String, String>> ids = this.lastNetworkUpdates.entrySet()
             .stream()
             .filter((e) -> e.getValue().getSecond() < cutoff && e.getKey().startsWith(node.getNodeIdentifier().toString()))

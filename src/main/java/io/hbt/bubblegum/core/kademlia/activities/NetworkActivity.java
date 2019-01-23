@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import io.hbt.bubblegum.core.BubblegumCellServer;
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
@@ -8,8 +9,6 @@ import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import java.util.UUID;
 
 public abstract class NetworkActivity extends SystemActivity {
-
-    private final static int RETRIES = 3;
 
     private int currentTry;
 
@@ -52,7 +51,7 @@ public abstract class NetworkActivity extends SystemActivity {
     protected void timeoutOnComplete() {
         super.timeoutOnComplete();
         if(!this.complete) {
-            if (this.currentTry < RETRIES) {
+            if (this.currentTry < Configuration.NETWORK_ACTIVITY_RETRIES) {
                 this.currentTry++;
                 this.server.removeCallback(this.exchangeID);
 

@@ -166,24 +166,30 @@ public class Simulator {
         float feedPerNodePerHour = (float)feedRate / backgroundNodes.size();
         float nodeSecondPerFeed = 3600 / feedPerNodePerHour;
 
-        int randomNum, randomNum2;
+        int randomNum, randomNum2, bound1, bound2;
         for(String id : backgroundNodes) {
             BubblegumNode node = this.bubblegum.getNode(id);
 
-            randomNum = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondsPerPost) * 1000);
-            node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
-                node.savePost(randomText(500));
-            }, randomNum, (long)Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
+            bound1 = (int)Math.ceil(nodeSecondsPerPost) * 1000;
+            if(bound1 > 0) {
+                randomNum = ThreadLocalRandom.current().nextInt(0, bound1);
+                node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
+                    node.savePost(randomText(500));
+                }, randomNum, (long) Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
+            }
 
-            randomNum2 = ThreadLocalRandom.current().nextInt(0, (int)Math.ceil(nodeSecondPerFeed) * 1000);
-            node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
+            bound2 = (int)Math.ceil(nodeSecondPerFeed) * 1000;
+            if(bound2 > 0) {
+                randomNum2 = ThreadLocalRandom.current().nextInt(0, (int) Math.ceil(nodeSecondPerFeed) * 1000);
+                node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
 //                System.out.println("Started ANQ for " + node.getNodeIdentifier().toString());
-                AsyncNetworkQuery q = new AsyncNetworkQuery(node);
-                long current = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;
-                q.addID(current);
-                q.run();
+                    AsyncNetworkQuery q = new AsyncNetworkQuery(node);
+                    long current = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;
+                    q.addID(current);
+                    q.run();
 //                q.onChange(() -> System.out.println("ANQ change for " + node.getNodeIdentifier().toString()));
-            }, randomNum2, (long)Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
+                }, randomNum2, (long) Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
+            }
         }
     }
 
@@ -210,7 +216,7 @@ public class Simulator {
     }
 
     public static void main(String[] args) {
-        NetworkingHelper.setLookupExternalIP(false);
+        NetworkingHelper.setLookupExternalIP(true);
         SimulationConfig config = new SimulationConfig("simulation.yml");
         if(args.length >= 3) config.runningBootstrap(args[0], args[1], args[2]);
 

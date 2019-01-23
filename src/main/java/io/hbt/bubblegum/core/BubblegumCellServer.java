@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.hbt.bubblegum.core.auxiliary.BufferPool;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
@@ -19,6 +20,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.Buffer;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -108,13 +110,14 @@ public class BubblegumCellServer {
     private void listen() {
         while(this.alive) {
             try {
-                byte[] buffer = new byte[DATAGRAM_BUFFER_SIZE];
+                byte[] buffer = BufferPool.getOrCreateBuffer();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 this.listeningSocket.receive(packet);
 
                 // Copy required as incorrect byte[] length will result in Protobuf failing to unpack the data.
                 byte[] data = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
+                BufferPool.release(buffer);
 
                 // Create async task for the bulk of the operation.
                 this.executionContext.addCallbackActivity("system", () -> {

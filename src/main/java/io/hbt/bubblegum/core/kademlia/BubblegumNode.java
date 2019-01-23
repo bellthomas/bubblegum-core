@@ -37,12 +37,10 @@ public class BubblegumNode {
 
     // region Initialisation
     private BubblegumNode(
-        String identifier,
-        String networkIdentifier,
-        ActivityExecutionContext context,
-        BubblegumCellServer server,
-        NodeID nid
-    ) {
+        String identifier, String networkIdentifier,
+        ActivityExecutionContext context, BubblegumCellServer server,
+        NodeID nid)
+    {
         this.identifier = identifier;
         this.networkIdentifier = networkIdentifier;
         this.nodeIdentifier = nid;

@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.ComparableBytePayload;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
@@ -17,7 +18,6 @@ import java.util.stream.Collectors;
 public class LookupActivity extends SystemActivity {
 
     private final static int alpha = 5;
-    private final static int timeout = 5; // seconds
     private final NodeID nodeToLookup;
     private final int numResults;
     private final boolean getValue;
@@ -81,8 +81,8 @@ public class LookupActivity extends SystemActivity {
         closestNode = shortlist.first();
         ArrayList<FindActivity> currentActivities = new ArrayList<>();
 
-        long timeoutTime = System.currentTimeMillis() + timeout * 1000;
-        while(opsWithoutNewClosest < 2 * alpha && System.currentTimeMillis() < timeoutTime) {
+        long timeoutTime = System.currentTimeMillis() + Configuration.LOOKUP_TIMEOUT;
+        while(opsWithoutNewClosest < alpha && System.currentTimeMillis() < timeoutTime) {
             Iterator<FindActivity> activityIterator = currentActivities.iterator();
             while (activityIterator.hasNext()) {
                 FindActivity activity = activityIterator.next();
@@ -169,7 +169,7 @@ public class LookupActivity extends SystemActivity {
 
             } else {
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(25);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
