@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
+import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
@@ -159,6 +160,19 @@ public class Simulator {
 
         Set<String> backgroundNodes = this.bubblegum.getNodeIdentifiers();
 
+        int successes = 0, fails = 0;
+        int initialiseWithFixedPostNumber = this.config.getInitialiseWithFixedPostNumber();
+        if(initialiseWithFixedPostNumber > 0) {
+            System.out.println("Initialising with posts...");
+            String initial = backgroundNodes.iterator().next();
+            for(int i = 0; i < initialiseWithFixedPostNumber; i++) {
+                Post p = this.bubblegum.getNode(initial).savePost(randomText(500));
+                if(p != null) successes++;
+                else fails++;
+            }
+            System.out.println("Posts created: " + successes + " succeeded, " + fails + " failed  (" + LocalDateTime.now() + ")");
+        }
+
         int postRate = this.config.getNewPostsEveryHour();
         float postsPerNodePerHour = (float)postRate / backgroundNodes.size();
         float nodeSecondsPerPost = 3600 / postsPerNodePerHour;
@@ -216,7 +230,7 @@ public class Simulator {
     }
 
     public static void main(String[] args) {
-        NetworkingHelper.setLookupExternalIP(true);
+        NetworkingHelper.setLookupExternalIP(false);
         SimulationConfig config = new SimulationConfig("simulation.yml");
         if(args.length >= 3) config.runningBootstrap(args[0], args[1], args[2]);
 

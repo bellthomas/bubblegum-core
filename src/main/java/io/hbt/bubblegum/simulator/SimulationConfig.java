@@ -27,6 +27,7 @@ public class SimulationConfig {
     int numNetworkNodes = 1;
     int newPostsEveryHour = 0;
     int feedRetrievalsEveryHour = 60;
+    int initialiseWithFixedPostNumber = 60;
 
     public SimulationConfig(String file) {
         this.loadedSuccessfully = false;
@@ -60,6 +61,11 @@ public class SimulationConfig {
                 if(background.containsKey("feedRetrievalsEveryHour")) {
                     Integer feedRetrievalsEveryHour = this.toInt((String) background.get("feedRetrievalsEveryHour"));
                     if(feedRetrievalsEveryHour != null) this.feedRetrievalsEveryHour = feedRetrievalsEveryHour;
+                }
+
+                if(background.containsKey("initialiseWithFixedPostNumber")) {
+                    Integer initialiseWithFixedPostNumber = this.toInt((String) background.get("initialiseWithFixedPostNumber"));
+                    if(initialiseWithFixedPostNumber != null) this.initialiseWithFixedPostNumber = initialiseWithFixedPostNumber;
                 }
 
             }
@@ -108,6 +114,10 @@ public class SimulationConfig {
 
     public int getFeedRetrievalsEveryHour() {
         return (this.feedRetrievalsEveryHour < 0) ? 0 : this.feedRetrievalsEveryHour;
+    }
+
+    public int getInitialiseWithFixedPostNumber() {
+        return (this.initialiseWithFixedPostNumber < 0) ? 0 : this.initialiseWithFixedPostNumber;
     }
 
     public InetAddress getAddr() {
