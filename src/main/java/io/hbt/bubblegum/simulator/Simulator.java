@@ -33,7 +33,7 @@ public class Simulator {
     private AtomicInteger backgroundTasksCompleted;
     private Queue<Runnable> bootstrapActions = new LinkedList<>();
 
-    private List<String> backgroundNetworks = new ArrayList<>();
+    private ArrayList<String> backgroundNetworks = new ArrayList<>();
 
     public Simulator(SimulationConfig config) {
         Simulator.currentlySimulating = true;
@@ -160,50 +160,57 @@ public class Simulator {
 
         Set<String> backgroundNodes = this.bubblegum.getNodeIdentifiers();
 
-        int successes = 0, fails = 0;
+//        Integer successes = 0, fails = 0;
         int initialiseWithFixedPostNumber = this.config.getInitialiseWithFixedPostNumber();
         if(initialiseWithFixedPostNumber > 0) {
             System.out.println("Initialising with posts...");
             String initial = backgroundNodes.iterator().next();
-            for(int i = 0; i < initialiseWithFixedPostNumber; i++) {
-                Post p = this.bubblegum.getNode(initial).savePost(randomText(500));
-                if(p != null) successes++;
-                else fails++;
-            }
-            System.out.println("Posts created: " + successes + " succeeded, " + fails + " failed  (" + LocalDateTime.now() + ")");
+            new Thread(() -> {
+                for (int i = 0; i < initialiseWithFixedPostNumber; i++) {
+//                    Post p =
+                    this.bubblegum.getNode(initial).savePost(randomText(500));
+//                    if (p != null) successes++;
+//                    else fails++;
+                }
+            }).start();
+//            System.out.println("Posts created: " + successes + " succeeded, " + fails + " failed  (" + LocalDateTime.now() + ")");
         }
 
         int postRate = this.config.getNewPostsEveryHour();
         float postsPerNodePerHour = (float)postRate / backgroundNodes.size();
         float nodeSecondsPerPost = 3600 / postsPerNodePerHour;
         int feedRate = this.config.getFeedRetrievalsEveryHour();
-        float feedPerNodePerHour = (float)feedRate / backgroundNodes.size();
-        float nodeSecondPerFeed = 3600 / feedPerNodePerHour;
+        float nodeSecondPerFeed = 3600 / (float)feedRate;
 
         int randomNum, randomNum2, bound1, bound2;
         for(String id : backgroundNodes) {
             BubblegumNode node = this.bubblegum.getNode(id);
 
             bound1 = (int)Math.ceil(nodeSecondsPerPost) * 1000;
-            if(bound1 > 0) {
+            if(bound1 > 0 && nodeSecondsPerPost > 0) {
                 randomNum = ThreadLocalRandom.current().nextInt(0, bound1);
                 node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
                     node.savePost(randomText(500));
                 }, randomNum, (long) Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
             }
+        }
 
-            bound2 = (int)Math.ceil(nodeSecondPerFeed) * 1000;
-            if(bound2 > 0) {
-                randomNum2 = ThreadLocalRandom.current().nextInt(0, (int) Math.ceil(nodeSecondPerFeed) * 1000);
-                node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
+        randomNum = ThreadLocalRandom.current().nextInt(0, backgroundNodes.size());
+        String randomNode = (backgroundNodes.toArray(new String[]{}))[randomNum];
+        BubblegumNode node = this.bubblegum.getNode(randomNode);
+        bound2 = (int)Math.ceil(nodeSecondPerFeed) * 1000;
+
+        if(bound2 > 0 && nodeSecondsPerPost > 0) {
+            randomNum2 = ThreadLocalRandom.current().nextInt(0, (int) Math.ceil(nodeSecondPerFeed) * 1000);
+            node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
 //                System.out.println("Started ANQ for " + node.getNodeIdentifier().toString());
-                    AsyncNetworkQuery q = new AsyncNetworkQuery(node);
-                    long current = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;
-                    q.addID(current);
-                    q.run();
+                AsyncNetworkQuery q = new AsyncNetworkQuery(node);
+                long current = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;
+                q.addID(current);
+                q.addID(current - 1);
+                q.run();
 //                q.onChange(() -> System.out.println("ANQ change for " + node.getNodeIdentifier().toString()));
-                }, randomNum2, (long) Math.ceil(nodeSecondsPerPost) * 1000, TimeUnit.MILLISECONDS);
-            }
+            }, randomNum2, (long) Math.ceil(nodeSecondPerFeed) * 1000, TimeUnit.MILLISECONDS);
         }
     }
 
