@@ -1,5 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import io.hbt.bubblegum.core.Configuration;
+
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -9,38 +11,34 @@ public class ActivityExecutionContext {
     private final ActivityExecutionManager compoundManager;
     private final ActivityExecutionManager callbackManager;
 
-    protected final static int MAX_THREADS_IN_CONTEXT = 200;
-
-    protected final static int GENERAL_ACTIVITIES_PARALLELISM = 8;//.4
-    protected final static int COMPOUND_ACTIVITIES_PARALLELISM = 5;//.25
-    protected final static int CALLBACK_ACTIVITIES_PARALLELISM = 7;//
-
-    private int numProcesses = 0;
-
     private final ScheduledThreadPoolExecutor executor;
+    private int numProcesses = 0;
 
     public ActivityExecutionContext(int numProcesses) {
         this.numProcesses = (numProcesses < 0) ? 0 : numProcesses;
         if(numProcesses < 1) numProcesses = 1;
 
-        double parallelismTotal = GENERAL_ACTIVITIES_PARALLELISM + CALLBACK_ACTIVITIES_PARALLELISM;
+        double parallelismTotal =
+            Configuration.EXECUTION_CONTEXT_GENERAL_PARALLELISM +
+            Configuration.EXECUTION_CONTEXT_COMPOUND_PARALLELISM +
+            Configuration.EXECUTION_CONTEXT_CALLBACK_PARALLELISM;
 
         executor = new ScheduledThreadPoolExecutor(2);
         executor.setRemoveOnCancelPolicy(true);
 
         this.activityManager = new ActivityExecutionManager(
-            numProcesses, GENERAL_ACTIVITIES_PARALLELISM,
-            (int)((GENERAL_ACTIVITIES_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
+            numProcesses, Configuration.EXECUTION_CONTEXT_GENERAL_PARALLELISM,
+            (int)((Configuration.EXECUTION_CONTEXT_GENERAL_PARALLELISM / parallelismTotal) * Configuration.EXECUTION_CONTEXT_MAX_THREADS)
         );
 
         this.compoundManager = new ActivityExecutionManager(
-            numProcesses, COMPOUND_ACTIVITIES_PARALLELISM,
-            (int)((COMPOUND_ACTIVITIES_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
+            numProcesses, Configuration.EXECUTION_CONTEXT_COMPOUND_PARALLELISM,
+            (int)((Configuration.EXECUTION_CONTEXT_COMPOUND_PARALLELISM / parallelismTotal) * Configuration.EXECUTION_CONTEXT_MAX_THREADS)
         );
 
         this.callbackManager = new ActivityExecutionManager(
-            numProcesses, CALLBACK_ACTIVITIES_PARALLELISM,
-            (int)((CALLBACK_ACTIVITIES_PARALLELISM / parallelismTotal) * MAX_THREADS_IN_CONTEXT)
+            numProcesses, Configuration.EXECUTION_CONTEXT_CALLBACK_PARALLELISM,
+            (int)((Configuration.EXECUTION_CONTEXT_CALLBACK_PARALLELISM / parallelismTotal) * Configuration.EXECUTION_CONTEXT_MAX_THREADS)
         );
     }
 
@@ -80,9 +78,7 @@ public class ActivityExecutionContext {
     }
 
     public void scheduleTask(String owner, Runnable command, long initial, long period, TimeUnit unit) {
-        this.executor.scheduleAtFixedRate(() -> {
-            this.addCompoundActivity(owner, command);
-        }, initial, period, unit);
+        this.executor.scheduleAtFixedRate(() -> this.addCompoundActivity(owner, command), initial, period, unit);
     }
 
     public String queueStates() {

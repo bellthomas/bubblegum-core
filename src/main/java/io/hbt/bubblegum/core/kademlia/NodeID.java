@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
@@ -169,7 +170,7 @@ public class NodeID {
         int sharedBits = length % 8;
 
         byte[] newID = new byte[this.key.length];
-        new Random().nextBytes(newID);
+        Configuration.rand.nextBytes(newID);
 
         // Copy shared whole bytes
         for(int i = 0; i < sharedBytes; i++) newID[i] = this.key[i];

@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.databasing;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
 import java.io.File;
@@ -84,7 +85,7 @@ public class MasterDatabase {
             this.checkDatabasesDirectory();
 
             // create a databasing connection
-            connection = DriverManager.getConnection("jdbc:sqlite:" + Database.DB_FOLDER_PATH + MASTER_DB_NAME);
+            connection = DriverManager.getConnection("jdbc:sqlite:" + Configuration.DB_FOLDER_PATH + MASTER_DB_NAME);
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
@@ -120,12 +121,12 @@ public class MasterDatabase {
     }
 
     protected void checkDatabasesDirectory() {
-        File directory = new File(Database.DB_FOLDER_PATH);
+        File directory = new File(Configuration.DB_FOLDER_PATH);
         if (!directory.exists()) directory.mkdir();
     }
 
     public void resetDatabases() {
-        File directory = new File(Database.DB_FOLDER_PATH);
+        File directory = new File(Configuration.DB_FOLDER_PATH);
         if(directory.exists()) {
             this.delete(directory);
         }

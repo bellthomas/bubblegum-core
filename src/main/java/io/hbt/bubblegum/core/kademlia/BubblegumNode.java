@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia;
 
 import io.hbt.bubblegum.core.BubblegumCellServer;
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.Post;
@@ -72,13 +73,13 @@ public class BubblegumNode {
         if(!Simulator.isCurrentlySimulating()) {
             this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
                 this.routingTable.refreshBuckets();
-            }, new Random().nextInt(5 * 60 * 1000), 5 * 60 * 1000, TimeUnit.MILLISECONDS);
+            }, Configuration.random(5 * 60 * 1000), 5 * 60 * 1000, TimeUnit.MILLISECONDS);
         }
 
         // Refresh/delete content as it expires
         this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
-            this.db.refreshExpiringPosts(this, 30000);
-        }, new Random().nextInt(60000), 60000, TimeUnit.MILLISECONDS);
+            this.db.refreshExpiringPosts(this, Configuration.POST_EXPIRY_REFRESH_CHECK);
+        }, Configuration.random(Configuration.POST_EXPIRY_REFRESH_CHECK), Configuration.POST_EXPIRY_REFRESH_CHECK, TimeUnit.MILLISECONDS);
 
     }
     //endregion

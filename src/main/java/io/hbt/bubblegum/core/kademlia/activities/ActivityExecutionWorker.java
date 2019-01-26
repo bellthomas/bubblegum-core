@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionManager.WorkItem;
 
@@ -26,7 +27,7 @@ public class ActivityExecutionWorker {
 
     private void start() {
         WorkItem item;
-        Random r = new Random();
+        Random r = Configuration.rand;
         while(this.alive) {
             try {
                 item = this.queue.get();

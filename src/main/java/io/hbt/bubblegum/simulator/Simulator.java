@@ -101,7 +101,7 @@ public class Simulator {
             }
         }
 
-        Collections.shuffle(tasks, new Random());
+        Collections.shuffle(tasks, Configuration.rand);
         bootstrapActions.addAll(tasks);
         tasks.clear();
         System.out.println("[Background Network] " + bootstrapActions.size() + " tasks prepared...");
@@ -219,7 +219,7 @@ public class Simulator {
 //        new Random().nextBytes(array);
 //        return new String(array, Charsets.US_ASCII);
 
-        Random r = new Random();
+        Random r = Configuration.rand;
         String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@£$%^&*(){}[]?/~-_       ";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {

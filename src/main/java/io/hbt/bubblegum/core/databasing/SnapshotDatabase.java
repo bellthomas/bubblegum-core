@@ -2,7 +2,6 @@ package io.hbt.bubblegum.core.databasing;
 
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
-import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.router.RouterBucket;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
@@ -23,7 +22,7 @@ import java.util.Set;
 
 public class SnapshotDatabase {
 
-    protected static final String DB_FOLDER_PATH = Database.DB_FOLDER_PATH + "snapshots/";
+    protected static final String DB_FOLDER_PATH = Configuration.DB_FOLDER_PATH + "snapshots/";
 
     protected SnapshotDatabase() { /* Static only */ }
 

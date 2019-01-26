@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.databasing;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
 import java.sql.Connection;
@@ -38,7 +39,7 @@ class ContentDatabase {
 
         try {
             // create a databasing connection
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + Database.DB_FOLDER_PATH + CDB_FILE_NAME);
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + Configuration.DB_FOLDER_PATH + CDB_FILE_NAME);
 
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.

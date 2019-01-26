@@ -26,9 +26,6 @@ public class Database {
     private static ContentDatabase cdbInstance;
     private static MasterDatabase masterDatabase;
 
-    protected static final String DB_FOLDER_PATH = ".databases/";
-    protected static final long EXPIRY_AGE = 30 * 60 * 1000; // ms
-
     private final ConcurrentHashMap<String, Pair<String, Long>> lastNetworkUpdates;
 
     private Database() {
@@ -132,7 +129,7 @@ public class Database {
     }
 
     private void checkDatabasesDirectory() {
-        File directory = new File(".databases");
+        File directory = new File(Configuration.DB_FOLDER_PATH);
         if (!directory.exists()) directory.mkdir();
     }
 
@@ -142,7 +139,7 @@ public class Database {
             v1.forEach((k2,v2) -> {
                 v2.removeAll(
                     v2.stream()
-                        .filter((p) -> ((p.getSecond() + Database.EXPIRY_AGE) < current)) // older than the expiry age
+                        .filter((p) -> ((p.getSecond() + Configuration.DB_ENTITY_EXPIRY_AGE) < current)) // older than the expiry age
                         .collect(Collectors.toList())
                 );
             });
@@ -150,10 +147,16 @@ public class Database {
     }
 
     public void refreshExpiringPosts(BubblegumNode node, int margin) {
-        long cutoff = System.currentTimeMillis() - Database.EXPIRY_AGE + margin;
+        long cutoff = System.currentTimeMillis() - Configuration.DB_ENTITY_EXPIRY_AGE + margin;
         List<Pair<String, String>> ids = this.lastNetworkUpdates.entrySet()
             .stream()
-            .filter((e) -> e.getValue().getSecond() < cutoff && e.getKey().startsWith(node.getNodeIdentifier().toString()))
+            .filter((e) -> {
+                return (
+                    (e.getValue().getSecond() < cutoff ||
+                    Configuration.random(100) < (Configuration.POST_EXPIRY_REFRESH_CHECK / Configuration.BIN_EPOCH_DURATION))
+                    && e.getKey().startsWith(node.getNodeIdentifier().toString())
+                );
+            })
             .map((e) -> {
                 String[] keyParts = e.getKey().split(":");
                 if(keyParts.length == 3) return new Pair<>(keyParts[0]+":"+keyParts[1], e.getValue().getFirst());
