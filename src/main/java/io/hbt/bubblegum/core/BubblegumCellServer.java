@@ -37,6 +37,7 @@ public class BubblegumCellServer {
     private Thread listenerThread;
     private static DatagramSocket sendingSocket;
 
+    // TODO Concurrent required? Also other placesq
     private final ConcurrentHashMap<String, Consumer<KademliaMessage>> responses = new ConcurrentHashMap<>();
     private final HashMap<String, BubblegumNode> recipients = new HashMap<>();
 

@@ -45,6 +45,7 @@ public class MeasurementNode {
         }
 
         Metrics.startRecording();
+        Metrics.startRecordEvents();
 
         System.out.println("\nStarting tests...");
 
@@ -62,7 +63,7 @@ public class MeasurementNode {
         }
 
         Metrics.stopRecording();
-        Metrics.clearEvents();
+        Metrics.startRecordEvents();
         this.bubblegum = null;
         System.exit(0);
     }

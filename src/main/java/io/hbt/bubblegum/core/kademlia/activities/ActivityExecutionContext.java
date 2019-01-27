@@ -101,7 +101,7 @@ public class ActivityExecutionContext {
         float compoundLoad = this.compoundManager.flushMetrics();
         float callbackLoad = this.callbackManager.flushMetrics();
         float systemLoad = Math.max(activityLoad, Math.max(compoundLoad, callbackLoad));
-        System.out.print(" [Load: " + String.format("%.2f", (systemLoad * 100)) + "%]");
+//        System.out.print(" [Load: " + String.format("%.2f", (systemLoad * 100)) + "%]");
 
         StringBuilder sb = new StringBuilder();
         sb.append(this.activityManager.getQueueSize() + ",");

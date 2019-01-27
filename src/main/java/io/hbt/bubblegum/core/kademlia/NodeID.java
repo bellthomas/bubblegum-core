@@ -7,7 +7,6 @@ import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -81,8 +80,7 @@ public class NodeID {
      */
     public static byte[] generateRandomKey() {
         byte[] randomKey = new byte[KEY_BYTE_LENGTH];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(randomKey);
+        Configuration.rand.nextBytes(randomKey);
         return randomKey;
     }
 
@@ -115,7 +113,7 @@ public class NodeID {
             hexChars[j << 1] = hexArray[v >>> 4];
             hexChars[(j << 1)+1] = hexArray[v & 0x0F];
         }
-        return new String(hexChars).intern();
+        return new String(hexChars);
     }
 
     /**

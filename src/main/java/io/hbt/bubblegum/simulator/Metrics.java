@@ -21,6 +21,7 @@ public class Metrics {
     private static final Logger logger = LoggerFactory.getLogger(Metrics.class);
     private static final Marker marker = MarkerFactory.getMarker(LocalDateTime.now().toString());
 
+    private static boolean recordEvents = false;
     private static List<Event> events = new ArrayList<>();
 
     private static AtomicLong numCalls = new AtomicLong(0L);
@@ -49,20 +50,29 @@ public class Metrics {
         Metrics.recording = false;
     }
 
+    protected static void startRecordEvents() { Metrics.recordEvents = true; }
+
+    protected static void stopRecordEvents() {
+        Metrics.recordEvents = false;
+        Metrics.clearEvents();
+    }
+
     public static void activitySubmission(SystemActivity activity, long init, long start, long end, boolean success) {
         if(Metrics.recording) {
             Metrics.addSF(success);
             numCalls.incrementAndGet();
 
-            boolean response = false;
-            if (activity instanceof NetworkActivity && ((NetworkActivity) activity).isResponse()) response = true;
-            events.add(new Event(activity.getClass().getSimpleName(), end - start, start - init, response));
+            if(recordEvents) {
+                boolean response = false;
+                if (activity instanceof NetworkActivity && ((NetworkActivity) activity).isResponse()) response = true;
+                events.add(new Event(activity.getClass().getSimpleName(), end - start, start - init, response));
+            }
         }
     }
 
     public static void serverSubmission(int bytes, boolean incoming) {
         if(Metrics.recording) {
-            events.add(new Event("Server", 0, bytes, incoming));
+            if(recordEvents) events.add(new Event("Server", 0, bytes, incoming));
             if(incoming) atomicBytesIn.addAndGet(bytes);
             else atomicBytesOut.addAndGet(bytes);
         }
@@ -188,7 +198,7 @@ public class Metrics {
     }
 
     public static void clearEvents() {
-        events = new ArrayList<>();
+        events.clear();
     }
 
     public static class Event {

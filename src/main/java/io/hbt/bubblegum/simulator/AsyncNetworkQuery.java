@@ -76,7 +76,7 @@ public class AsyncNetworkQuery {
                     globalIdentifiers.addAll(
                         values
                             .stream()
-                            .map((b) -> new String(b).intern())
+                            .map((b) -> new String(b))
                             .filter((s) -> !AsyncNetworkQuery.cached.containsKey(s))
                             .collect(Collectors.toList())
                     );
