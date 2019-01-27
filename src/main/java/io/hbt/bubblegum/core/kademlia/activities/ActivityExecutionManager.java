@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import io.hbt.bubblegum.core.auxiliary.Pair;
 
@@ -8,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class ActivityExecutionManager {
 
@@ -38,10 +38,6 @@ public class ActivityExecutionManager {
     private int parallelism;
     private HashMap<String, Integer> parallelismMatrix;
     private HashMap<String, ConcurrentLinkedQueue<WorkItem>> backlog;
-
-    private HashMap<String, Long> currentExecutingStartTimes = new HashMap<>();
-    private AtomicLong completedExecution = new AtomicLong(0L);
-    private long executionAlreadyDeclared = 0L;
 
     public ActivityExecutionManager(int numProcesses, int parallelism, int maximum) {
         this.numberOfProcesses = numProcesses;
@@ -84,9 +80,14 @@ public class ActivityExecutionManager {
         synchronized (this.parallelismMatrix) {
             if(!this.parallelismMatrix.containsKey(owner)) this.parallelismMatrix.put(owner, 0);
             int current = this.parallelismMatrix.get(owner);
-            if(current >= this.parallelism * 2) {
-                if(!this.backlog.containsKey(owner)) this.backlog.put(owner, new ConcurrentLinkedQueue<>());
-                this.backlog.get(owner).add(new WorkItem(owner, r));
+            if(current >= this.parallelism) {
+                if(current < Configuration.EXECUTION_CONTEXT_MAX_PENDING_QUEUE) {
+                    if (!this.backlog.containsKey(owner)) this.backlog.put(owner, new ConcurrentLinkedQueue<>());
+                    this.backlog.get(owner).add(new WorkItem(owner, r));
+                }
+                else {
+                    
+                }
             }
             else {
                 this.parallelismMatrix.put(owner, current + 1);

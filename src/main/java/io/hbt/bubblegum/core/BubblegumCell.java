@@ -6,8 +6,6 @@ import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
 import java.util.HashSet;
 
-import static io.hbt.bubblegum.core.Configuration.MAX_BUBBLEGUM_CELLS;
-
 /**
  * Internal class for managing the cell groupings of BubblegumNode instances.
  * @author Harri Bell-Thomas, ahb36@cam.ac.uk
@@ -61,7 +59,7 @@ class BubblegumCell {
         BubblegumNode finalNode = node.build();
         this.nodes.add(finalNode);
         this.totalNodes++;
-        this.cellSize = Math.floorDiv(MAX_BUBBLEGUM_CELLS + totalNodes, MAX_BUBBLEGUM_CELLS);
+        this.cellSize = Math.floorDiv(Configuration.MAX_BUBBLEGUM_CELLS + totalNodes, Configuration.MAX_BUBBLEGUM_CELLS);
         return finalNode;
     }
 

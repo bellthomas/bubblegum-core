@@ -90,13 +90,12 @@ public class Database {
     }
 
     // TODO broken
-    public void publishEntityMeta(BubblegumNode node, String key, String globalPostIdentifier) {
+    public void publishEntityMeta(BubblegumNode node, String key, String globalPostIdentifier, String oldUniquifier) {
         node.getExecutionContext().addCompoundActivity(node.getIdentifier(), () -> {
-            String uniquifier = ":" + UUID.randomUUID().toString();
+            String uniquifier = oldUniquifier == null ? ":" + UUID.randomUUID().toString() : ":" + oldUniquifier;
             if(node.store(NodeID.hash(key), globalPostIdentifier.getBytes())) {
                 this.lastNetworkUpdates.put(globalPostIdentifier + uniquifier, new Pair<>(key, System.currentTimeMillis()));
             } else {
-//                System.out.println("Failed to store value");
                 this.lastNetworkUpdates.put(globalPostIdentifier + uniquifier, new Pair<>(key, 0L));
             }
         });
@@ -110,7 +109,7 @@ public class Database {
         Post saved = Database.cdbInstance.savePost(node, content, inResponseTo);
         long epochBin = saved.getTimeCreated() / Configuration.BIN_EPOCH_DURATION;
         String globalPostIdentifier = Database.globalIdentifierForPost(node, saved);
-        this.publishEntityMeta(node, Long.toString(epochBin), globalPostIdentifier);
+        this.publishEntityMeta(node, Long.toString(epochBin), globalPostIdentifier, null);
 
 //        System.out.println(epochBin + " -> " + globalPostIdentifier);
         return saved;
@@ -135,37 +134,50 @@ public class Database {
 
     public void checkForExpiredPosts() {
         long current = System.currentTimeMillis();
-        this.db.forEach((k1,v1) -> {
-            v1.forEach((k2,v2) -> {
-                v2.removeAll(
-                    v2.stream()
-                        .filter((p) -> ((p.getSecond() + Configuration.DB_ENTITY_EXPIRY_AGE) < current)) // older than the expiry age
-                        .collect(Collectors.toList())
-                );
-            });
-        });
+        List<Pair<ComparableBytePayload, Long>> toRemove = new ArrayList<>();
+        for(Map.Entry<String, HashMap<String, List<Pair<ComparableBytePayload, Long>>>> entry : this.db.entrySet()) {
+            for(Map.Entry<String, List<Pair<ComparableBytePayload, Long>>> innerEntry : entry.getValue().entrySet()) {
+                for(Pair<ComparableBytePayload, Long> p : innerEntry.getValue()) {
+                    if((p.getSecond() + Configuration.DB_ENTITY_EXPIRY_AGE) < current) {
+                        toRemove.add(p);
+                    }
+                }
+
+                innerEntry.getValue().removeAll(toRemove);
+                toRemove.clear();
+            }
+        }
+
+//        this.db.forEach((k1,v1) -> {
+//            v1.forEach((k2,v2) -> {
+//                v2.removeAll(
+//                    v2.stream()
+//                        .filter((p) -> ((p.getSecond() + Configuration.DB_ENTITY_EXPIRY_AGE) < current)) // older than the expiry age
+//                        .collect(Collectors.toList())
+//                );
+//            });
+//        });
     }
 
+    // TODO cleanup
     public void refreshExpiringPosts(BubblegumNode node, int margin) {
         long cutoff = System.currentTimeMillis() - Configuration.DB_ENTITY_EXPIRY_AGE + margin;
-        List<Pair<String, String>> ids = this.lastNetworkUpdates.entrySet()
+        List<String[]> ids = this.lastNetworkUpdates.entrySet()
             .stream()
-            .filter((e) -> {
-                return (
-                    (e.getValue().getSecond() < cutoff ||
-                    Configuration.random(100) < (Configuration.POST_EXPIRY_REFRESH_CHECK / Configuration.BIN_EPOCH_DURATION))
-                    && e.getKey().startsWith(node.getNodeIdentifier().toString())
-                );
-            })
+            .filter((e) -> (
+                e.getValue().getSecond() < cutoff ||
+                Configuration.random(10000) < (10000.0 / (Configuration.DB_ENTITY_EXPIRY_AGE / Configuration.POST_EXPIRY_REFRESH_CHECK)))
+                && e.getKey().startsWith(node.getNodeIdentifier().toString())
+            )
             .map((e) -> {
                 String[] keyParts = e.getKey().split(":");
-                if(keyParts.length == 3) return new Pair<>(keyParts[0]+":"+keyParts[1], e.getValue().getFirst());
+                if (keyParts.length == 3) return new String[] {e.getValue().getFirst(), keyParts[0]+":"+keyParts[1], keyParts[2]};
                 else return null;
             })
             .collect(Collectors.toList());
 
-        for(Pair<String, String> p : ids) {
-            if (p != null) this.publishEntityMeta(node, p.getSecond(), p.getFirst());
+        for(String[] p : ids) {
+            if (p != null && p.length == 3) this.publishEntityMeta(node, p[0], p[1], p[2]);
         }
     }
 

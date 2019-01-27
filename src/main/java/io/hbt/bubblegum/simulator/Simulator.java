@@ -1,10 +1,8 @@
 package io.hbt.bubblegum.simulator;
 
-import com.google.common.base.Charsets;
 import io.hbt.bubblegum.core.Bubblegum;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
-import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
@@ -106,7 +104,7 @@ public class Simulator {
         tasks.clear();
         System.out.println("[Background Network] " + bootstrapActions.size() + " tasks prepared...");
 
-        int threadPoolSize = 50;
+        int threadPoolSize = 20;
         final AtomicInteger progress = new AtomicInteger(0);
         Thread[] executors = new Thread[threadPoolSize];
         for(int i = 0; i < threadPoolSize; i++) {
@@ -203,22 +201,18 @@ public class Simulator {
         if(bound2 > 0 && nodeSecondsPerPost > 0) {
             randomNum2 = ThreadLocalRandom.current().nextInt(0, (int) Math.ceil(nodeSecondPerFeed) * 1000);
             node.getExecutionContext().scheduleTask(node.getIdentifier(), () -> {
-//                System.out.println("Started ANQ for " + node.getNodeIdentifier().toString());
+                // System.out.println("Started ANQ for " + node.getNodeIdentifier().toString());
                 AsyncNetworkQuery q = new AsyncNetworkQuery(node);
                 long current = System.currentTimeMillis() / Configuration.BIN_EPOCH_DURATION;
                 q.addID(current);
                 q.addID(current - 1);
                 q.run();
-//                q.onChange(() -> System.out.println("ANQ change for " + node.getNodeIdentifier().toString()));
+                // q.onChange(() -> System.out.println("ANQ change for " + node.getNodeIdentifier().toString()));
             }, randomNum2, (long) Math.ceil(nodeSecondPerFeed) * 1000, TimeUnit.MILLISECONDS);
         }
     }
 
     private String randomText(int length) {
-//        byte[] array = new byte[length];
-//        new Random().nextBytes(array);
-//        return new String(array, Charsets.US_ASCII);
-
         Random r = Configuration.rand;
         String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@£$%^&*(){}[]?/~-_       ";
         StringBuilder sb = new StringBuilder();
@@ -237,7 +231,7 @@ public class Simulator {
     }
 
     public static void main(String[] args) {
-        NetworkingHelper.setLookupExternalIP(false);
+        NetworkingHelper.setLookupExternalIP(true);
         SimulationConfig config = new SimulationConfig("simulation.yml");
         if(args.length >= 3) config.runningBootstrap(args[0], args[1], args[2]);
 

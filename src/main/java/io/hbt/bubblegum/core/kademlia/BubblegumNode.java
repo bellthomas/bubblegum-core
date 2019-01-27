@@ -18,7 +18,6 @@ import io.hbt.bubblegum.simulator.Simulator;
 
 import java.net.InetAddress;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +34,8 @@ public class BubblegumNode {
     private BubblegumCellServer server;
     private ActivityExecutionContext executionContext;
     private Database db;
+    private int numberOfPosts = 0;
+    private boolean setupPostRefreshing = false;
 
     // region Initialisation
     private BubblegumNode(
@@ -73,14 +74,8 @@ public class BubblegumNode {
         if(!Simulator.isCurrentlySimulating()) {
             this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
                 this.routingTable.refreshBuckets();
-            }, Configuration.random(5 * 60 * 1000), 5 * 60 * 1000, TimeUnit.MILLISECONDS);
+            }, Configuration.random(Configuration.REFRESH_BUCKETS_TIMER), Configuration.REFRESH_BUCKETS_TIMER, TimeUnit.MILLISECONDS);
         }
-
-        // Refresh/delete content as it expires
-        this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
-            this.db.refreshExpiringPosts(this, Configuration.POST_EXPIRY_REFRESH_CHECK);
-        }, Configuration.random(Configuration.POST_EXPIRY_REFRESH_CHECK), Configuration.POST_EXPIRY_REFRESH_CHECK, TimeUnit.MILLISECONDS);
-
     }
     //endregion
 
@@ -215,12 +210,26 @@ public class BubblegumNode {
         return this.networkIdentifier + ":" + this.nodeIdentifier.toString();
     }
 
+    public int getNumberOfPosts() {
+        return this.numberOfPosts;
+    }
+
     public void log(String message) {
 //        this.logger.logMessage(message);
     }
     //endregion
 
     //region Database
+    private void initialisePostRefreshing() {
+        // Refresh/delete content as it expires
+        if (!this.setupPostRefreshing) {
+            this.getExecutionContext().scheduleTask(this.getIdentifier(), () -> {
+                this.db.refreshExpiringPosts(this, Configuration.POST_EXPIRY_REFRESH_CHECK);
+            }, Configuration.random(Configuration.POST_EXPIRY_REFRESH_CHECK), Configuration.POST_EXPIRY_REFRESH_CHECK, TimeUnit.MILLISECONDS);
+            this.setupPostRefreshing = true;
+        }
+    }
+
     public boolean databaseHasKey(String key) {
         return this.db.hasKey(this.identifier, key);
     }
@@ -230,7 +239,14 @@ public class BubblegumNode {
     }
 
     public Post savePost(String content) {
-        if(content != null && content.trim().length() > 0) return this.db.savePost(this, content);
+        if(content != null && content.trim().length() > 0) {
+            Post p = this.db.savePost(this, content);
+            if(p != null) {
+                if(this.numberOfPosts == 0) this.initialisePostRefreshing();
+                this.numberOfPosts++;
+                return p;
+            }
+        }
         return null;
     }
 
@@ -241,7 +257,7 @@ public class BubblegumNode {
             Post saved = this.db.savePost(this, content, inReponseTo);
             String key = "responses_" + inReponseTo;
             String globalIdentifier = Database.globalIdentifierForPost(this, saved);
-            this.db.publishEntityMeta(this, key, globalIdentifier);
+            this.db.publishEntityMeta(this, key, globalIdentifier, null);
             return saved;
         }
 

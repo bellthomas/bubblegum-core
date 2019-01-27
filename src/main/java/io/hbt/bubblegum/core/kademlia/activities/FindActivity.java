@@ -56,8 +56,8 @@ public class FindActivity extends NetworkActivity {
         KademliaMessage message = null;
 
         if(this.isResponse) {
-            this.print("Replying to " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + " from "
-                    + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
+//            this.print("Replying to " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + " from "
+//                    + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
 
             if(this.returnValue && this.localNode.databaseHasKey(this.request.getSearchHash())) {
 
@@ -90,8 +90,8 @@ public class FindActivity extends NetworkActivity {
             }
         }
         else {
-            this.print("Starting " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + "(" + this.search + ") activity to "
-                    + this.localNode.getNetworkIdentifier() + ":" + this.to.getNode());
+//            this.print("Starting " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + "(" + this.search + ") activity to "
+//                    + this.localNode.getNetworkIdentifier() + ":" + this.to.getNode());
 
 
             message = ProtobufHelper.buildFindRequest(
@@ -107,10 +107,10 @@ public class FindActivity extends NetworkActivity {
         Consumer<KademliaMessage> callback = this.isResponse ? null : (kademliaMessage) -> {
             if(kademliaMessage.hasFindNodeResponse()) {
                 KademliaFindNodeResponse response = kademliaMessage.getFindNodeResponse();
-                StringBuilder logMessage = new StringBuilder();
-                logMessage.append(kademliaMessage.getOriginHash() + " returned " + response.getResultsCount() + " results:\n");
+//                StringBuilder logMessage = new StringBuilder();
+//                logMessage.append(kademliaMessage.getOriginHash() + " returned " + response.getResultsCount() + " results:\n");
                 for(KademliaNode node : response.getResultsList()) {
-                    logMessage.append("- " + node.getHash() + " @ " + node.getIpAddress() + ":" + node.getPort() + "\n");
+//                    logMessage.append("- " + node.getHash() + " @ " + node.getIpAddress() + ":" + node.getPort() + "\n");
 
                     // Only ping if not found or stale
                     RouterNode destination = this.routingTable.fromKademliaNode(node);
@@ -128,12 +128,12 @@ public class FindActivity extends NetworkActivity {
                 List<ByteString> byteStringValues = findValueResponse.getValueList();
                 List<byte[]> byteArrayValues = byteStringValues.stream().map((bs) -> bs.toByteArray()).collect(Collectors.toList());
                 this.values = byteArrayValues;
-                this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + this.values.size() + " elements");
+//                this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + this.values.size() + " elements");
                 this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
                 this.onSuccess();
             }
             else {
-                this.print("Invalid");
+//                this.print("Invalid");
                 this.onFail();
             }
         };

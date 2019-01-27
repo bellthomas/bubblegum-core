@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 public class LookupActivity extends SystemActivity {
 
-    private final static int alpha = 5;
     private final NodeID nodeToLookup;
     private final int numResults;
     private final boolean getValue;
@@ -51,8 +50,6 @@ public class LookupActivity extends SystemActivity {
             return;
         }
 
-        this.print("Running lookup...");
-
         // Check if we have a value locally first
         if(this.getValue && this.localNode.databaseHasKey(this.nodeToLookup.toString())) {
             this.results.addAll(
@@ -64,7 +61,7 @@ public class LookupActivity extends SystemActivity {
         TreeSet<RouterNode> verifiedNodes = new TreeSet<>(this.nodeToLookup.getKeyDistanceComparator());
 
         TreeSet<RouterNode> shortlist = new TreeSet<>(this.nodeToLookup.getKeyDistanceComparator());
-        shortlist.addAll(this.localNode.getRoutingTable().getNodesClosestToKey(this.nodeToLookup, alpha));
+        shortlist.addAll(this.localNode.getRoutingTable().getNodesClosestToKey(this.nodeToLookup, Configuration.LOOKUP_ALPHA));
 
         HashMap<String, FindStatus> transitMatrix = new HashMap<>();
 
@@ -82,7 +79,7 @@ public class LookupActivity extends SystemActivity {
         ArrayList<FindActivity> currentActivities = new ArrayList<>();
 
         long timeoutTime = System.currentTimeMillis() + Configuration.LOOKUP_TIMEOUT;
-        while(opsWithoutNewClosest < 2 * alpha && System.currentTimeMillis() < timeoutTime) {
+        while(opsWithoutNewClosest < 2 * Configuration.LOOKUP_ALPHA && System.currentTimeMillis() < timeoutTime) {
             Iterator<FindActivity> activityIterator = currentActivities.iterator();
             while (activityIterator.hasNext()) {
                 FindActivity activity = activityIterator.next();
@@ -94,14 +91,12 @@ public class LookupActivity extends SystemActivity {
                     opsWithoutNewClosest++;
 
                     if (activity.getSuccess()) {
-
                         verifiedNodes.add(activity.getDestination());
 
                         // If this is the new closest, save
                         if (this.nodeToLookup.getKeyDistanceComparator().compare(activity.getDestination(), closestNode) < 0) {
                             closestNode = activity.getDestination();
                             opsWithoutNewClosest = 0;
-                            //sb.append("    ***** New closest - " + rNode.getNode().toString() + "\n");
                         }
 
                         if(this.getValue && this.foundFirstValue) {
@@ -116,7 +111,7 @@ public class LookupActivity extends SystemActivity {
                         }
 
                         // FIND_VALUE continuation for alpha ops
-                        if(this.getValue && this.opsSinceFirstFind >= alpha) {
+                        if(this.getValue && this.opsSinceFirstFind >= Configuration.LOOKUP_ALPHA) {
                             this.onSuccess("Retrieved " + this.results.size() + " values");
                             return;
                         }
@@ -124,20 +119,14 @@ public class LookupActivity extends SystemActivity {
                         // FIND_NODE check
                         Set<RouterNode> results = activity.getFindNodeResults();
                         if (results != null) {
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(activity.getDestination().getNode() + " returned " + results.size() + " results;\n");
                             for (RouterNode rNode : results) {
                                 // Exclude fresh nodes as they were already in the routing table and hence already in consideration
                                 if (!transitMatrix.containsKey(rNode.getNode().toString()) && !rNode.isFresh()) {
-                                    sb.append("--- " + rNode.getNode() + "\n");
                                     // Not yet seen/request in transit
                                     shortlist.add(rNode);
                                 }
-                                else {
-                                    sb.append("--- " + rNode.getNode() + "  (Seen)\n");
-                                }
                             }
-                            this.print(sb.toString());
+
                         }
                     }
 
@@ -147,25 +136,22 @@ public class LookupActivity extends SystemActivity {
             }
 
 
-            if (currentActivities.size() < alpha) {
+            if (currentActivities.size() < Configuration.LOOKUP_ALPHA) {
 
                 // start new loop
                 previousClosestNode = closestNode;
                 if(currentActivities.isEmpty() && shortlist.isEmpty()) break;
 
-                for (int i = 0; i < (alpha - currentActivities.size()); i++) {
+                for (int i = 0; i < (Configuration.LOOKUP_ALPHA - currentActivities.size()); i++) {
                     if (!shortlist.isEmpty()) {
                         RouterNode toAdd = shortlist.pollFirst();
                         transitMatrix.put(toAdd.getNode().toString(), FindStatus.IN_TRANSIT);
 
-                        this.print("FIND to " + toAdd.getNode().toString());
                         FindActivity find = new FindActivity(this.localNode, toAdd, this.nodeToLookup.toString(), this.getValue);
                         this.localNode.getExecutionContext().addActivity(this.localNode.getNodeIdentifier().toString(), find);
                         currentActivities.add(find);
                     }
                 }
-
-                this.print("Ops Without New Closest: " + opsWithoutNewClosest);
 
             } else {
                 try {

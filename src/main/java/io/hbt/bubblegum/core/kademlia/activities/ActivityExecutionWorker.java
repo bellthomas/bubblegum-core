@@ -4,9 +4,7 @@ import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.ConcurrentBlockingQueue;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionManager.WorkItem;
 
-import java.util.Random;
 import java.util.UUID;
-
 
 public class ActivityExecutionWorker {
 
@@ -27,12 +25,11 @@ public class ActivityExecutionWorker {
 
     private void start() {
         WorkItem item;
-        Random r = Configuration.rand;
         while(this.alive) {
             try {
                 item = this.queue.get();
                 if(item != null) {
-                    String id = new UUID(r.nextLong(), r.nextLong()).toString();
+                    String id = new UUID(Configuration.rand.nextLong(), Configuration.rand.nextLong()).toString();
                     this.manager.onStart(this.id, id);
                     if (item.getOperation() != null) {
                         item.getOperation().run();

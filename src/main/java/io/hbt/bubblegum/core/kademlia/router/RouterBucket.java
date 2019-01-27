@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 
 import java.util.Comparator;
@@ -15,9 +16,6 @@ public final class RouterBucket {
     protected ConcurrentSkipListSet<RouterNode> replacements;
 
     protected int activeNodes, replacementNodes = 0;
-
-    /** Configuration **/
-    protected static final int BUCKET_SIZE = 8;
 
     public RouterBucket(int prefix) {
         this.prefixLength = prefix;
@@ -38,7 +36,7 @@ public final class RouterBucket {
         else {
             node.hasResponded();
 
-            if(this.activeNodes >= RouterBucket.BUCKET_SIZE) {
+            if(this.activeNodes >= Configuration.ROUTER_BUCKET_SIZE) {
                 // check if there is a stale node in the activeBucket to replace
                 Comparator<RouterNode> failedResponsesComparator = Comparator.comparing(RouterNode::getFailedResponses);
                 RouterNode mostStale = this.activeBucket.stream().max(failedResponsesComparator).get();
@@ -48,7 +46,7 @@ public final class RouterBucket {
                 }
                 else {
                     this.activeBucket.remove(mostStale);
-                    if(this.replacementNodes < RouterBucket.BUCKET_SIZE) {
+                    if(this.replacementNodes < Configuration.ROUTER_BUCKET_SIZE) {
                         if(this.replacements == null) this.replacements = new ConcurrentSkipListSet<>();
                         this.replacements.add(mostStale);
                         this.replacementNodes++;
@@ -85,7 +83,7 @@ public final class RouterBucket {
             node.hasResponded();
             this.replacements.add(node);
         }
-        else if(this.replacementNodes >= RouterBucket.BUCKET_SIZE) {
+        else if(this.replacementNodes >= Configuration.ROUTER_BUCKET_SIZE) {
             this.replacements.pollLast();
             node.hasResponded();
             this.replacements.add(node);
@@ -136,7 +134,7 @@ public final class RouterBucket {
         Set<RouterNode> active = nodes.get(0);
         if(active != null) {
             for(RouterNode node : active) {
-                if(this.activeNodes < BUCKET_SIZE) {
+                if(this.activeNodes < Configuration.ROUTER_BUCKET_SIZE) {
                     if(this.activeBucket == null) this.activeBucket = new ConcurrentSkipListSet<>();
                     this.activeBucket.add(node);
                     this.activeNodes++;
@@ -147,7 +145,7 @@ public final class RouterBucket {
         Set<RouterNode> replacements = nodes.get(1);
         if(replacements != null) {
             for(RouterNode node : replacements) {
-                if(this.replacementNodes < BUCKET_SIZE) {
+                if(this.replacementNodes < Configuration.ROUTER_BUCKET_SIZE) {
                     if(this.replacements == null) this.replacements = new ConcurrentSkipListSet<>();
                     this.replacements.add(node);
                     this.replacementNodes++;

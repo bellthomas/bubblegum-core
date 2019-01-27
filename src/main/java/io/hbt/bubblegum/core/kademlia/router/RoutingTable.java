@@ -74,7 +74,6 @@ public final class RoutingTable {
         int i = 0;
         while(distanceTreeIterator.hasNext() & i < nodesToGet) {
             RouterNode n = distanceTreeIterator.next();
-            // System.out.println(new BigInteger(1, node.xorDistance(n.getIdentifier())));
             if(!exclusions.contains(n.getNode().toString())) {
                 results.add(n);
                 i++;
@@ -91,7 +90,6 @@ public final class RoutingTable {
     }
 
     public void refreshBuckets() {
-        this.self.log("Refreshing Buckets...");
 
 //        LookupActivity lookupActivity = new LookupActivity(this.self, this.self.getNodeIdentifier(), 10, false);
 //        lookupActivity.run();
@@ -114,6 +112,7 @@ public final class RoutingTable {
         }
     }
 
+    // TODO optimise
     public TreeSet<RouterNode> getAllNodesSorted(Comparator<RouterNode> comparator) {
         TreeSet<RouterNode> nodeDistanceTree = new TreeSet<>(comparator);
 

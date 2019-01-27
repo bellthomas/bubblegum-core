@@ -20,12 +20,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.Buffer;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-
-import static io.hbt.bubblegum.core.Configuration.DATAGRAM_BUFFER_SIZE;
 
 /**
  * Sending/Receiving Server attributed to a BubblegumCell.

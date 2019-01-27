@@ -10,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Random;
 
 import static io.hbt.bubblegum.core.Configuration.KEY_BIT_LENGTH;
 

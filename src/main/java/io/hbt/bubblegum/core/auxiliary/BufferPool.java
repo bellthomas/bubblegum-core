@@ -2,7 +2,6 @@ package io.hbt.bubblegum.core.auxiliary;
 
 import io.hbt.bubblegum.core.Configuration;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 

@@ -16,7 +16,6 @@ import java.util.UUID;
 class ContentDatabase {
     private static ContentDatabase instance;
     private static Connection connection;
-    private static final String CDB_FILE_NAME = "_content.db";
 
     private ContentDatabase() {
 
@@ -39,7 +38,7 @@ class ContentDatabase {
 
         try {
             // create a databasing connection
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + Configuration.DB_FOLDER_PATH + CDB_FILE_NAME);
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + Configuration.DB_FOLDER_PATH + Configuration.CDB_FILE_NAME);
 
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
