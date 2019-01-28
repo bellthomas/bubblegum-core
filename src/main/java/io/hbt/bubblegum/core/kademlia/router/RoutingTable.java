@@ -26,14 +26,14 @@ public final class RoutingTable {
 //        for(int i = 0; i < NodeID.KEY_BIT_LENGTH; i++) this.buckets[i] = new RouterBucket(i);
 
         // Try restore from snapshot
-        Map<Integer, List<Set<RouterNode>>> snapshot = SnapshotDatabase.buildRoutingTableNodesFromSnapshot(self.getIdentifier());
-        if(snapshot != null) {
-            for (int i = 0; i < Configuration.KEY_BIT_LENGTH; i++) {
-                if (snapshot.containsKey(i)) {
-                    this.getBucket(i).loadInSnapshotNodes(snapshot.get(i));
-                }
-            }
-        }
+//        Map<Integer, List<Set<RouterNode>>> snapshot = SnapshotDatabase.buildRoutingTableNodesFromSnapshot(self.getIdentifier());
+//        if(snapshot != null) {
+//            for (int i = 0; i < Configuration.KEY_BIT_LENGTH; i++) {
+//                if (snapshot.containsKey(i)) {
+//                    this.getBucket(i).loadInSnapshotNodes(snapshot.get(i));
+//                }
+//            }
+//        }
     }
 
     public void insert(RouterNode node) {
@@ -72,8 +72,9 @@ public final class RoutingTable {
 
         Iterator<RouterNode> distanceTreeIterator = nodeDistanceTree.iterator();
         int i = 0;
+        RouterNode n;
         while(distanceTreeIterator.hasNext() & i < nodesToGet) {
-            RouterNode n = distanceTreeIterator.next();
+            n = distanceTreeIterator.next();
             if(!exclusions.contains(n.getNode().toString())) {
                 results.add(n);
                 i++;

@@ -19,9 +19,10 @@ public class Configuration {
     //region Database
     public static final String DB_FOLDER_PATH = ".databases/";
     public static final String CDB_FILE_NAME = "_content.db";
-    public static final long DB_ENTITY_EXPIRY_AGE = 30 * 60 * 1000; // ms
+    public static final long DB_ENTITY_EXPIRY_AGE = 10 * 1000; // ms
     public static final int BIN_EPOCH_DURATION = 5 * 60 * 1000; // ms
     public static final int POST_EXPIRY_REFRESH_CHECK = 250; // ms
+    public static final float RANDOM_POST_REFRESH_PROBABILITY = (float)Configuration.DB_ENTITY_EXPIRY_AGE / Configuration.POST_EXPIRY_REFRESH_CHECK;
     //endregion
 
     //region Activities/RPCs

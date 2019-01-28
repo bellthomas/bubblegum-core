@@ -24,13 +24,26 @@ public class ComparableBytePayload implements Comparable<ComparableBytePayload> 
     @Override
     public boolean equals(Object obj) {
         if(obj instanceof ComparableBytePayload) {
-            return Arrays.equals(this.payload, ((ComparableBytePayload) obj).getPayload());
+//            return Arrays.equals(this.payload, ((ComparableBytePayload) obj).getPayload());
+            return this.customComparison(((ComparableBytePayload) obj).getPayload());
         }
         else if(obj instanceof byte[]) {
-            return Arrays.equals(this.payload, (byte[])obj);
+//            return Arrays.equals(this.payload, (byte[])obj);
+            return this.customComparison((byte[])obj);
         }
         else {
             return false;
+        }
+    }
+
+    // TODO evaluate
+    private boolean customComparison(byte[] toCompare) {
+        if(this.payload.length != toCompare.length) return false;
+        else {
+            for(int i = 0; i < this.payload.length; i++) {
+                if(this.payload[i] != toCompare[i]) return false;
+            }
+            return true;
         }
     }
 

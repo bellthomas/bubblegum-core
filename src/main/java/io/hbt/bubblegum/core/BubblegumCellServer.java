@@ -37,7 +37,7 @@ public class BubblegumCellServer {
     private Thread listenerThread;
     private static DatagramSocket sendingSocket;
 
-    // TODO Concurrent required? Also other placesq
+    // TODO Concurrent required? Also other places
     private final ConcurrentHashMap<String, Consumer<KademliaMessage>> responses = new ConcurrentHashMap<>();
     private final HashMap<String, BubblegumNode> recipients = new HashMap<>();
 
@@ -194,28 +194,29 @@ public class BubblegumCellServer {
      * @param callback A callback function to be triggered when a response with the same exchange ID is received. May be null.
      */
     public void sendDatagram(BubblegumNode localNode, RouterNode node, KademliaMessage payload, Consumer<KademliaMessage> callback) {
-        synchronized (this.sendingSocket) {
-            try {
-                if (callback != null) {
-                    this.responses.put(localNode.getIdentifier() + ":" + payload.getExchangeID(), callback);
-                }
+        try {
+            if (callback != null) {
+                this.responses.put(localNode.getIdentifier() + ":" + payload.getExchangeID(), callback);
+            }
 
-                DatagramPacket packet = new DatagramPacket(payload.toByteArray(), payload.toByteArray().length, node.getIPAddress(), node.getPort());
+            DatagramPacket packet = new DatagramPacket(payload.toByteArray(), payload.toByteArray().length, node.getIPAddress(), node.getPort());
+            synchronized (this.sendingSocket) {
                 if (this.sendingSocket == null) {
-                    if(!this.sendingSocket.isConnected() || this.sendingSocket.isClosed()) this.sendingSocket.close();
+                    if (!this.sendingSocket.isConnected() || this.sendingSocket.isClosed())
+                        this.sendingSocket.close();
                     this.sendingSocket = new DatagramSocket();
                 }
-                this.sendingSocket.send(packet);
-
-                if(Metrics.isRecording()) Metrics.serverSubmission(packet.getLength(), false);
-
-            } catch (SocketException e) {
-                // Network library exception.
-                // Failure is handled further up the stack.
-            } catch (IOException e) {
-                // Network library exception.
-                // Failure is handled further up the stack.
             }
+            this.sendingSocket.send(packet);
+
+            if(Metrics.isRecording()) Metrics.serverSubmission(packet.getLength(), false);
+
+        } catch (SocketException e) {
+            // Network library exception.
+            // Failure is handled further up the stack.
+        } catch (IOException e) {
+            // Network library exception.
+            // Failure is handled further up the stack.
         }
     }
 

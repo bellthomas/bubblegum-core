@@ -43,20 +43,6 @@ public class CLI {
 
         System.out.println("Starting Bubblegum...");
 
-//        new Thread(() -> {
-//            while (true) {
-//                if (this.currentIndex > 0) {
-//                    System.out.println(this.bb.getNode(this.networkIndicies.get(0)).getExecutionContext().queueStates());
-//                }
-//
-//                try {
-//                    Thread.sleep(5000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }).start();
-
         networkIndicies = new HashMap<>();
         for(String network : bb.getNodeIdentifiers()) {
             networkIndicies.put(this.currentIndex, network);

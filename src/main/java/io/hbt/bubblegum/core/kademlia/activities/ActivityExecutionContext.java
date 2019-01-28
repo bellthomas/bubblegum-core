@@ -78,7 +78,10 @@ public class ActivityExecutionContext {
     }
 
     public void scheduleTask(String owner, Runnable command, long initial, long period, TimeUnit unit) {
-        this.executor.scheduleAtFixedRate(() -> this.addCompoundActivity(owner, command), initial, period, unit);
+        this.executor.scheduleAtFixedRate(() -> {
+//            System.out.println("Running scheduled activity for " + owner);
+            this.addCompoundActivity(owner, command);
+        }, initial, period, unit);
     }
 
     public String queueStates() {

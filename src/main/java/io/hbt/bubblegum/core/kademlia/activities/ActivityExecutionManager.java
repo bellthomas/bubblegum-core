@@ -78,7 +78,9 @@ public class ActivityExecutionManager {
     // TODO synchronise per ID?
     public void addActivity(String owner, Runnable r) {
         synchronized (this.parallelismMatrix) {
-            if(!this.parallelismMatrix.containsKey(owner)) this.parallelismMatrix.put(owner, 0);
+            if (!this.parallelismMatrix.containsKey(owner)) this.parallelismMatrix.put(owner, 0);
+        }
+        synchronized (this.parallelismMatrix.get(owner)) {
             int current = this.parallelismMatrix.get(owner);
             if(current >= this.parallelism) {
                 if(current < Configuration.EXECUTION_CONTEXT_MAX_PENDING_QUEUE) {
@@ -86,7 +88,7 @@ public class ActivityExecutionManager {
                     this.backlog.get(owner).add(new WorkItem(owner, r));
                 }
                 else {
-                    
+                    // Reject
                 }
             }
             else {
@@ -117,7 +119,7 @@ public class ActivityExecutionManager {
 //        }
 
         if(this.parallelismMatrix.containsKey(owner)) {
-            synchronized (this.parallelismMatrix) {
+            synchronized (this.parallelismMatrix.get(owner)) {
                 if(this.backlog.containsKey(owner) && !this.backlog.get(owner).isEmpty()) {
                     this.queue.put(this.backlog.get(owner).poll());
                 }

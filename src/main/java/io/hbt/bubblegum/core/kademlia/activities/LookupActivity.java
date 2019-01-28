@@ -78,9 +78,14 @@ public class LookupActivity extends SystemActivity {
         closestNode = shortlist.first();
         ArrayList<FindActivity> currentActivities = new ArrayList<>();
 
+        // Reusable variables
+        Iterator<FindActivity> activityIterator;
+        List<byte[]> value;
+        Set<RouterNode> results;
+
         long timeoutTime = System.currentTimeMillis() + Configuration.LOOKUP_TIMEOUT;
         while(opsWithoutNewClosest < 2 * Configuration.LOOKUP_ALPHA && System.currentTimeMillis() < timeoutTime) {
-            Iterator<FindActivity> activityIterator = currentActivities.iterator();
+            activityIterator = currentActivities.iterator();
             while (activityIterator.hasNext()) {
                 FindActivity activity = activityIterator.next();
 
@@ -104,7 +109,7 @@ public class LookupActivity extends SystemActivity {
                         }
 
                         // FIND_VALUE check
-                        List<byte[]> value = activity.getFindValueResult();
+                        value = activity.getFindValueResult();
                         if (this.getValue && value != null) {
                             if(!this.foundFirstValue) this.foundFirstValue = true;
                             this.results.addAll(ComparableBytePayload.fromCollection(value));
@@ -117,7 +122,7 @@ public class LookupActivity extends SystemActivity {
                         }
 
                         // FIND_NODE check
-                        Set<RouterNode> results = activity.getFindNodeResults();
+                        results = activity.getFindNodeResults();
                         if (results != null) {
                             for (RouterNode rNode : results) {
                                 // Exclude fresh nodes as they were already in the routing table and hence already in consideration

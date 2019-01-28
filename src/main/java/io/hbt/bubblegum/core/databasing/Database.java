@@ -9,8 +9,8 @@ import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -77,11 +77,14 @@ public class Database {
         ComparableBytePayload newPayload = new ComparableBytePayload(value);
         synchronized (this.db.get(node).get(key)) {
             // If we have an old version, remove it and save the new one
-            this.db.get(node).get(key).removeIf(p -> p.getFirst().equals(newPayload));
+            Iterator<Pair<ComparableBytePayload, Long>> iterator = this.db.get(node).get(key).iterator();
+            while(iterator.hasNext()) {
+                if(iterator.next().getFirst().equals(newPayload)) iterator.remove();
+            }
+
             this.db.get(node).get(key).add(new Pair<>(new ComparableBytePayload(value), System.currentTimeMillis()));
         }
 
-        this.print("[Database] Saved " + key + " -> " + Arrays.toString(value));
         return true;
     }
 
@@ -162,23 +165,42 @@ public class Database {
     // TODO cleanup
     public void refreshExpiringPosts(BubblegumNode node, int margin) {
         long cutoff = System.currentTimeMillis() - Configuration.DB_ENTITY_EXPIRY_AGE + margin;
-        List<String[]> ids = this.lastNetworkUpdates.entrySet()
-            .stream()
-            .filter((e) -> (
-                e.getValue().getSecond() < cutoff ||
-                Configuration.random(10000) < (10000.0 / (Configuration.DB_ENTITY_EXPIRY_AGE / Configuration.POST_EXPIRY_REFRESH_CHECK)))
-                && e.getKey().startsWith(node.getNodeIdentifier().toString())
-            )
-            .map((e) -> {
-                String[] keyParts = e.getKey().split(":");
-                if (keyParts.length == 3) return new String[] {e.getValue().getFirst(), keyParts[0]+":"+keyParts[1], keyParts[2]};
-                else return null;
-            })
-            .collect(Collectors.toList());
 
-        for(String[] p : ids) {
-            if (p != null && p.length == 3) this.publishEntityMeta(node, p[0], p[1], p[2]);
+        Iterator<Map.Entry<String, Pair<String, Long>>> iterator = this.lastNetworkUpdates.entrySet().iterator();
+        Map.Entry<String, Pair<String, Long>> currentEntry;
+        String globalID, uniquifier;
+        float localRandomRefreshProbability = 10000 / Configuration.RANDOM_POST_REFRESH_PROBABILITY;
+        while(iterator.hasNext()) {
+            currentEntry = iterator.next();
+            if(currentEntry.getKey().startsWith(node.getNodeIdentifier().toString())) {
+               if(currentEntry.getValue().getSecond() < cutoff ||
+                  Configuration.random(10000) < localRandomRefreshProbability) {
+                   globalID = currentEntry.getKey().substring(0, currentEntry.getKey().length() - 37);
+                   uniquifier = currentEntry.getKey().substring(currentEntry.getKey().length() - 36);
+                   currentEntry.getValue().setSecond(System.currentTimeMillis());
+                   this.publishEntityMeta(node, currentEntry.getValue().getFirst(), globalID, uniquifier);
+               }
+            }
         }
+
+
+//        List<String[]> ids = this.lastNetworkUpdates.entrySet()
+//            .stream()
+//            .filter((e) -> (
+//                e.getValue().getSecond() < cutoff ||
+//                Configuration.random(10000) < (10000.0 / (Configuration.DB_ENTITY_EXPIRY_AGE / Configuration.POST_EXPIRY_REFRESH_CHECK)))
+//                && e.getKey().startsWith(node.getNodeIdentifier().toString())
+//            )
+//            .map((e) -> {
+//                String[] keyParts = e.getKey().split(":");
+//                if (keyParts.length == 3) return new String[] {e.getValue().getFirst(), keyParts[0]+":"+keyParts[1], keyParts[2]};
+//                else return null;
+//            })
+//            .collect(Collectors.toList());
+//
+//        for(String[] p : ids) {
+//            if (p != null && p.length == 3) this.publishEntityMeta(node, p[0], p[1], p[2]);
+//        }
     }
 
     public static String globalIdentifierForPost(BubblegumNode node, Post post) {
@@ -190,7 +212,4 @@ public class Database {
         Database.masterDatabase.resetDatabases();
     }
 
-    private void print(String msg) {
-//        this.localNode.log(msg);
-    }
 }

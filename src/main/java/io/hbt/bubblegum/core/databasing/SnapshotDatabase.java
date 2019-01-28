@@ -180,8 +180,9 @@ public class SnapshotDatabase {
         }
 
         Iterator<RouterNode> replacementsIterator = bucket.getReplacementNodes().iterator();
+        RouterNode node;
         while(replacementsIterator.hasNext()) {
-            RouterNode node = replacementsIterator.next();
+            node = replacementsIterator.next();
 
             sb.append(", ('"
                 + node.getNode() + "', '"
