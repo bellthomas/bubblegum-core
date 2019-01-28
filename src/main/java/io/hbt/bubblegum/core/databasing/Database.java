@@ -20,20 +20,20 @@ import java.util.stream.Collectors;
 
 public class Database {
 
-    private ConcurrentHashMap<String, HashMap<String, List<Pair<ComparableBytePayload, Long>>>> db;
+    private HashMap<String, HashMap<String, List<Pair<ComparableBytePayload, Long>>>> db;
 
     private static Database instance;
     private static ContentDatabase cdbInstance;
-    private static MasterDatabase masterDatabase;
+//    private static MasterDatabase masterDatabase;
 
-    private final ConcurrentHashMap<String, Pair<String, Long>> lastNetworkUpdates;
+    private final HashMap<String, Pair<String, Long>> lastNetworkUpdates;
 
     private Database() {
         this.checkDatabasesDirectory();
-        this.db = new ConcurrentHashMap<>();
-        this.lastNetworkUpdates = new ConcurrentHashMap<>();
+        this.db = new HashMap<>();
+        this.lastNetworkUpdates = new HashMap<>();
         Database.cdbInstance = ContentDatabase.getInstance();
-        Database.masterDatabase = MasterDatabase.getInstance();
+//        Database.masterDatabase = MasterDatabase.getInstance();
     }
 
     public synchronized static Database getInstance() {
@@ -43,21 +43,25 @@ public class Database {
 
     public void initialiseExpiryScheduler(ActivityExecutionContext context) {
         if(context != null) {
-            context.scheduleTask("system", () -> this.checkForExpiredPosts(), 30, 30, TimeUnit.SECONDS);
+            context.scheduleTask("system", () -> {
+                this.checkForExpiredPosts();
+                System.gc();
+            }, 30, 30, TimeUnit.SECONDS);
         }
     }
 
 
     public Map<Integer, List<NetworkDetails>> loadNetworksFromDatabase() {
-        return Database.masterDatabase.loadNetworksFromDatabase();
+//        return Database.masterDatabase.loadNetworksFromDatabase();
+        return new HashMap<>();
     }
 
     public void updateNodeInDatabase(BubblegumNode node) {
-        Database.masterDatabase.updateNetwork(node);
+//        Database.masterDatabase.updateNetwork(node);
     }
 
     public void updateNodesInDatabase(List<BubblegumNode> nodes) {
-        Database.masterDatabase.updateNetworks(nodes);
+//        Database.masterDatabase.updateNetworks(nodes);
     }
 
     public boolean hasKey(String node, String key) {
@@ -150,6 +154,7 @@ public class Database {
                 toRemove.clear();
             }
         }
+        toRemove = null;
 
 //        this.db.forEach((k1,v1) -> {
 //            v1.forEach((k2,v2) -> {
@@ -163,10 +168,10 @@ public class Database {
     }
 
     // TODO cleanup
-    public void refreshExpiringPosts(BubblegumNode node, int margin) {
+    public static void refreshExpiringPosts(BubblegumNode node, int margin) {
         long cutoff = System.currentTimeMillis() - Configuration.DB_ENTITY_EXPIRY_AGE + margin;
 
-        Iterator<Map.Entry<String, Pair<String, Long>>> iterator = this.lastNetworkUpdates.entrySet().iterator();
+        Iterator<Map.Entry<String, Pair<String, Long>>> iterator = Database.getInstance().lastNetworkUpdates.entrySet().iterator();
         Map.Entry<String, Pair<String, Long>> currentEntry;
         String globalID, uniquifier;
         float localRandomRefreshProbability = 10000 / Configuration.RANDOM_POST_REFRESH_PROBABILITY;
@@ -178,7 +183,7 @@ public class Database {
                    globalID = currentEntry.getKey().substring(0, currentEntry.getKey().length() - 37);
                    uniquifier = currentEntry.getKey().substring(currentEntry.getKey().length() - 36);
                    currentEntry.getValue().setSecond(System.currentTimeMillis());
-                   this.publishEntityMeta(node, currentEntry.getValue().getFirst(), globalID, uniquifier);
+                   Database.getInstance().publishEntityMeta(node, currentEntry.getValue().getFirst(), globalID, uniquifier);
                }
             }
         }
@@ -209,7 +214,7 @@ public class Database {
 
     public void reset() {
         // TODO finish
-        Database.masterDatabase.resetDatabases();
+//        Database.masterDatabase.resetDatabases();
     }
 
 }

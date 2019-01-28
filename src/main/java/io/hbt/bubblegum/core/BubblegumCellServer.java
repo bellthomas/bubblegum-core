@@ -200,11 +200,13 @@ public class BubblegumCellServer {
             }
 
             DatagramPacket packet = new DatagramPacket(payload.toByteArray(), payload.toByteArray().length, node.getIPAddress(), node.getPort());
-            synchronized (this.sendingSocket) {
-                if (this.sendingSocket == null) {
-                    if (!this.sendingSocket.isConnected() || this.sendingSocket.isClosed())
-                        this.sendingSocket.close();
-                    this.sendingSocket = new DatagramSocket();
+            if (this.sendingSocket == null) {
+                synchronized (this.sendingSocket) {
+                    if (this.sendingSocket == null) {
+                        if (!this.sendingSocket.isConnected() || this.sendingSocket.isClosed())
+                            this.sendingSocket.close();
+                        this.sendingSocket = new DatagramSocket();
+                    }
                 }
             }
             this.sendingSocket.send(packet);

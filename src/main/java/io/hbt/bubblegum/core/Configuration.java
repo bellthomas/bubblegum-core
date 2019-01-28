@@ -19,7 +19,7 @@ public class Configuration {
     //region Database
     public static final String DB_FOLDER_PATH = ".databases/";
     public static final String CDB_FILE_NAME = "_content.db";
-    public static final long DB_ENTITY_EXPIRY_AGE = 10 * 1000; // ms
+    public static final long DB_ENTITY_EXPIRY_AGE = 15 * 60 * 1000; // ms
     public static final int BIN_EPOCH_DURATION = 5 * 60 * 1000; // ms
     public static final int POST_EXPIRY_REFRESH_CHECK = 250; // ms
     public static final float RANDOM_POST_REFRESH_PROBABILITY = (float)Configuration.DB_ENTITY_EXPIRY_AGE / Configuration.POST_EXPIRY_REFRESH_CHECK;
@@ -34,12 +34,12 @@ public class Configuration {
     //endregion
 
     //region Server
-    public static final int MAX_BUBBLEGUM_CELLS = 10;
+    public static final int MAX_BUBBLEGUM_CELLS = 30;
     public static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // kb
     //endregion
 
     //region Execution Context
-    public static final int EXECUTION_CONTEXT_MAX_THREADS = 50;
+    public static final int EXECUTION_CONTEXT_MAX_THREADS = 100;
     public static final int EXECUTION_CONTEXT_GENERAL_PARALLELISM = 8;
     public static final int EXECUTION_CONTEXT_COMPOUND_PARALLELISM = 5;
     public static final int EXECUTION_CONTEXT_CALLBACK_PARALLELISM = 7;

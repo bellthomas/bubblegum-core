@@ -1,10 +1,6 @@
 package io.hbt.bubblegum.core.databasing;
 
-import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponseItem.KademliaQueryResponseItem;
-import io.hbt.bubblegum.core.kademlia.router.RouterNode;
-
-import java.util.UUID;
 
 public class Post {
     private final String id;

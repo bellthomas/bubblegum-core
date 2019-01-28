@@ -231,7 +231,7 @@ public class Simulator {
     }
 
     public static void main(String[] args) {
-        NetworkingHelper.setLookupExternalIP(false);
+        NetworkingHelper.setLookupExternalIP(true);
         SimulationConfig config = new SimulationConfig("simulation.yml");
         if(args.length >= 3) config.runningBootstrap(args[0], args[1], args[2]);
 
@@ -246,7 +246,7 @@ public class Simulator {
         Metrics.addLogMessage(Metrics.getStatusLogHeader() + "," + s.getExecutionContext().queueLogHeader());
         while(true) {
             try {
-                current = System.currentTimeMillis();
+//                current = System.currentTimeMillis();
                 Metrics.runPeriodicCalls(s.getExecutionContext().queueLogInfo());
 //                System.out.print(" [" + (current - start) + "ms] " + s.getExecutionContext().queueStates() + "          \r");
                 Thread.sleep(2000);
