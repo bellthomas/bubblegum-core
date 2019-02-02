@@ -1,0 +1,3 @@
+c5.large, 2 vCPUs and limited to 1GB of JVM ram
+Run on cluster of 10000 nodes wth the initial post corpus size of the folder label
+Run for 6 hours
