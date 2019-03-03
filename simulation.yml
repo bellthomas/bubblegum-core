@@ -1,7 +1,7 @@
 background:
   networks: 1
-  nodesPerNetwork: 1000000
+  nodesPerNetwork: 100000
   newPostsEveryHour: 200 # network sees n new posts every hour
   feedRetrievalsEveryHour: 60 # get posts every n seconds
-  initialiseWithFixedPostNumber: 100
+  initialiseWithFixedPostNumber: 10
 

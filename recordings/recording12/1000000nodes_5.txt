@@ -1,0 +1,209 @@
+Built primary node
+Built helper node 0
+Built helper node 1
+Built helper node 2
+Built helper node 3
+Built helper node 4
+
+Starting tests...
+[Run 0]-----------------------------------------------
+
+--[ PING ]--
+[0] 0.277008ms, 171
+[1] 0.009537ms, 171
+[2] 0.006284ms, 171
+[3] 0.005921ms, 171
+[4] 0.004885ms, 171
+Averages - Duration = 0.060727ms, Meta = 171
+
+--[ FIND_NODE ]--
+[0] 114.458568ms, 1883
+[1] 281.591747ms, 1325
+[2] 0.689731ms, 763
+[3] 0.675597ms, 763
+[4] 0.672283ms, 763
+Averages - Duration = 79.61758520000001ms, Meta = 1099
+
+--[ FIND_VALUE ]--
+[0] 0.659356ms, 767
+[1] 0.633156ms, 771
+[2] 0.627884ms, 767
+[3] 0.635966ms, 767
+[4] 0.685581ms, 771
+Averages - Duration = 0.6483886ms, Meta = 768
+
+--[ STORE ]--
+[0] 3.339965ms, 474
+[1] 0.449986ms, 474
+[2] 0.332738ms, 474
+[3] 0.353367ms, 474
+[4] 0.344556ms, 474
+Averages - Duration = 0.9641224ms, Meta = 474
+
+--[ Lookup (value=false) ]--
+[0] 452.773002ms, 69
+[1] 377.200801ms, 62
+[2] 377.428583ms, 62
+[3] 251.710566ms, 64
+[4] 276.91855ms, 64
+Averages - Duration = 347.2063004ms, Meta = 64
+
+--[ Lookup (value=true) ]--
+[0] 328.317418ms, 197
+[1] 302.080755ms, 150
+[2] Aborted - lookup failed
+[3] 251.956375ms, 174
+[4] 251.666098ms, 159
+Averages - Duration = 283.5051615ms, Meta = 170
+
+--[ Store ]--
+[0] 903.093684ms, 95
+[1] 1228.571579ms, 118
+[2] 878.233666ms, 112
+[3] 852.994046ms, 99
+[4] 953.313617ms, 115
+Averages - Duration = 963.2413184ms, Meta = 107
+
+--[ Query ]--
+[0] 104.668472ms, 1664
+[1] 300.332826ms, 2916
+[2] Aborted - find failed
+[3] 200.237689ms, 1035
+[4] 100.212389ms, 2918
+Averages - Duration = 176.362844ms, Meta = 2133
+
+
+[Run 1]-----------------------------------------------
+
+--[ PING ]--
+[0] 0.041158ms, 171
+[1] 0.012005ms, 171
+[2] 0.012314ms, 171
+[3] 0.004207ms, 171
+[4] 0.004203ms, 171
+Averages - Duration = 0.0147774ms, Meta = 171
+
+--[ FIND_NODE ]--
+[0] 0.680444ms, 770
+[1] 26.745756ms, 763
+[2] 0.574993ms, 776
+[3] 116.374195ms, 777
+[4] 0.738171ms, 763
+Averages - Duration = 29.0227118ms, Meta = 769
+
+--[ FIND_VALUE ]--
+[0] 0.602085ms, 787
+[1] 30.174953ms, 767
+[2] 2.363853ms, 780
+[3] 5.011643ms, 780
+[4] 248.811724ms, 794
+Averages - Duration = 57.3928516ms, Meta = 781
+
+--[ STORE ]--
+[0] 0.505604ms, 474
+[1] 0.578635ms, 476
+[2] 231.792933ms, 477
+[3] 35.260875ms, 474
+[4] 0.489674ms, 474
+Averages - Duration = 53.7255442ms, Meta = 475
+
+--[ Lookup (value=false) ]--
+[0] 241.867329ms, 27
+[1] 156.356449ms, 21
+[2] 326.705509ms, 57
+[3] 703.302768ms, 107
+[4] 109.580399ms, 27
+Averages - Duration = 307.56249080000003ms, Meta = 47
+
+--[ Lookup (value=true) ]--
+[0] Aborted - lookup failed
+[1] 251.589442ms, 164
+[2] Aborted - lookup failed
+[3] 251.257879ms, 166
+[4] Aborted - lookup failed
+Averages - Duration = 251.4236605ms, Meta = 165
+
+--[ Store ]--
+[0] 1027.424797ms, 102
+[1] 1127.684155ms, 106
+[2] 1328.128464ms, 97
+[3] 1777.932392ms, 88
+[4] 1477.956185ms, 94
+Averages - Duration = 1347.8251985999998ms, Meta = 97
+
+--[ Query ]--
+[0] 100.128656ms, 1036
+[1] 200.185641ms, 1662
+[2] Aborted - find failed
+[3] 100.154188ms, 2288
+[4] 300.257506ms, 1662
+Averages - Duration = 175.18149775ms, Meta = 1662
+
+
+[Run 2]-----------------------------------------------
+
+--[ PING ]--
+[0] 0.027332ms, 171
+[1] 0.007769ms, 171
+[2] 0.005977ms, 171
+[3] 0.004586ms, 171
+[4] 0.004959ms, 171
+Averages - Duration = 0.010124600000000001ms, Meta = 171
+
+--[ FIND_NODE ]--
+[0] 0.51501ms, 772
+[1] 147.560108ms, 784
+[2] 0.575752ms, 763
+[3] 156.462154ms, 788
+[4] 0.540759ms, 770
+Averages - Duration = 61.1307566ms, Meta = 775
+
+--[ FIND_VALUE ]--
+[0] 0.587746ms, 770
+[1] 164.86129ms, 785
+[2] 135.376828ms, 784
+[3] 0.499889ms, 786
+[4] 285.080673ms, 782
+Averages - Duration = 117.2812852ms, Meta = 781
+
+--[ STORE ]--
+[0] 0.331401ms, 474
+[1] 209.364682ms, 477
+[2] 0.371561ms, 476
+[3] 0.322058ms, 473
+[4] 0.359189ms, 474
+Averages - Duration = 42.1497782ms, Meta = 474
+
+--[ Lookup (value=false) ]--
+[0] 178.468643ms, 18
+[1] 589.121871ms, 27
+[2] 351.555744ms, 46
+[3] 652.813242ms, 78
+[4] 218.314988ms, 29
+Averages - Duration = 398.0548976ms, Meta = 39
+
+--[ Lookup (value=true) ]--
+[0] 326.455767ms, 192
+[1] Aborted - lookup failed
+[2] Aborted - lookup failed
+[3] Aborted - lookup failed
+[4] 376.907536ms, 150
+Averages - Duration = 351.6816515ms, Meta = 171
+
+--[ Store ]--
+[0] 827.307782ms, 85
+[1] 1804.005386ms, 111
+[2] 927.999523ms, 91
+[3] 1202.669131ms, 79
+[4] 1453.379928ms, 91
+Averages - Duration = 1243.07235ms, Meta = 91
+
+--[ Query ]--
+[0] 100.148407ms, 1033
+[1] 200.218105ms, 2286
+[2] 300.303396ms, 1031
+[3] 300.322786ms, 1031
+[4] 100.1706ms, 399
+Averages - Duration = 200.23265880000002ms, Meta = 1156
+
+
