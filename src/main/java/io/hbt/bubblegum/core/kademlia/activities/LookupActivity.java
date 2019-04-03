@@ -57,6 +57,7 @@ public class LookupActivity extends SystemActivity {
             );
         }
 
+        // TODO need verifiedNodes?
         TreeSet<RouterNode> knownNodes = this.localNode.getRoutingTable().getAllNodesSorted(this.nodeToLookup.getKeyDistanceComparator());
         TreeSet<RouterNode> verifiedNodes = new TreeSet<>(this.nodeToLookup.getKeyDistanceComparator());
 
@@ -102,6 +103,7 @@ public class LookupActivity extends SystemActivity {
                         if (this.nodeToLookup.getKeyDistanceComparator().compare(activity.getDestination(), closestNode) < 0) {
                             closestNode = activity.getDestination();
                             opsWithoutNewClosest = 0;
+                            // TODO meant to set previousClosest?
                         }
 
                         if(this.getValue && this.foundFirstValue) {
@@ -185,3 +187,59 @@ public class LookupActivity extends SystemActivity {
         return this.closestNodes;
     }
 }
+
+/*
+
+shortlist = ...
+transit = <>
+currentActivities = []
+verified = ...
+foundFirstValue = false
+valueResults = []
+sinceNewClosest = 0
+sinceFirstValue = 0
+
+while(sinceNewClosest < 2alpha & !timedout) {
+    for activity in currentActivities {
+        if(activity.complete) {
+            transit[activity.destination] = COMPLETED
+            if(activity.success) {
+                verified.add(activity.destination)
+                sinceNewClosest++
+                if(foundFirstValue) sinceFirstValue++
+
+                if distance(currentClosest, goal) > distance(activity.destination, goal) {
+                    previousClosest = currentClosest
+                    currentClosest = activity.destination
+                    sinceNewClosest = 0
+                }
+
+                if(activity.hasValueResponse) {
+                    foundFirstValue = true
+                    valueResults.append(activity.valueResponses)
+                }
+
+                if(activity.hasNodeResponse) {
+                    for node in activity.nodeResponse {
+                        if(transit[node] undefined) shortlist.add(node)
+                    }
+                }
+            }
+            currentActivities.remove(activity)
+        }
+    }
+
+    if(gettingValue & sinceFirstValue > alpha) {
+        break;
+    }
+
+    while (currentActivities.size < alpha) {
+        newDest = shortlist.pollTop
+        newActivity = dispatch find_activity to newDest
+        transit[newDest] = IN_TRANSIT
+    }
+}
+
+
+
+ */

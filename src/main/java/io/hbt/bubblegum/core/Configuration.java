@@ -9,7 +9,7 @@ import java.util.Random;
 public class Configuration {
 
     //region Kademlia ID and Router
-    public static final int KEY_BIT_LENGTH = 80;
+    public static final int KEY_BIT_LENGTH = 160;
     public static final int ROUTER_BUCKET_SIZE = 8;
     public static final int ROUTER_NODE_FRESH_EXPIRY = 60 * 1000; // ms
     public static final int ROUTER_NODE_FRESH_OVERRIDE_PERCENTAGE = 5; // %

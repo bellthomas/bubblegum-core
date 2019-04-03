@@ -57,6 +57,7 @@ public class BubblegumCellServer {
                 this.listeningSocket = new DatagramSocket(0);
                 System.out.println("[BubblegumCellServer] Forced to change port from " + port + " to " + this.listeningSocket.getPort());
             } catch (SocketException e1) {
+                e1.printStackTrace();
                 throw new BubblegumException();
             }
         }

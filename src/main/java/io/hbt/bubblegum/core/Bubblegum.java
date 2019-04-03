@@ -50,7 +50,9 @@ public class Bubblegum {
         BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
         newNodeBuilder = null;
 
-        this.nodes.put(newNode.getIdentifier(), newNode);
+        if(newNode != null) {
+            this.nodes.put(newNode.getIdentifier(), newNode);
+        }
         // Database.getInstance().updateNodeInDatabase(newNode);
         return newNode;
     }
