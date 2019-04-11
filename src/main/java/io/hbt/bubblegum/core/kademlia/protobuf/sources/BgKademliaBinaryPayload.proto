@@ -1,0 +1,24 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+import "BgKademliaFindRequest.proto";
+import "BgKademliaFindNodeResponse.proto";
+import "BgKademliaFindValueResponse.proto";
+import "BgKademliaStoreRequest.proto";
+import "BgKademliaStoreResponse.proto";
+import "BgKademliaQueryRequest.proto";
+import "BgKademliaQueryResponse.proto";
+
+message KademliaBinaryPayload {
+
+    // Message content
+    oneof message {
+        KademliaFindRequest findRequest = 1;
+        KademliaFindNodeResponse findNodeResponse = 2;
+        KademliaFindValueResponse findValueResponse = 3;
+        KademliaStoreRequest storeRequest = 4;
+        KademliaStoreResponse storeResponse = 5;
+        KademliaQueryRequest queryRequest = 6;
+        KademliaQueryResponse queryResponse = 7;
+    }
+}

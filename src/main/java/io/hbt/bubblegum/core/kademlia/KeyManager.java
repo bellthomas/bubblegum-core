@@ -42,7 +42,6 @@ import java.security.Security;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.UUID;
 
 
 class KeyManager {
@@ -57,54 +56,57 @@ class KeyManager {
     private HashMap<String, Pair<PGPPublicKey, Long>> keyCache = new HashMap<>();
 
     KeyManager(BubblegumNode node) {
-        Security.addProvider(new BouncyCastleProvider());
-        this.node = node;
-        try {
-            long start = System.currentTimeMillis();
-            this.reKey();
-            System.out.println(System.currentTimeMillis() - start);
-            this.initialised = true;
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+        if(Configuration.ENABLE_PGP) {
+            Security.addProvider(new BouncyCastleProvider());
+            this.node = node;
+            try {
+                this.reKey(false);
+                this.initialised = true;
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
         }
     }
 
-    void reKey() throws NoSuchAlgorithmException, NoSuchProviderException, PGPException, IOException, ProtocolException {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
-        kpg.initialize(Configuration.RSA_KEY_LENGTH);
-        KeyPair kp = kpg.generateKeyPair();
+    void reKey(boolean verifyKey) throws NoSuchAlgorithmException, NoSuchProviderException, PGPException, IOException, ProtocolException {
+        if(Configuration.ENABLE_PGP) {
+            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
+            kpg.initialize(Configuration.RSA_KEY_LENGTH);
+            KeyPair kp = kpg.generateKeyPair();
 
-        UUID uuid = UUID.randomUUID();
-        PGPSecretKey key = this.generateKey(kp, uuid.toString(), "password".toCharArray());
-        String keyID = Long.toHexString(key.getPublicKey().getKeyID());
-        System.out.println("Generated PGP Key: 0x" + keyID);
+            String uid = this.node.toPGPUID();
+            PGPSecretKey key = this.generateKey(kp, uid, this.node.getIdentifier().toCharArray());
+            String keyID = Long.toHexString(key.getPublicKey().getKeyID());
+            System.out.println("Generated PGP Key: 0x" + keyID);
 
-        // Convert PGP public key to String
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ArmoredOutputStream aos = new ArmoredOutputStream(baos);
-        key.getPublicKey().encode(aos);
-        aos.close();
-        publishKey(baos.toString());
+            // Convert PGP public key to String
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ArmoredOutputStream aos = new ArmoredOutputStream(baos);
+            key.getPublicKey().encode(aos);
+            aos.close();
+            publishKey(baos.toString());
 
-        try {
-            System.out.println("Waiting for propagation...");
-            int retries = 0;
-            while(retries < 15 && !verifyKey("0x" + keyID, uuid.toString())) {
-                Thread.sleep(2000);
-                retries++;
-            }
+            if (verifyKey) {
+                try {
+                    int retries = 0;
+                    while (retries < 15 && !verifyKey("0x" + keyID, uid)) {
+                        Thread.sleep(2000);
+                        retries++;
+                    }
 
-            if(retries >= 30) {
-                System.out.println("Verification failed.");
+                    if (retries < 15) {
+                        this.pgpKey = key;
+                        this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             } else {
-                System.out.println("Verified identity ("+(retries*2)+"s)");
+                this.pgpKey = key;
+                this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-
-
     }
 
     private byte[] decrypt(RouterNode node, String pgpID, byte[] payload) {
@@ -112,10 +114,10 @@ class KeyManager {
         return null;
     }
 
-    private PGPPublicKey getKey(String id) {
-//        if(id.equals(node.getNodeIdentifier().toString())) {
-//            return this.generator.getPublicKey().toString();
-//        }
+    private PGPPublicKey getPublicKey(String id) {
+        if(id.equals(this.node.toPGPUID())) {
+            return this.pgpKey.getPublicKey();
+        }
 
         if(this.keyCache.containsKey(id)) {
             if(System.currentTimeMillis() - this.keyCache.get(id).getSecond() < Configuration.KEY_CACHE_EXPIRY) {
@@ -180,11 +182,7 @@ class KeyManager {
             }
             in.close();
 
-            if (response.toString().contains("added successfully")) {
-                // Treat as success
-                System.out.println("Successfully published key to '" + Configuration.OPENPGP_KEY_SERVER_URL + "'");
-                return true;
-            }
+            return response.toString().contains("added successfully");
         }
 
         System.out.println("Fail");
@@ -215,10 +213,7 @@ class KeyManager {
             }
             in.close();
 
-            //print result
-
             String resp = response.toString();
-
             InputStream keyIS = new ByteArrayInputStream(resp.getBytes(Charset.forName("UTF-8")));
 
             PGPPublicKeyRingCollection pgpPub = new PGPPublicKeyRingCollection(
@@ -249,9 +244,4 @@ class KeyManager {
             return false;
         }
     }
-
-    public static void main(String[] args) {
-        KeyManager km = new KeyManager(null);
-    }
-
 }

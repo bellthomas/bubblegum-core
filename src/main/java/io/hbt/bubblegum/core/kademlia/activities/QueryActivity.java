@@ -3,6 +3,8 @@ package io.hbt.bubblegum.core.kademlia.activities;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.KademliaServerWorker;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryRequest.KademliaQueryRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.KademliaQueryResponse;
@@ -67,17 +69,21 @@ public class QueryActivity extends NetworkActivity {
         }
 
         Consumer<KademliaMessage> callback = (this.isResponse) ? null : (kademliaMessage -> {
-            if(kademliaMessage.hasQueryResponse()) {
-                KademliaQueryResponse response = kademliaMessage.getQueryResponse();
+            KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(kademliaMessage);
+            if(payload != null) {
+                if (payload.hasQueryResponse()) {
+                    KademliaQueryResponse response = payload.getQueryResponse();
 
-                for(KademliaQueryResponseItem item : response.getItemsList()) {
-                    this.results.add(Post.fromKademliaQueryResponseItem(item));
+                    for (KademliaQueryResponseItem item : response.getItemsList()) {
+                        this.results.add(Post.fromKademliaQueryResponseItem(item));
+                    }
+
+                    this.onSuccess();
+                } else {
+                    this.onFail("Invalid response");
                 }
-
-                this.onSuccess();
-            }
-            else {
-                this.onFail("Invalid response");
+            } else {
+                this.onFail();
             }
         });
 

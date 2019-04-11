@@ -98,7 +98,7 @@ public final class BgKademliaFindValueResponse {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 value_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -106,7 +106,7 @@ public final class BgKademliaFindValueResponse {
               break;
             }
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
@@ -120,8 +120,8 @@ public final class BgKademliaFindValueResponse {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-          value_ = java.util.Collections.unmodifiableList(value_);
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
+          value_ = java.util.Collections.unmodifiableList(value_); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -241,16 +241,15 @@ public final class BgKademliaFindValueResponse {
       }
       io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse other = (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse) obj;
 
-      boolean result = true;
-      result = result && (hasRequest() == other.hasRequest());
+      if (hasRequest() != other.hasRequest()) return false;
       if (hasRequest()) {
-        result = result && getRequest()
-            .equals(other.getRequest());
+        if (!getRequest()
+            .equals(other.getRequest())) return false;
       }
-      result = result && getValueList()
-          .equals(other.getValueList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getValueList()
+          .equals(other.getValueList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -442,7 +441,7 @@ public final class BgKademliaFindValueResponse {
         } else {
           result.request_ = requestBuilder_.build();
         }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((bitField0_ & 0x00000002) != 0)) {
           value_ = java.util.Collections.unmodifiableList(value_);
           bitField0_ = (bitField0_ & ~0x00000002);
         }
@@ -454,35 +453,35 @@ public final class BgKademliaFindValueResponse {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -539,7 +538,7 @@ public final class BgKademliaFindValueResponse {
       }
       private int bitField0_;
 
-      private io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest request_ = null;
+      private io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest request_;
       private com.google.protobuf.SingleFieldBuilderV3<
           io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest.Builder, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequestOrBuilder> requestBuilder_;
       /**
@@ -658,7 +657,7 @@ public final class BgKademliaFindValueResponse {
 
       private java.util.List<com.google.protobuf.ByteString> value_ = java.util.Collections.emptyList();
       private void ensureValueIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           value_ = new java.util.ArrayList<com.google.protobuf.ByteString>(value_);
           bitField0_ |= 0x00000002;
          }
@@ -668,7 +667,8 @@ public final class BgKademliaFindValueResponse {
        */
       public java.util.List<com.google.protobuf.ByteString>
           getValueList() {
-        return java.util.Collections.unmodifiableList(value_);
+        return ((bitField0_ & 0x00000002) != 0) ?
+                 java.util.Collections.unmodifiableList(value_) : value_;
       }
       /**
        * <code>repeated bytes value = 2;</code>
@@ -730,7 +730,7 @@ public final class BgKademliaFindValueResponse {
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       @java.lang.Override

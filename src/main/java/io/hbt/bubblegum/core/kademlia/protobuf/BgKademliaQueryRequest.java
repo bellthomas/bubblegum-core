@@ -80,8 +80,6 @@ public final class BgKademliaQueryRequest {
       super(builder);
     }
     private KademliaQueryRequest() {
-      fromTime_ = 0L;
-      toTime_ = 0L;
       idList_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
@@ -121,7 +119,7 @@ public final class BgKademliaQueryRequest {
             }
             case 26: {
               java.lang.String s = input.readStringRequireUtf8();
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 idList_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -129,7 +127,7 @@ public final class BgKademliaQueryRequest {
               break;
             }
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
@@ -143,7 +141,7 @@ public final class BgKademliaQueryRequest {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           idList_ = idList_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -294,15 +292,14 @@ public final class BgKademliaQueryRequest {
       }
       io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryRequest.KademliaQueryRequest other = (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryRequest.KademliaQueryRequest) obj;
 
-      boolean result = true;
-      result = result && (getFromTime()
-          == other.getFromTime());
-      result = result && (getToTime()
-          == other.getToTime());
-      result = result && getIdListList()
-          .equals(other.getIdListList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (getFromTime()
+          != other.getFromTime()) return false;
+      if (getToTime()
+          != other.getToTime()) return false;
+      if (!getIdListList()
+          .equals(other.getIdListList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -491,7 +488,7 @@ public final class BgKademliaQueryRequest {
         int to_bitField0_ = 0;
         result.fromTime_ = fromTime_;
         result.toTime_ = toTime_;
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((bitField0_ & 0x00000004) != 0)) {
           idList_ = idList_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000004);
         }
@@ -503,35 +500,35 @@ public final class BgKademliaQueryRequest {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -657,7 +654,7 @@ public final class BgKademliaQueryRequest {
 
       private com.google.protobuf.LazyStringList idList_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureIdListIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           idList_ = new com.google.protobuf.LazyStringArrayList(idList_);
           bitField0_ |= 0x00000004;
          }
@@ -787,7 +784,7 @@ public final class BgKademliaQueryRequest {
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       @java.lang.Override

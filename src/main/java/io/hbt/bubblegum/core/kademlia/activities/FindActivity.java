@@ -5,7 +5,9 @@ import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.KademliaServerWorker;
 import io.hbt.bubblegum.core.kademlia.NodeID;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindNodeResponse.KademliaFindNodeResponse;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.KademliaFindRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.KademliaFindValueResponse;
@@ -105,35 +107,39 @@ public class FindActivity extends NetworkActivity {
         }
 
         Consumer<KademliaMessage> callback = this.isResponse ? null : (kademliaMessage) -> {
-            if(kademliaMessage.hasFindNodeResponse()) {
-                KademliaFindNodeResponse response = kademliaMessage.getFindNodeResponse();
+            KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(kademliaMessage);
+            if(payload != null) {
+                if (payload.hasFindNodeResponse()) {
+                    KademliaFindNodeResponse response = payload.getFindNodeResponse();
 //                StringBuilder logMessage = new StringBuilder();
 //                logMessage.append(kademliaMessage.getOriginHash() + " returned " + response.getResultsCount() + " results:\n");
-                for(KademliaNode node : response.getResultsList()) {
+                    for (KademliaNode node : response.getResultsList()) {
 //                    logMessage.append("- " + node.getHash() + " @ " + node.getIpAddress() + ":" + node.getPort() + "\n");
 
-                    // Only ping if not found or stale
-                    RouterNode destination = this.routingTable.fromKademliaNode(node);
-                    this.resultNodes.add(destination);
-                }
+                        // Only ping if not found or stale
+                        RouterNode destination = this.routingTable.fromKademliaNode(node);
+                        this.resultNodes.add(destination);
+                    }
 
 //                this.print(logMessage.toString());
-                this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
-                this.onSuccess();
+                    this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
+                    this.onSuccess();
 
-                // TODO handle response?
-            }
-            else if(kademliaMessage.hasFindValueResponse()) {
-                KademliaFindValueResponse findValueResponse = kademliaMessage.getFindValueResponse();
-                List<ByteString> byteStringValues = findValueResponse.getValueList();
-                List<byte[]> byteArrayValues = byteStringValues.stream().map((bs) -> bs.toByteArray()).collect(Collectors.toList());
-                this.values = byteArrayValues;
+                    // TODO handle response?
+                } else if (payload.hasFindValueResponse()) {
+                    KademliaFindValueResponse findValueResponse = payload.getFindValueResponse();
+                    List<ByteString> byteStringValues = findValueResponse.getValueList();
+                    List<byte[]> byteArrayValues = byteStringValues.stream().map((bs) -> bs.toByteArray()).collect(Collectors.toList());
+                    this.values = byteArrayValues;
 //                this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + this.values.size() + " elements");
-                this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
-                this.onSuccess();
+                    this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
+                    this.onSuccess();
+                } else {
+//                this.print("Invalid");
+                    this.onFail();
+                }
             }
             else {
-//                this.print("Invalid");
                 this.onFail();
             }
         };

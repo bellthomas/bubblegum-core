@@ -3,6 +3,8 @@ package io.hbt.bubblegum.core.kademlia.activities;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.KademliaServerWorker;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
@@ -36,16 +38,19 @@ public class PrimitiveStoreActivity extends NetworkActivity {
             this.print("Sending STORE("+this.key+") request to " + this.to.getNode().toString());
             KademliaMessage message = ProtobufHelper.buildStoreRequest(this.localNode, this.to, this.exchangeID, this.key, this.payload);
             this.server.sendDatagram(this.localNode, this.to, message, (kademliaMessage -> {
-                if(kademliaMessage.hasStoreResponse()) {
-                    if(kademliaMessage.getStoreResponse().getAccepted()) {
-                        this.onSuccess("STORE("+this.key+") operation successful to " + this.to.getNode().toString());
+                KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(kademliaMessage);
+                if(payload != null) {
+                    if (payload.hasStoreResponse()) {
+                        if (payload.getStoreResponse().getAccepted()) {
+                            this.onSuccess("STORE(" + this.key + ") operation successful to " + this.to.getNode().toString());
+                        } else {
+                            this.onFail("STORE(" + this.key + ") operation failed to " + this.to.getNode().toString());
+                        }
+                    } else {
+                        this.onFail("Invalid response to STORE (" + this.key + ")request from " + this.to.getNode().toString());
                     }
-                    else {
-                        this.onFail("STORE("+this.key+") operation failed to " + this.to.getNode().toString());
-                    }
-                }
-                else {
-                    this.onFail("Invalid response to STORE ("+this.key+")request from " + this.to.getNode().toString());
+                } else {
+                    this.onFail();
                 }
             }));
         }

@@ -7,9 +7,7 @@ import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.KademliaServerWorker;
-import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
-import io.hbt.bubblegum.core.kademlia.activities.DiscoveryActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.simulator.Metrics;
@@ -121,63 +119,39 @@ public class BubblegumCellServer {
                 // Create async task for the bulk of the operation.
                 this.executionContext.addCallbackActivity("system", () -> {
 
-                    if(Metrics.isRecording()) Metrics.serverSubmission(data.length, true);
+                    if (Metrics.isRecording()) Metrics.serverSubmission(data.length, true);
                     try {
                         KademliaMessage message = KademliaMessage.parseFrom(data);
 
-                        // Detect Discovery process request (deprecated)
-                        if (message.hasDiscoveryRequest()) {
-                            if (this.recipients.size() > 0) {
-                                this.recipients.keySet();
-                                RouterNode sender = new RouterNode(
-                                    new NodeID(message.getOriginHash()),
-                                    NetworkingHelper.getInetAddress(message.getOriginIP()),
-                                    message.getOriginPort()
-                                );
+                        // Only acknowledge packets that declare the correct origin.
+                        if(packet.getAddress().getHostAddress().equals(message.getOriginIP())) {
 
-                                String firstLocalID = (String) (this.recipients.keySet().toArray())[0];
-                                BubblegumNode firstLocal = this.recipients.get(firstLocalID);
+                            // Pass the message to the node the message is addressed to or drop if recipient unknown.
+                            if (this.recipients.containsKey(message.getRecipient())) {
 
-                                if (firstLocal != null) {
-                                    DiscoveryActivity discover = new DiscoveryActivity(firstLocal, sender);
-                                    discover.setResponse(message.getExchangeID(), this.recipients.keySet(), message.getOriginNetwork() + ":" + message.getOriginHash());
-                                    firstLocal.getExecutionContext().addCallbackActivity(
-                                        "system",
-                                        () -> discover.run()
-                                    );
+                                BubblegumNode localRecipient = this.recipients.get(message.getRecipient());
+                                if (this.responses.containsKey(localRecipient.getIdentifier() + ":" + message.getExchangeID())) {
+                                    Consumer<KademliaMessage> callback = this.responses.remove(localRecipient.getIdentifier() + ":" + message.getExchangeID());
+                                    if (callback != null) {
+                                        // We're expecting this packet, so pass to the method waiting on it.
+                                        // TODO decrypt
+                                        callback.accept(message);
+                                    }
+                                } else {
+                                    // Invoke message handler.
+                                    KademliaServerWorker.accept(localRecipient, message);
                                 }
                             }
-                        }
 
-                        // Pass the message to the node the message is addressed to or drop if recipient unknown.
-                        else if (this.recipients.containsKey(message.getRecipient())) {
-                            BubblegumNode localRecipient = this.recipients.get(message.getRecipient());
-                            if (this.responses.containsKey(localRecipient.getIdentifier() + ":" + message.getExchangeID())) {
-                                Consumer<KademliaMessage> callback = this.responses.remove(localRecipient.getIdentifier() + ":" + message.getExchangeID());
-                                if (callback != null) {
-                                    // We're expecting this packet, so pass to the method waiting on it.
-                                    callback.accept(message);
-                                }
-                            } else {
-                                // Invoke message handler.
-                                KademliaServerWorker.accept(localRecipient, message);
-                            }
+                            // Unknown recipient, drop.
+                            // else {
+                            //     System.out.println("Dropped message to " + message.getRecipient());
+                            // }
                         }
-
-                        // Unknown recipient, drop.
-                        // else {
-                        //     System.out.println("Dropped message to " + message.getRecipient());
-                        // }
 
                     } catch (InvalidProtocolBufferException ipbe) {
                         // This is a corrupted packet.
                         // No action necessary, fault tolerance is inherent further up the stack.
-                    } catch (MalformedKeyException e) {
-                        // This is a corrupted packet.
-                        // Invalid recipient information.
-                    } catch (UnknownHostException e) {
-                        // This is a corrupted packet.
-                        // Invalid recipient address information.
                     }
                 });
 

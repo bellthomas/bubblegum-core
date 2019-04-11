@@ -8,7 +8,6 @@ import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
-import io.hbt.bubblegum.core.kademlia.activities.DiscoveryActivity;
 import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
 import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
 import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
@@ -34,6 +33,7 @@ public class BubblegumNode {
     private BubblegumCellServer server;
     private ActivityExecutionContext executionContext;
     private Database db;
+    private KeyManager keyManager;
     private int numberOfPosts = 0;
     private boolean setupPostRefreshing = false;
 
@@ -52,7 +52,7 @@ public class BubblegumNode {
         this.routingTable = new RoutingTable(this);
         this.db = Database.getInstance();
         this.db.saveUserMeta(this, "username", this.nodeIdentifier.toString());
-
+        this.keyManager = new KeyManager(this);
         this.setupInternalScheduling();
 
         this.log("Constructed BubblegumNode: " + this.nodeIdentifier.toString());
@@ -81,14 +81,6 @@ public class BubblegumNode {
 
     //region Primitive Operations
     public Set<String> discover(InetAddress address, int port) {
-        RouterNode to = new RouterNode(new NodeID(), address, port);
-        DiscoveryActivity discoveryActivity = new DiscoveryActivity(this, to);
-        discoveryActivity.run();
-
-        if(discoveryActivity.getComplete() && discoveryActivity.getSuccess()) {
-            return discoveryActivity.getEntries();
-        }
-
         return null;
     }
 
@@ -108,6 +100,12 @@ public class BubblegumNode {
         StoreActivity storeActivity = new StoreActivity(this, id.toString(), value);
         storeActivity.run();
         return (storeActivity.getComplete() && storeActivity.getSuccess());
+    }
+
+    public boolean sync(NodeID id) {
+        if(!Configuration.ENABLE_PGP) return true;
+
+        return true;
     }
     //endregion
 
@@ -357,6 +355,9 @@ public class BubblegumNode {
     //endregion
 
     //region Misc
+    public String toPGPUID() {
+        return String.join(":", this.server.getLocal().getHostAddress(), this.server.getPort()+"", this.nodeIdentifier.toString());
+    }
 
     @Override
     public String toString() {

@@ -1,11 +1,14 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PrimitiveStoreActivity;
 import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
@@ -40,49 +43,56 @@ public class KademliaServerWorker {
             }
         }
 
-        // FIND RPC received.
-        else if(message.hasFindRequest()) {
-            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
-            if(sender != null) {
-                node.getRoutingTable().insert(sender);
+        else {
+            // These methods are embedded in the binary payload.
+            KademliaBinaryPayload binaryPayload = KademliaServerWorker.extractPayload(message);
+            if(binaryPayload != null) {
 
-                FindActivity findNodeReply = new FindActivity(
-                    node,
-                    sender,
-                    message.getFindRequest().getSearchHash(),
-                    message.getFindRequest().getReturnValue()
-                );
-                findNodeReply.setResponse(message.getExchangeID(), message.getFindRequest(), message.getOriginHash());
-                node.getExecutionContext().addCallbackActivity(node.getIdentifier(), findNodeReply);
-            }
-        }
+                // FIND RPC received.
+                if (binaryPayload.hasFindRequest()) {
+                    RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+                    if (sender != null) {
+                        node.getRoutingTable().insert(sender);
 
-        // STORE RPC received.
-        else if(message.hasStoreRequest()) {
-            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
-            if(sender != null) {
-                node.getRoutingTable().insert(sender);
+                        FindActivity findNodeReply = new FindActivity(
+                            node,
+                            sender,
+                            binaryPayload.getFindRequest().getSearchHash(),
+                            binaryPayload.getFindRequest().getReturnValue()
+                        );
+                        findNodeReply.setResponse(message.getExchangeID(), binaryPayload.getFindRequest(), message.getOriginHash());
+                        node.getExecutionContext().addCallbackActivity(node.getIdentifier(), findNodeReply);
+                    }
+                }
 
-                PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(
-                    node,
-                    sender,
-                    message.getStoreRequest().getKey(),
-                    message.getStoreRequest().getValue().toByteArray()
-                );
-                storeActivity.setResponse(message.getExchangeID());
-                node.getExecutionContext().addCallbackActivity(node.getIdentifier(), storeActivity);
-            }
-        }
+                // STORE RPC received.
+                else if (binaryPayload.hasStoreRequest()) {
+                    RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+                    if (sender != null) {
+                        node.getRoutingTable().insert(sender);
 
-        // QUERY RPC received.
-        else if(message.hasQueryRequest()) {
-            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
-            if(sender != null) {
-                node.getRoutingTable().insert(sender);
+                        PrimitiveStoreActivity storeActivity = new PrimitiveStoreActivity(
+                            node,
+                            sender,
+                            binaryPayload.getStoreRequest().getKey(),
+                            binaryPayload.getStoreRequest().getValue().toByteArray()
+                        );
+                        storeActivity.setResponse(message.getExchangeID());
+                        node.getExecutionContext().addCallbackActivity(node.getIdentifier(), storeActivity);
+                    }
+                }
 
-                QueryActivity queryActivity = new QueryActivity(node, sender, 0, 0, null);
-                queryActivity.setResponse(message.getExchangeID(), message.getQueryRequest());
-                node.getExecutionContext().addCallbackActivity(node.getIdentifier(), queryActivity);
+                // QUERY RPC received.
+                else if (binaryPayload.hasQueryRequest()) {
+                    RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+                    if (sender != null) {
+                        node.getRoutingTable().insert(sender);
+
+                        QueryActivity queryActivity = new QueryActivity(node, sender, 0, 0, null);
+                        queryActivity.setResponse(message.getExchangeID(), binaryPayload.getQueryRequest());
+                        node.getExecutionContext().addCallbackActivity(node.getIdentifier(), queryActivity);
+                    }
+                }
             }
         }
     }
@@ -107,6 +117,32 @@ public class KademliaServerWorker {
         } catch (UnknownHostException e) {
             return null;
         }
+    }
+
+
+    public static KademliaBinaryPayload extractPayload(KademliaMessage message) {
+
+        if(message.getPayload() != null) {
+            byte[] payload = message.getPayload().toByteArray();
+
+            // TODO decrypt here
+            if (Configuration.ENABLE_PGP) {
+
+            }
+
+            try {
+                return KademliaBinaryPayload.parseFrom(payload);
+            } catch (InvalidProtocolBufferException e) {
+                System.out.println("Failed to parse");
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    public static String kademliaMessagesToPGPID(KademliaMessage message) {
+        return String.join(":", message.getOriginIP(), message.getOriginPort()+"", message.getOriginHash());
     }
 
 } // end KademliaServerWorker class
