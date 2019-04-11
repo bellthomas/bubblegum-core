@@ -46,6 +46,12 @@ public class Configuration {
     public static final int EXECUTION_CONTEXT_MAX_PENDING_QUEUE = 100;
     //endregion
 
+    //region Encryption
+    public static final int RSA_KEY_LENGTH = 2048; // bits
+    public static final long KEY_CACHE_EXPIRY = 60 * 60 * 1000; // ms
+    public static final String OPENPGP_KEY_SERVER_URL = "https://keyserver.ubuntu.com";
+    //endregion Encryption
+
     public static Random rand = new Random();
 
     private Configuration() { /* Non instantiatable */ }
