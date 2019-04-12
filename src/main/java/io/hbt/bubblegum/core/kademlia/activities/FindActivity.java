@@ -107,7 +107,7 @@ public class FindActivity extends NetworkActivity {
         }
 
         Consumer<KademliaMessage> callback = this.isResponse ? null : (kademliaMessage) -> {
-            KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(kademliaMessage);
+            KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(this.localNode, this.to, kademliaMessage);
             if(payload != null) {
                 if (payload.hasFindNodeResponse()) {
                     KademliaFindNodeResponse response = payload.getFindNodeResponse();

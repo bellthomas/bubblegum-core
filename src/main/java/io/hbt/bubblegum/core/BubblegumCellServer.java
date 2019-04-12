@@ -128,9 +128,9 @@ public class BubblegumCellServer {
 
                             // Pass the message to the node the message is addressed to or drop if recipient unknown.
                             if (this.recipients.containsKey(message.getRecipient())) {
-
                                 BubblegumNode localRecipient = this.recipients.get(message.getRecipient());
                                 if (this.responses.containsKey(localRecipient.getIdentifier() + ":" + message.getExchangeID())) {
+
                                     Consumer<KademliaMessage> callback = this.responses.remove(localRecipient.getIdentifier() + ":" + message.getExchangeID());
                                     if (callback != null) {
                                         // We're expecting this packet, so pass to the method waiting on it.

@@ -11,6 +11,7 @@ import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
 import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
 import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
 import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
+import io.hbt.bubblegum.core.kademlia.activities.SyncActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
@@ -103,16 +104,21 @@ public class BubblegumNode {
         return (storeActivity.getComplete() && storeActivity.getSuccess());
     }
 
-    public boolean sync(NodeID id) {
-        if(!Configuration.ENABLE_PGP) return true;
+//    public boolean sync(NodeID id) {
+//        SyncActivity syncActivity = new SyncActivity(this, id.toString())
+//    }
 
-        return true;
-    }
+//    public boolean sync(NodeID id) {
+//        if(!Configuration.ENABLE_PGP) return true;
+//
+//        return true;
+//    }
     //endregion
 
     //region Compound Operations
     public boolean bootstrap(InetAddress address, int port, String foreignRecipient) {
 
+        System.out.println("Starting Bootstrap...");
         RouterNode to = new RouterNode(new NodeID(), address, port);
         BootstrapActivity boostrapActivity = new BootstrapActivity(this, to, foreignRecipient, (networkID) -> this.networkIdentifier = networkID);
         boostrapActivity.run(); // sync

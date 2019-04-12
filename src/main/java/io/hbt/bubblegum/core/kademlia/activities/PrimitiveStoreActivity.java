@@ -38,7 +38,7 @@ public class PrimitiveStoreActivity extends NetworkActivity {
             this.print("Sending STORE("+this.key+") request to " + this.to.getNode().toString());
             KademliaMessage message = ProtobufHelper.buildStoreRequest(this.localNode, this.to, this.exchangeID, this.key, this.payload);
             this.server.sendDatagram(this.localNode, this.to, message, (kademliaMessage -> {
-                KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(kademliaMessage);
+                KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(this.localNode, this.to, kademliaMessage);
                 if(payload != null) {
                     if (payload.hasStoreResponse()) {
                         if (payload.getStoreResponse().getAccepted()) {

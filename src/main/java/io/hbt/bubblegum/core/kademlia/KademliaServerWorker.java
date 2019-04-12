@@ -8,6 +8,7 @@ import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PrimitiveStoreActivity;
 import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
+import io.hbt.bubblegum.core.kademlia.activities.SyncActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
@@ -40,6 +41,16 @@ public class KademliaServerWorker {
                 );
                 pingReply.setResponse(message);
                 node.getExecutionContext().addCallbackActivity(node.getIdentifier(), pingReply);
+            }
+        }
+
+        // TODO check
+        else if(message.hasSyncMessage()) {
+            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+            if(sender != null) {
+                SyncActivity syncActivity = new SyncActivity(node, sender);
+                syncActivity.setResponse(message);
+                node.getExecutionContext().addCallbackActivity(node.getIdentifier(), syncActivity);
             }
         }
 
@@ -119,6 +130,7 @@ public class KademliaServerWorker {
 
 
     public static KademliaBinaryPayload extractPayload(BubblegumNode node, RouterNode sender, KademliaMessage message) {
+
 
         if(message.getPayload() != null) {
 

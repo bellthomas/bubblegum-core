@@ -107,27 +107,28 @@ class KeyManager {
             ArmoredOutputStream aos = new ArmoredOutputStream(baos);
             key.getPublicKey().encode(aos);
             aos.close();
-            publishKey(baos.toString());
+            if (publishKey(baos.toString())) {
+                System.out.println("Published PGP Key");
+                if (verifyKey) {
+                    try {
+                        int retries = 0;
+                        while (retries < 15 && !verifyKey("0x" + keyID, uid)) {
+                            Thread.sleep(2000);
+                            retries++;
+                        }
 
-            if (verifyKey) {
-                try {
-                    int retries = 0;
-                    while (retries < 15 && !verifyKey("0x" + keyID, uid)) {
-                        Thread.sleep(2000);
-                        retries++;
+                        if (retries < 15) {
+                            this.pgpKey = key;
+    //                        this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-
-                    if (retries < 15) {
-                        this.pgpKey = key;
-//                        this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
-                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } else {
+                    this.pgpKey = key;
+    //                this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
                 }
-            } else {
-                this.pgpKey = key;
-//                this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
             }
         }
     }
@@ -166,7 +167,7 @@ class KeyManager {
             byte[] outer = this.encryptWithPublic(publicKey, key_b);
 
             sealed.setKeyA(ByteString.copyFrom(outer));
-            sealed.setKeyA(ByteString.copyFrom(inner));
+            sealed.setKeyB(ByteString.copyFrom(inner));
             sealed.setData(ByteString.copyFrom(cipher));
             System.out.println("Packet encryption overhead: " + (System.currentTimeMillis() - start) + "ms");
 
