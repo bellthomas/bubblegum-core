@@ -34,9 +34,14 @@ public final class BgKademliaSync {
         getLabelBytes();
 
     /**
-     * <code>bytes encrypted = 3;</code>
+     * <code>bytes encrypted_a = 3;</code>
      */
-    com.google.protobuf.ByteString getEncrypted();
+    com.google.protobuf.ByteString getEncryptedA();
+
+    /**
+     * <code>bytes encrypted_b = 4;</code>
+     */
+    com.google.protobuf.ByteString getEncryptedB();
   }
   /**
    * Protobuf type {@code io.hbt.bubblegum.core.kademlia.protobuf.KademliaSync}
@@ -52,7 +57,8 @@ public final class BgKademliaSync {
     }
     private KademliaSync() {
       label_ = "";
-      encrypted_ = com.google.protobuf.ByteString.EMPTY;
+      encryptedA_ = com.google.protobuf.ByteString.EMPTY;
+      encryptedB_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -92,7 +98,12 @@ public final class BgKademliaSync {
             }
             case 26: {
 
-              encrypted_ = input.readBytes();
+              encryptedA_ = input.readBytes();
+              break;
+            }
+            case 34: {
+
+              encryptedB_ = input.readBytes();
               break;
             }
             default: {
@@ -170,13 +181,22 @@ public final class BgKademliaSync {
       }
     }
 
-    public static final int ENCRYPTED_FIELD_NUMBER = 3;
-    private com.google.protobuf.ByteString encrypted_;
+    public static final int ENCRYPTED_A_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString encryptedA_;
     /**
-     * <code>bytes encrypted = 3;</code>
+     * <code>bytes encrypted_a = 3;</code>
      */
-    public com.google.protobuf.ByteString getEncrypted() {
-      return encrypted_;
+    public com.google.protobuf.ByteString getEncryptedA() {
+      return encryptedA_;
+    }
+
+    public static final int ENCRYPTED_B_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString encryptedB_;
+    /**
+     * <code>bytes encrypted_b = 4;</code>
+     */
+    public com.google.protobuf.ByteString getEncryptedB() {
+      return encryptedB_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -199,8 +219,11 @@ public final class BgKademliaSync {
       if (!getLabelBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, label_);
       }
-      if (!encrypted_.isEmpty()) {
-        output.writeBytes(3, encrypted_);
+      if (!encryptedA_.isEmpty()) {
+        output.writeBytes(3, encryptedA_);
+      }
+      if (!encryptedB_.isEmpty()) {
+        output.writeBytes(4, encryptedB_);
       }
       unknownFields.writeTo(output);
     }
@@ -218,9 +241,13 @@ public final class BgKademliaSync {
       if (!getLabelBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, label_);
       }
-      if (!encrypted_.isEmpty()) {
+      if (!encryptedA_.isEmpty()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, encrypted_);
+          .computeBytesSize(3, encryptedA_);
+      }
+      if (!encryptedB_.isEmpty()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, encryptedB_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -241,8 +268,10 @@ public final class BgKademliaSync {
           != other.getStage()) return false;
       if (!getLabel()
           .equals(other.getLabel())) return false;
-      if (!getEncrypted()
-          .equals(other.getEncrypted())) return false;
+      if (!getEncryptedA()
+          .equals(other.getEncryptedA())) return false;
+      if (!getEncryptedB()
+          .equals(other.getEncryptedB())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -258,8 +287,10 @@ public final class BgKademliaSync {
       hash = (53 * hash) + getStage();
       hash = (37 * hash) + LABEL_FIELD_NUMBER;
       hash = (53 * hash) + getLabel().hashCode();
-      hash = (37 * hash) + ENCRYPTED_FIELD_NUMBER;
-      hash = (53 * hash) + getEncrypted().hashCode();
+      hash = (37 * hash) + ENCRYPTED_A_FIELD_NUMBER;
+      hash = (53 * hash) + getEncryptedA().hashCode();
+      hash = (37 * hash) + ENCRYPTED_B_FIELD_NUMBER;
+      hash = (53 * hash) + getEncryptedB().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -397,7 +428,9 @@ public final class BgKademliaSync {
 
         label_ = "";
 
-        encrypted_ = com.google.protobuf.ByteString.EMPTY;
+        encryptedA_ = com.google.protobuf.ByteString.EMPTY;
+
+        encryptedB_ = com.google.protobuf.ByteString.EMPTY;
 
         return this;
       }
@@ -427,7 +460,8 @@ public final class BgKademliaSync {
         io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSync.KademliaSync result = new io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSync.KademliaSync(this);
         result.stage_ = stage_;
         result.label_ = label_;
-        result.encrypted_ = encrypted_;
+        result.encryptedA_ = encryptedA_;
+        result.encryptedB_ = encryptedB_;
         onBuilt();
         return result;
       }
@@ -483,8 +517,11 @@ public final class BgKademliaSync {
           label_ = other.label_;
           onChanged();
         }
-        if (other.getEncrypted() != com.google.protobuf.ByteString.EMPTY) {
-          setEncrypted(other.getEncrypted());
+        if (other.getEncryptedA() != com.google.protobuf.ByteString.EMPTY) {
+          setEncryptedA(other.getEncryptedA());
+        }
+        if (other.getEncryptedB() != com.google.protobuf.ByteString.EMPTY) {
+          setEncryptedB(other.getEncryptedB());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -610,31 +647,60 @@ public final class BgKademliaSync {
         return this;
       }
 
-      private com.google.protobuf.ByteString encrypted_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString encryptedA_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>bytes encrypted = 3;</code>
+       * <code>bytes encrypted_a = 3;</code>
        */
-      public com.google.protobuf.ByteString getEncrypted() {
-        return encrypted_;
+      public com.google.protobuf.ByteString getEncryptedA() {
+        return encryptedA_;
       }
       /**
-       * <code>bytes encrypted = 3;</code>
+       * <code>bytes encrypted_a = 3;</code>
        */
-      public Builder setEncrypted(com.google.protobuf.ByteString value) {
+      public Builder setEncryptedA(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   
-        encrypted_ = value;
+        encryptedA_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>bytes encrypted = 3;</code>
+       * <code>bytes encrypted_a = 3;</code>
        */
-      public Builder clearEncrypted() {
+      public Builder clearEncryptedA() {
         
-        encrypted_ = getDefaultInstance().getEncrypted();
+        encryptedA_ = getDefaultInstance().getEncryptedA();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString encryptedB_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>bytes encrypted_b = 4;</code>
+       */
+      public com.google.protobuf.ByteString getEncryptedB() {
+        return encryptedB_;
+      }
+      /**
+       * <code>bytes encrypted_b = 4;</code>
+       */
+      public Builder setEncryptedB(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        encryptedB_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>bytes encrypted_b = 4;</code>
+       */
+      public Builder clearEncryptedB() {
+        
+        encryptedB_ = getDefaultInstance().getEncryptedB();
         onChanged();
         return this;
       }
@@ -706,9 +772,9 @@ public final class BgKademliaSync {
   static {
     java.lang.String[] descriptorData = {
       "\n\024BgKademliaSync.proto\022\'io.hbt.bubblegum" +
-      ".core.kademlia.protobuf\"?\n\014KademliaSync\022" +
-      "\r\n\005stage\030\001 \001(\005\022\r\n\005label\030\002 \001(\t\022\021\n\tencrypt" +
-      "ed\030\003 \001(\014b\006proto3"
+      ".core.kademlia.protobuf\"V\n\014KademliaSync\022" +
+      "\r\n\005stage\030\001 \001(\005\022\r\n\005label\030\002 \001(\t\022\023\n\013encrypt" +
+      "ed_a\030\003 \001(\014\022\023\n\013encrypted_b\030\004 \001(\014b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -727,7 +793,7 @@ public final class BgKademliaSync {
     internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaSync_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaSync_descriptor,
-        new java.lang.String[] { "Stage", "Label", "Encrypted", });
+        new java.lang.String[] { "Stage", "Label", "EncryptedA", "EncryptedB", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

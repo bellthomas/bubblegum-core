@@ -312,6 +312,36 @@ public class BubblegumNode {
     public byte[] decryptPacket(RouterNode node, KademliaSealedPayload sealed) {
         return this.keyManager.decryptPacket(node, sealed);
     }
+
+    public byte[] encryptPrivate(byte[] payload) {
+        return this.keyManager.encryptWithPrivate(payload);
+    }
+
+    public byte[] encryptPublic(byte[] payload) {
+        return this.keyManager.encryptWithPublic(this.keyManager.getPublicKey(null), payload);
+    }
+
+    public byte[] encryptForNode(RouterNode node, byte[] payload) {
+        if(this.keyManager.getPublicKey(node.toPGPUID()) != null) {
+            return this.keyManager.encryptWithPublic(this.keyManager.getPublicKey(node.toPGPUID()), payload);
+        }
+        return null;
+    }
+
+    public byte[] decryptPublic(byte[] payload) {
+        return this.keyManager.decryptWithPrivate(payload);
+    }
+
+    public byte[] decryptForNode(RouterNode node, byte[] payload) {
+        if(this.keyManager.getPublicKey(node.toPGPUID()) != null) {
+            return this.keyManager.decryptWithPublic(this.keyManager.getPublicKey(node.toPGPUID()), payload);
+        }
+        return null;
+    }
+
+    public String getPGPKeyID() {
+        return this.keyManager.getPGPKeyID();
+    }
     //endregion
 
 

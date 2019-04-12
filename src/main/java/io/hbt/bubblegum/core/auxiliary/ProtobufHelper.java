@@ -157,12 +157,13 @@ public class ProtobufHelper {
         return responseItem.build();
     }
 
-    public static KademliaMessage buildSyncMessage(BubblegumNode localNode, RouterNode to, String exchangeID, int stage, String label, byte[] payload) {
+    public static KademliaMessage buildSyncMessage(BubblegumNode localNode, RouterNode to, String exchangeID, int stage, String label, ByteString enc_a, ByteString enc_b) {
         KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
         KademliaSync.Builder sync = KademliaSync.newBuilder();
         sync.setStage(stage);
         sync.setLabel(label);
-        sync.setEncrypted(ByteString.copyFrom(payload));
+        sync.setEncryptedA(enc_a);
+        sync.setEncryptedB(enc_b);
         message.setSyncMessage(sync);
         return message.build();
     }

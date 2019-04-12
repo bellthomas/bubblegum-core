@@ -85,6 +85,10 @@ class KeyManager {
         }
     }
 
+    public String getPGPKeyID() {
+        return "0x" + Long.toHexString(this.pgpKey.getPublicKey().getKeyID());
+    }
+
     void reKey(boolean verifyKey) throws NoSuchAlgorithmException, NoSuchProviderException, PGPException, IOException, ProtocolException {
 
         if(Configuration.ENABLE_PGP) {
@@ -93,8 +97,8 @@ class KeyManager {
             KeyPair kp = kpg.generateKeyPair();
             keyPair = kp;
 
-            String uid = "uid";//this.node.toPGPUID();
-            PGPSecretKey key = this.generateKey(kp, uid, "password".toCharArray());//this.node.getIdentifier().toCharArray());
+            String uid = this.node.toPGPUID();
+            PGPSecretKey key = this.generateKey(kp, uid, this.node.getIdentifier().toCharArray());
             String keyID = Long.toHexString(key.getPublicKey().getKeyID());
             System.out.println("Generated PGP Key: 0x" + keyID);
 
@@ -103,7 +107,7 @@ class KeyManager {
             ArmoredOutputStream aos = new ArmoredOutputStream(baos);
             key.getPublicKey().encode(aos);
             aos.close();
-//            publishKey(baos.toString());
+            publishKey(baos.toString());
 
             if (verifyKey) {
                 try {
@@ -145,7 +149,7 @@ class KeyManager {
         return true;
     }
 
-    KademliaSealedPayload encryptPacket(RouterNode node, byte[] payload) {
+    public KademliaSealedPayload encryptPacket(RouterNode node, byte[] payload) {
         // TODO check for nulls
         PGPPublicKey publicKey  = this.getPublicKey(node.toPGPUID());
         if(publicKey != null) {
@@ -239,7 +243,7 @@ class KeyManager {
     }
 
     PGPPublicKey getPublicKey(String id) {
-        if(id.equals(this.node.toPGPUID())) {
+        if(id.equals(this.node.toPGPUID()) || id == null) {
             return this.pgpKey.getPublicKey();
         }
 
