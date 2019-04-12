@@ -298,6 +298,14 @@ public class BubblegumNode {
     }
     //endregion
 
+
+    //region PGP
+    public boolean ensurePGPKeyIsLocal(String keyID, String pgpID) {
+       return this.keyManager.ensurePGPKeyIsLocal(keyID, pgpID);
+    }
+    //endregion
+
+
     //region Builder
     public static class Builder {
         private String identifier, networkIdentifier;

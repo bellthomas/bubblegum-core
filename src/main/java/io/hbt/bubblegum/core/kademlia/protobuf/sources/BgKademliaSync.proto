@@ -1,0 +1,8 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+message KademliaSync {
+    int32 stage = 1;
+    string label = 2;
+    bytes encrypted = 3;
+}

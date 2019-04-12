@@ -14,8 +14,10 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryRequest.KademliaQueryRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.KademliaQueryResponse;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponseItem.KademliaQueryResponseItem;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreRequest.KademliaStoreRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreResponse.KademliaStoreResponse;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSync.KademliaSync;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import java.util.Collections;
@@ -47,7 +49,7 @@ public class ProtobufHelper {
         // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setStoreRequest(storeRequest);
-        message.setPayload(payload.build().toByteString());
+        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
         return message.build();
     }
 
@@ -58,7 +60,7 @@ public class ProtobufHelper {
         // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setStoreResponse(storeResponse);
-        message.setPayload(payload.build().toByteString());
+        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
         return message.build();
     }
 
@@ -89,7 +91,7 @@ public class ProtobufHelper {
         // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setFindValueResponse(findValueResponse);
-        message.setPayload(payload.build().toByteString());
+        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
         return message.build();
     }
 
@@ -109,7 +111,7 @@ public class ProtobufHelper {
         // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setFindNodeResponse(findNodeResponse);
-        message.setPayload(payload.build().toByteString());
+        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
         return message.build();
     }
 
@@ -123,7 +125,7 @@ public class ProtobufHelper {
         // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setFindRequest(findRequest);
-        message.setPayload(payload.build().toByteString());
+        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
         return message.build();
     }
 
@@ -137,7 +139,7 @@ public class ProtobufHelper {
         // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setQueryRequest(queryRequest);
-        message.setPayload(payload.build().toByteString());
+        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
         return message.build();
     }
 
@@ -149,7 +151,7 @@ public class ProtobufHelper {
         // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setQueryResponse(queryResponse);
-        message.setPayload(payload.build().toByteString());
+        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
         return message.build();
     }
 
@@ -163,4 +165,22 @@ public class ProtobufHelper {
         responseItem.setOwner(post.getOwner());
         return responseItem.build();
     }
+
+    public static KademliaMessage buildSyncMessage(BubblegumNode localNode, RouterNode to, String exchangeID, int stage, String label, byte[] payload) {
+        KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
+        KademliaSync.Builder sync = KademliaSync.newBuilder();
+        sync.setStage(stage);
+        sync.setLabel(label);
+        sync.setEncrypted(ByteString.copyFrom(payload));
+        message.setSyncMessage(sync);
+        return message.build();
+    }
+
+    public static KademliaSealedPayload buildSealedPayload(ByteString key, ByteString data) {
+        KademliaSealedPayload.Builder payload = KademliaSealedPayload.newBuilder();
+        payload.setKey(key);
+        payload.setData(data);
+        return payload.build();
+    }
+
 }

@@ -2,6 +2,8 @@ syntax = "proto3";
 package io.hbt.bubblegum.core.kademlia.protobuf;
 
 import "BgKademliaPing.proto";
+import "BgKademliaSealedPayload.proto";
+import "BgKademliaSync.proto";
 
 message KademliaMessage {
 
@@ -18,6 +20,7 @@ message KademliaMessage {
     // Message content
     oneof message {
         KademliaPing pingMessage = 7;
-        bytes payload = 8;
+        KademliaSync syncMessage = 8;
+        KademliaSealedPayload payload = 9;
     }
 }

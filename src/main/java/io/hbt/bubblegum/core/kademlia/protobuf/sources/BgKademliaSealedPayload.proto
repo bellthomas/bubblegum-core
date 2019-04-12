@@ -1,0 +1,7 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+message KademliaSealedPayload {
+    bytes key = 1;
+    bytes data = 2;
+}

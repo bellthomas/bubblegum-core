@@ -123,7 +123,7 @@ public class KademliaServerWorker {
     public static KademliaBinaryPayload extractPayload(KademliaMessage message) {
 
         if(message.getPayload() != null) {
-            byte[] payload = message.getPayload().toByteArray();
+            byte[] payload = message.getPayload().getData().toByteArray();
 
             // TODO decrypt here
             if (Configuration.ENABLE_PGP) {
