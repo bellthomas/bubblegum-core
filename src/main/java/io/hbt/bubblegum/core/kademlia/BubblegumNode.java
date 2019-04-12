@@ -123,9 +123,9 @@ public class BubblegumNode {
         boostrapActivity.run(); // sync
 
         if(boostrapActivity.getSuccess()) {
-//            this.saveRouterSnapshot();
+            // this.saveRouterSnapshot();
             Database.getInstance().updateNodeInDatabase(this);
-//            SnapshotDatabase.saveRouterSnapshot(this, this.getRoutingTable());
+            // SnapshotDatabase.saveRouterSnapshot(this, this.getRoutingTable());
             return true;
         }
         else {
@@ -346,6 +346,13 @@ public class BubblegumNode {
 
     public String getPGPKeyID() {
         return this.keyManager.getPGPKeyID();
+    }
+
+    public boolean syncIfRequired(RouterNode node) {
+        if(this.keyManager.getPublicKey(node.toPGPUID()) == null) {
+            return this.sync(node);
+        }
+        return true;
     }
     //endregion
 

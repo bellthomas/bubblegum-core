@@ -50,8 +50,8 @@ public class FindActivity extends NetworkActivity {
     @Override
     public void run() {
         super.run();
-        if(this.aborted) {
-            this.onFail("aborted");
+        if(this.aborted || !this.localNode.syncIfRequired(this.to)) {
+            this.onFail("Aborted/Sync Failed");
             return;
         }
 

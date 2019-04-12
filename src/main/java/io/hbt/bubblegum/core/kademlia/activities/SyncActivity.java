@@ -46,15 +46,15 @@ public class SyncActivity extends NetworkActivity {
         // dest and to with different ip/port?
         byte[] myNonce = UUID.randomUUID().toString().getBytes();
         String label = this.isResponse ? "B" : "A";
-        System.out.println(label + ": Starting");
-        System.out.println(label + ": Nonce - " + new String(myNonce));
+        this.print(label + ": Starting");
+        this.print(label + ": Nonce - " + new String(myNonce));
 
         KademliaMessage message = null;
         if(!this.isResponse) {
             // Send stage 1
             byte[] payload = this.localNode.encryptPrivate(myNonce);
             if(payload != null) {
-                System.out.println(label + ": Stage 1 encrypt success");
+                this.print(label + ": Stage 1 encrypt success");
                 message = ProtobufHelper.buildSyncMessage(
                     this.localNode, destination, this.exchangeID,
                     1, this.localNode.getPGPKeyID(), ByteString.copyFrom(payload), ByteString.EMPTY
@@ -76,7 +76,7 @@ public class SyncActivity extends NetworkActivity {
 
             if(!valid) {
                 // Suspected MITM / Keyserver down.
-                System.out.println(label + ": Key get fail");
+                System.err.println(label + ": Key retrieval failed");
                 this.onFail();
                 return;
             }
@@ -85,14 +85,14 @@ public class SyncActivity extends NetworkActivity {
                 this.to, this.originalSync.getSyncMessage().getEncryptedA().toByteArray()
             );
             if(theirNonce != null) {
-                System.out.println(label + ": Stage 1 decrypt success");
+                this.print(label + ": Stage 1 decrypt success");
                 theirNonce = this.localNode.encryptPrivate(theirNonce);
                 if(theirNonce != null) {
-                    System.out.println(label + ": Stage 2 encrypt N_a success");
+                    this.print(label + ": Stage 2 encrypt N_a success");
                     String payloadAString = this.localNode.getPGPKeyID() + ":" + new String(myNonce);
                     byte[] payloadA = this.localNode.encryptForNode(this.to, payloadAString.getBytes());
                     if(payloadA != null) {
-                        System.out.println(label + ": Stage 2 encrypt payload A success");
+                        this.print(label + ": Stage 2 encrypt payload A success");
                         message = ProtobufHelper.buildSyncMessage(
                             this.localNode, destination, this.exchangeID,
                             2, "", ByteString.copyFrom(payloadA), ByteString.copyFrom(theirNonce)
@@ -105,14 +105,14 @@ public class SyncActivity extends NetworkActivity {
 
         Consumer<KademliaMessage> response = this.isResponse ? (kademliaMessage -> {
             // Received stage one, sent stage two, and now receiving stage 3.
-            System.out.println(label + ": Received stage 3");
+            this.print(label + ": Received stage 3");
             if(kademliaMessage.getSyncMessage().getStage() == 3) {
                 byte[] x = this.localNode.decryptPublic(kademliaMessage.getSyncMessage().getEncryptedA().toByteArray());
                 if(x != null) {
-                    System.out.println(label + ": Stage 3 decrypt success");
+                    this.print(label + ": Stage 3 decrypt success");
                     if (new String(x).trim().equals(new String(myNonce))) this.onSuccess();
                     else {
-                        System.out.println(label + ": Stage 3 nonce incorrect");
+                        this.print(label + ": Stage 3 nonce incorrect");
                         this.onFail();
                     }
                 } else {
@@ -130,12 +130,12 @@ public class SyncActivity extends NetworkActivity {
                     kademliaMessage.getSyncMessage().getEncryptedA().toByteArray()
                 );
                 if(payloadA != null) {
-                    System.out.println(label + ": Stage 2 decrypt payload A success");
+                    this.print(label + ": Stage 2 decrypt payload A success");
                     String payloadAStr = new String(payloadA);
                     if(payloadAStr.contains(":")) {
                         String[] payloadAParts = payloadAStr.split(":");
                         if(payloadAParts.length == 2) {
-                            System.out.println(label + ": Stage 2 payload A correct ("+payloadAStr+")");
+                            this.print(label + ": Stage 2 payload A correct ("+payloadAStr+")");
                             // Get B's public key.
                             // Also implicitly checks the IP address for MITM.
                             boolean valid = this.localNode.ensurePGPKeyIsLocal(
@@ -145,7 +145,7 @@ public class SyncActivity extends NetworkActivity {
 
                             if (!valid) {
                                 // Suspected MITM / Keyserver down.
-                                System.out.println(label + ": Key retrieval failed");
+                                System.err.println(label + ": Key retrieval failed");
                                 this.onFail();
                                 return;
                             }
@@ -156,11 +156,11 @@ public class SyncActivity extends NetworkActivity {
                             String returnedNonce = new String(payloadB).trim();
 
                             if(payloadB != null && returnedNonce.equals(new String(myNonce))) {
-                                System.out.println(label + ": Stage 3 nonce correct");
+                                this.print(label + ": Stage 3 nonce correct");
 
                                 byte[] stage3Payload = this.localNode.encryptForNode(this.to, payloadAParts[1].getBytes());
                                 if(stage3Payload != null) {
-                                    System.out.println(label + ": Stage 3 encryption success");
+                                    this.print(label + ": Stage 3 encryption success");
 
                                     KademliaMessage stage3 = ProtobufHelper.buildSyncMessage(
                                         this.localNode, destination, this.exchangeID,
@@ -194,7 +194,7 @@ public class SyncActivity extends NetworkActivity {
 
 
         if(message != null) {
-            System.out.println(label + ": Sent packet");
+            this.print(label + ": Sent packet");
             this.server.sendDatagram(localNode, destination, message, response);
         }
         else this.onFail();

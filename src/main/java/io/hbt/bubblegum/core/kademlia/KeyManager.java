@@ -3,7 +3,6 @@ package io.hbt.bubblegum.core.kademlia;
 import com.google.protobuf.ByteString;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.Pair;
-import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -151,7 +150,6 @@ class KeyManager {
     }
 
     public KademliaSealedPayload encryptPacket(RouterNode node, byte[] payload) {
-        // TODO check for nulls
         PGPPublicKey publicKey  = this.getPublicKey(node.toPGPUID());
         if(publicKey != null) {
             KademliaSealedPayload.Builder sealed = KademliaSealedPayload.newBuilder();
@@ -169,7 +167,7 @@ class KeyManager {
             sealed.setKeyA(ByteString.copyFrom(outer));
             sealed.setKeyB(ByteString.copyFrom(inner));
             sealed.setData(ByteString.copyFrom(cipher));
-            System.out.println("Packet encryption overhead: " + (System.currentTimeMillis() - start) + "ms");
+            // System.out.println("Packet encryption overhead: " + (System.currentTimeMillis() - start) + "ms");
 
             return sealed.build();
         }
@@ -178,7 +176,6 @@ class KeyManager {
 
     byte[] decryptPacket(RouterNode node, KademliaSealedPayload sealed) {
         // Remove outer layer and inner one as well
-        // TODO check for nulls
         PGPPublicKey publicKey  = this.getPublicKey(node.toPGPUID());
         if(publicKey != null) {
 
@@ -188,7 +185,7 @@ class KeyManager {
 
             byte[] unwrapCipher = AES.decrypt(sealed.getData().toByteArray(), unwrapOuter);
             unwrapCipher = AES.decrypt(unwrapCipher, unwrapInner);
-            System.out.println("Packet decryption overhead: " + (System.currentTimeMillis() - start) + "ms");
+            // System.out.println("Packet decryption overhead: " + (System.currentTimeMillis() - start) + "ms");
 
             return unwrapCipher;
         }
@@ -197,7 +194,7 @@ class KeyManager {
 
     byte[] crypt(Key k, int mode, byte[] data) {
         try {
-            if (rsa != null) {
+            if (rsa != null && k != null && data != null) {
                 synchronized (rsa) {
                     rsa.init(mode, k);
                     return rsa.doFinal(data);
@@ -216,6 +213,7 @@ class KeyManager {
 
 
     byte[] decryptWithPublic(PGPPublicKey key, byte[] data) {
+        if(key == null || data == null) return null;
         try {
             PublicKey pk = new JcaPGPKeyConverter().getPublicKey(key);
             return crypt(pk, Cipher.DECRYPT_MODE, data);
@@ -226,10 +224,12 @@ class KeyManager {
     }
 
     byte[] decryptWithPrivate(byte[] data) {
+        if(data == null) return null;
         return crypt(this.keyPair.getPrivate(), Cipher.DECRYPT_MODE, data);
     }
 
     byte[] encryptWithPublic(PGPPublicKey key, byte[] data) {
+        if(key == null || data == null) return null;
         try {
             PublicKey pk = new JcaPGPKeyConverter().getPublicKey(key);
             return crypt(pk, Cipher.ENCRYPT_MODE, data);
@@ -240,6 +240,7 @@ class KeyManager {
     }
 
     byte[] encryptWithPrivate(byte[] data) {
+        if(data == null) return null;
         return crypt(this.keyPair.getPrivate(), Cipher.ENCRYPT_MODE, data);
     }
 
@@ -381,6 +382,7 @@ class KeyManager {
         }
 
         public static byte[] encrypt (byte[] plainText, byte[] key) {
+            if(plainText == null || key == null) return null;
             try {
                 Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 SecretKey originalKey = new SecretKeySpec(key, "AES");
@@ -393,6 +395,7 @@ class KeyManager {
         }
 
         public static byte[] decrypt (byte[] cipherText, byte[] key) {
+            if(cipherText == null || key == null) return null;
             try {
                 Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 SecretKey originalKey = new SecretKeySpec(key, 0, key.length, "AES");

@@ -22,8 +22,8 @@ public class PrimitiveStoreActivity extends NetworkActivity {
     @Override
     public void run() {
         super.run();
-        if(this.aborted) {
-            this.onFail();
+        if(this.aborted || !this.localNode.syncIfRequired(this.to)) {
+            this.onFail("Aborted/Sync Failed");
             return;
         }
 
