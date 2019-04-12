@@ -112,7 +112,7 @@ public class KademliaServerWorker {
      * @param message The KademliaMessage object received.
      * @return The generated RouterNode instance or null if the information in the KademliaMessage is invalid.
      */
-    private static RouterNode getFromOriginHash(BubblegumNode node, KademliaMessage message) {
+    public static RouterNode getFromOriginHash(BubblegumNode node, KademliaMessage message) {
         try {
             RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
             if (sender == null) sender = new RouterNode(
@@ -130,10 +130,7 @@ public class KademliaServerWorker {
 
 
     public static KademliaBinaryPayload extractPayload(BubblegumNode node, RouterNode sender, KademliaMessage message) {
-
-
         if(message.getPayload() != null) {
-
             byte[] payload;
             if (Configuration.ENABLE_PGP) {
                 payload = node.decryptPacket(sender, message.getPayload());
@@ -149,7 +146,8 @@ public class KademliaServerWorker {
                     return null;
                 }
             } else {
-                System.out.println("Packet decryption failed. Dropping.");
+                System.out.println("Packet decryption failed. Dropping and requesting synchronisation....");
+                node.requestSync(sender);
             }
         }
 

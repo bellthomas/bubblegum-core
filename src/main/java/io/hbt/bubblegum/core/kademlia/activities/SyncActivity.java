@@ -110,7 +110,7 @@ public class SyncActivity extends NetworkActivity {
                 byte[] x = this.localNode.decryptPublic(kademliaMessage.getSyncMessage().getEncryptedA().toByteArray());
                 if(x != null) {
                     System.out.println(label + ": Stage 3 decrypt success");
-                    if (new String(x).equals(myNonce)) this.onSuccess();
+                    if (new String(x).trim().equals(new String(myNonce))) this.onSuccess();
                     else {
                         System.out.println(label + ": Stage 3 nonce incorrect");
                         this.onFail();
@@ -154,8 +154,6 @@ public class SyncActivity extends NetworkActivity {
                                 this.to, kademliaMessage.getSyncMessage().getEncryptedB().toByteArray()
                             );
                             String returnedNonce = new String(payloadB).trim();
-
-                            System.out.println("["+returnedNonce+"] vs. ["+new String(myNonce)+"]");
 
                             if(payloadB != null && returnedNonce.equals(new String(myNonce))) {
                                 System.out.println(label + ": Stage 3 nonce correct");

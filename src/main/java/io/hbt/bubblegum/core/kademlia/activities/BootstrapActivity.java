@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.KademliaServerWorker;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
@@ -15,11 +16,6 @@ public class BootstrapActivity extends NetworkActivity {
         super(self, to);
         this.foreignRecipient = foreignRecipient;
         this.networkIDUpdate = networkIDUpdate;
-    }
-
-    @Override
-    public void print(String msg) {
-        System.out.println(msg);
     }
 
     @Override
@@ -48,23 +44,13 @@ public class BootstrapActivity extends NetworkActivity {
                 this.print("Network ID from PING null");
             }
 
-            this.print("Starting lookup");
-//            LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getNodeIdentifier(), 10, false);
-            // TODO revert
-
-            Set<RouterNode> nodes = this.routingTable.getBucket(this.routingTable.getGreatestNonEmptyBucket()).getNodes();
-            if(nodes.size() > 0) {
-                RouterNode rn = nodes.stream().findFirst().get();
-                System.out.println("Got RouterNode: " + rn.getNode().toString());
-
-                SyncActivity lookupActivity = new SyncActivity(this.localNode, rn);
+            RouterNode node = KademliaServerWorker.getFromOriginHash(this.localNode, ping.getPing());
+            if(node != null && this.localNode.sync(node)) {
+                this.print("Starting lookup");
+                LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getNodeIdentifier(), 10, false);
                 lookupActivity.run();
-
                 if (lookupActivity.getComplete() && lookupActivity.getSuccess()) this.onSuccess();
                 else this.onFail();
-            } else {
-                System.out.println("No nodes..");
-                this.onFail();
             }
         }
 

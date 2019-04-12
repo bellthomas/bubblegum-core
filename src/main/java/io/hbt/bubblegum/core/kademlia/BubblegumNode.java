@@ -104,21 +104,20 @@ public class BubblegumNode {
         return (storeActivity.getComplete() && storeActivity.getSuccess());
     }
 
-//    public boolean sync(NodeID id) {
-//        SyncActivity syncActivity = new SyncActivity(this, id.toString())
-//    }
+    public boolean sync(RouterNode node) {
+        SyncActivity syncActivity = new SyncActivity(this, node);
+        syncActivity.run();
+        return (syncActivity.getComplete() && syncActivity.getSuccess());
+    }
 
-//    public boolean sync(NodeID id) {
-//        if(!Configuration.ENABLE_PGP) return true;
-//
-//        return true;
-//    }
+    public void requestSync(RouterNode node) {
+        this.executionContext.addCallbackActivity("system", () -> this.sync(node));
+    }
     //endregion
 
     //region Compound Operations
     public boolean bootstrap(InetAddress address, int port, String foreignRecipient) {
 
-        System.out.println("Starting Bootstrap...");
         RouterNode to = new RouterNode(new NodeID(), address, port);
         BootstrapActivity boostrapActivity = new BootstrapActivity(this, to, foreignRecipient, (networkID) -> this.networkIdentifier = networkID);
         boostrapActivity.run(); // sync

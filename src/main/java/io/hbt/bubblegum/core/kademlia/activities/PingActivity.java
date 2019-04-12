@@ -76,6 +76,7 @@ public class PingActivity extends NetworkActivity {
 
                 responder.hasResponded();
                 this.routingTable.insert(responder);
+                this.originalPing = kademliaMessage;
                 this.onSuccess("PING response from " + responder.getNode().toString());
 
             } catch (MalformedKeyException e) {
@@ -108,4 +109,7 @@ public class PingActivity extends NetworkActivity {
         return this.networkID;
     }
 
+    public KademliaMessage getPing() {
+        return this.originalPing;
+    }
 }
