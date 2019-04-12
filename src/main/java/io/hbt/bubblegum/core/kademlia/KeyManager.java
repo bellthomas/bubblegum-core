@@ -1,47 +1,33 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import com.google.protobuf.ByteString;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.Pair;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
-import net.jpountz.lz4.LZ4Compressor;
-import net.jpountz.lz4.LZ4Factory;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
-import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
-import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
-import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
-import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
-import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyDataDecryptorFactoryBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodGenerator;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SealedObject;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -53,7 +39,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -62,14 +47,11 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -87,12 +69,15 @@ class KeyManager {
     private BubblegumNode node;
     private HashMap<String, Pair<PGPPublicKey, Long>> keyCache = new HashMap<>();
 
+    private Cipher rsa;
+
     KeyManager(BubblegumNode node) {
         if(Configuration.ENABLE_PGP) {
             Security.addProvider(provider);
             this.node = node;
             try {
                 this.reKey(false);
+                this.rsa = Cipher.getInstance("RSA");
                 this.initialised = true;
             } catch (Exception e) {
                 System.err.println(e.getMessage());
@@ -160,21 +145,59 @@ class KeyManager {
         return true;
     }
 
-    byte[] decryptPacket(RouterNode node, String pgpID, byte[] payload) {
-        // Remove outer layer and inner one as well
+    KademliaSealedPayload encryptPacket(RouterNode node, byte[] payload) {
+        // TODO check for nulls
+        PGPPublicKey publicKey  = this.getPublicKey(node.toPGPUID());
+        if(publicKey != null) {
+            KademliaSealedPayload.Builder sealed = KademliaSealedPayload.newBuilder();
+
+            long start = System.currentTimeMillis();
+            byte[] key_a = AES.generateKey();
+            byte[] key_b = AES.generateKey();
+
+            byte[] cipher = AES.encrypt(payload, key_a);
+            cipher = AES.encrypt(cipher, key_b);
+
+            byte[] inner = this.encryptWithPrivate(key_a);
+            byte[] outer = this.encryptWithPublic(publicKey, key_b);
+
+            sealed.setKeyA(ByteString.copyFrom(outer));
+            sealed.setKeyA(ByteString.copyFrom(inner));
+            sealed.setData(ByteString.copyFrom(cipher));
+            System.out.println("Packet encryption overhead: " + (System.currentTimeMillis() - start) + "ms");
+
+            return sealed.build();
+        }
         return null;
     }
 
+    byte[] decryptPacket(RouterNode node, KademliaSealedPayload sealed) {
+        // Remove outer layer and inner one as well
+        // TODO check for nulls
+        PGPPublicKey publicKey  = this.getPublicKey(node.toPGPUID());
+        if(publicKey != null) {
+
+            long start = System.currentTimeMillis();
+            byte[] unwrapOuter = this.decryptWithPrivate(sealed.getKeyA().toByteArray());
+            byte[] unwrapInner = this.decryptWithPublic(publicKey, sealed.getKeyB().toByteArray());
+
+            byte[] unwrapCipher = AES.decrypt(sealed.getData().toByteArray(), unwrapOuter);
+            unwrapCipher = AES.decrypt(unwrapCipher, unwrapInner);
+            System.out.println("Packet decryption overhead: " + (System.currentTimeMillis() - start) + "ms");
+
+            return unwrapCipher;
+        }
+        return null;
+    }
 
     byte[] crypt(Key k, int mode, byte[] data) {
         try {
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(mode, k);
-            return cipher.doFinal(data);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
+            if (rsa != null) {
+                synchronized (rsa) {
+                    rsa.init(mode, k);
+                    return rsa.doFinal(data);
+                }
+            }
         } catch (BadPaddingException e) {
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
@@ -191,99 +214,29 @@ class KeyManager {
         try {
             PublicKey pk = new JcaPGPKeyConverter().getPublicKey(key);
             return crypt(pk, Cipher.DECRYPT_MODE, data);
-
-        } catch (PGPException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     byte[] decryptWithPrivate(byte[] data) {
-        try {
-            PBESecretKeyDecryptor keyDec = new JcePBESecretKeyDecryptorBuilder(
-                new JcaPGPDigestCalculatorProviderBuilder().setProvider("BC").build())
-                .setProvider("BC").build("password".toCharArray());
-            PrivateKey pk = new JcaPGPKeyConverter().getPrivateKey(this.pgpKey.extractPrivateKey(keyDec));
-            return crypt(pk, Cipher.DECRYPT_MODE, data);
-
-        } catch (PGPException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return crypt(this.keyPair.getPrivate(), Cipher.DECRYPT_MODE, data);
     }
 
     byte[] encryptWithPublic(PGPPublicKey key, byte[] data) {
         try {
             PublicKey pk = new JcaPGPKeyConverter().getPublicKey(key);
             return crypt(pk, Cipher.ENCRYPT_MODE, data);
-
-        } catch (PGPException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     byte[] encryptWithPrivate(byte[] data) {
-        try {
-            PBESecretKeyDecryptor keyDec = new JcePBESecretKeyDecryptorBuilder(
-                new JcaPGPDigestCalculatorProviderBuilder().setProvider("BC").build())
-                .setProvider("BC").build("password".toCharArray());
-            PrivateKey pk = new JcaPGPKeyConverter().getPrivateKey(this.pgpKey.extractPrivateKey(keyDec));
-            return crypt(pk, Cipher.ENCRYPT_MODE, data);
-
-        } catch (PGPException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return crypt(this.keyPair.getPrivate(), Cipher.ENCRYPT_MODE, data);
     }
-
-//    byte[] decryptWithPrivate(byte[] data) {
-//        try {
-//            JcaPGPObjectFactory objFact = new JcaPGPObjectFactory(data);
-//            PGPEncryptedDataList encList = (PGPEncryptedDataList) objFact.nextObject();
-//            PGPPublicKeyEncryptedData encD = (PGPPublicKeyEncryptedData) encList.get(0);
-//            PBESecretKeyDecryptor keyDec = new JcePBESecretKeyDecryptorBuilder(
-//                new JcaPGPDigestCalculatorProviderBuilder().setProvider("BC").build())
-//                .setProvider("BC").build("password".toCharArray());
-//
-//            PGPPrivateKey privateKey1 = this.pgpKey.extractPrivateKey(keyDec);
-//            PublicKeyDataDecryptorFactory dec1 =
-//                new JcePublicKeyDataDecryptorFactoryBuilder().setProvider("BC").build(privateKey1);
-//            InputStream in1 = encD.getDataStream(dec1);
-//            int ch;
-//            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//            while( (ch = in1.read()) >= 0) baos.write(ch);
-//            byte[] decrypted1 = baos.toByteArray();
-//            return decrypted1;
-//
-//        } catch (PGPException e) {
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
-
-
-//    final PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(
-//        new JcePGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256).setWithIntegrityPacket(true)
-//            .setSecureRandom(new SecureRandom())
-//            .setProvider(this.provider)
-//    );
-//    byte[] encryptWithPublic(PGPPublicKey key, byte[] data) {
-//        try {
-//            final ByteArrayOutputStream out = new ByteArrayOutputStream();
-//
-//            encryptedDataGenerator.addMethod(new JcePublicKeyKeyEncryptionMethodGenerator(key).setProvider(this.provider));
-//            OutputStream encryptor = encryptedDataGenerator.open(out, data.length);
-//            encryptor.write(data);
-//            encryptor.close();
-//            return out.toByteArray();
-//
-//        } catch (Exception pgpe) {
-//            return null;
-//        }
-//    }
 
     PGPPublicKey getPublicKey(String id) {
         if(id.equals(this.node.toPGPUID())) {
@@ -299,9 +252,6 @@ class KeyManager {
         return null;
     }
 
-    private void requestKey(String id) {
-
-    }
 
     private static PGPSecretKey generateKey(KeyPair pair, String identity, char[] passphrase) throws PGPException {
         PGPDigestCalculator sha1Calc = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
@@ -415,114 +365,86 @@ class KeyManager {
     }
 
     static class AES {
-        public static void start(String plainText) throws Exception
-        {
-            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-            keyGenerator.init(256);
+        static SecureRandom random = new SecureRandom();
+        static byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        static IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-            // Generate Key
-            SecretKey key = keyGenerator.generateKey();
-
-            // Generating IV.
-            byte[] IV = new byte[16];
-            SecureRandom random = new SecureRandom();
-            random.nextBytes(IV);
-
-            System.out.println("Original Text  : "+plainText);
-
-            byte[] cipherText = encrypt(plainText.getBytes(),key, IV);
-            System.out.println("Encrypted Text : "+Base64.getEncoder().encodeToString(cipherText));
-
-            String decryptedText = decrypt(cipherText,key, IV);
-            System.out.println("DeCrypted Text : "+decryptedText);
-
+        public static byte[] generateKey() {
+            byte[] bytes = new byte[16];
+            random.nextBytes(bytes);
+            return bytes;
         }
 
-        public static byte[] encrypt (byte[] plaintext,SecretKey key,byte[] IV ) throws Exception
-        {
-            //Get Cipher Instance
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-
-            //Create SecretKeySpec
-            SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
-
-            //Create IvParameterSpec
-            IvParameterSpec ivSpec = new IvParameterSpec(IV);
-
-            //Initialize Cipher for ENCRYPT_MODE
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-
-            //Perform Encryption
-            byte[] cipherText = cipher.doFinal(plaintext);
-
-            return cipherText;
+        public static byte[] encrypt (byte[] plainText, byte[] key) {
+            try {
+                Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                SecretKey originalKey = new SecretKeySpec(key, "AES");
+                aes.init(Cipher.ENCRYPT_MODE, originalKey, ivspec);
+                return aes.doFinal(plainText);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
         }
 
-        public static String decrypt (byte[] cipherText, SecretKey key,byte[] IV) throws Exception
-        {
-            //Get Cipher Instance
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-
-            //Create SecretKeySpec
-            SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
-
-            //Create IvParameterSpec
-            IvParameterSpec ivSpec = new IvParameterSpec(IV);
-
-            //Initialize Cipher for DECRYPT_MODE
-            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
-
-            //Perform Decryption
-            byte[] decryptedText = cipher.doFinal(cipherText);
-
-            return new String(decryptedText);
+        public static byte[] decrypt (byte[] cipherText, byte[] key) {
+            try {
+                Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                SecretKey originalKey = new SecretKeySpec(key, 0, key.length, "AES");
+                aes.init(Cipher.DECRYPT_MODE, originalKey, ivspec);
+                return aes.doFinal(cipherText);
+            } catch(Exception e) {
+                e.printStackTrace();
+                return null;
+            }
         }
     }
 
     public static void main(String[] args) {
         KeyManager km = new KeyManager(null);
-        LZ4Factory factory = LZ4Factory.fastestInstance();
-        LZ4Compressor compressor = factory.fastCompressor();
+
 
         System.out.println("Starting");
-
-//        byte[] result = km.encryptWithPublic(km.pgpKey.getPublicKey(), "hhhhhhhhhh".getBytes());
-//        String s = new String(Base64.getEncoder().encode(result));
-//        System.out.println(s);
-//        System.out.println(result.length);
-//
-//        int maxCompressedLength = compressor.maxCompressedLength(result.length);
-//        byte[] compressed = new byte[maxCompressedLength];
-//        int compressedLength = compressor.compress(result, 0, result.length, compressed, 0, maxCompressedLength);
-//        System.out.println(compressedLength);
-//
-//        byte[] result2 = km.decryptWithPrivate(result);
-//        System.out.println(new String(result2));
-
-//        result = km.encryptWithPrivate("hello".getBytes());
-//        s = new String(Base64.getEncoder().encode(result));
-//        System.out.println(s);
-//        System.out.println(result.length);
-//        result2 = km.decryptWithPublic(km.pgpKey.getPublicKey(), result);
-//        System.out.println(new String(result2));
-
-
-//        try {
-//            System.out.println(new String(km.pgpKey.));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
         StringBuilder sb = new StringBuilder();
         long a, b;
-        for(int j = 0; j < 10; j++) {
+        for(int j = 0; j < 1000; j++) {
             for (int i = 0; i < 100; i++) sb.append("a");
 
+//            a = System.currentTimeMillis();
+//            byte[] result = km.encryptWithPublic(km.pgpKey.getPublicKey(), sb.toString().getBytes());
+//            b = System.currentTimeMillis();
+//            String s = new String(Base64.getEncoder().encode(result));
+
+            // Encrypt packet
             a = System.currentTimeMillis();
-            byte[] result = km.encryptWithPublic(km.pgpKey.getPublicKey(), sb.toString().getBytes());
+            byte[] key_a = AES.generateKey();
+            byte[] key_b = AES.generateKey();
+
+            String plaintext = sb.toString();
+            byte[] cipher = AES.encrypt(plaintext.getBytes(), key_a);
+            cipher = AES.encrypt(cipher, key_b);
+
+            byte[] inner = km.encryptWithPrivate(key_a);
+            byte[] outer = km.encryptWithPublic(km.pgpKey.getPublicKey(), key_b);
             b = System.currentTimeMillis();
-            String s = new String(Base64.getEncoder().encode(result));
-            System.out.println(100*(j+1) + ": " + s.length() + "  ["+(b-a)+"ms]");
+            System.out.println((b-a) + "ms");
+
+            // Decrypt packet phase
+            a = System.currentTimeMillis();
+            byte[] unwrapOuter = km.decryptWithPrivate(outer);
+            byte[] unwrapInner = km.decryptWithPublic(km.pgpKey.getPublicKey(), inner);
+
+            byte[] unwrapCipher = AES.decrypt(cipher, unwrapOuter);
+            unwrapCipher = AES.decrypt(unwrapCipher, unwrapInner);
+            b = System.currentTimeMillis();
+            System.out.println((b-a) + "ms");
+
+            System.out.println(new String(unwrapCipher));
+
+
+
+
+            System.out.println("Plaintext: " + plaintext.length() + " bytes \n\n");
         }
     }
 

@@ -70,11 +70,6 @@
             <artifactId>bcpg-jdk15on</artifactId>
             <version>1.61</version>
         </dependency>
-        <dependency>
-            <groupId>org.lz4</groupId>
-            <artifactId>lz4-java</artifactId>
-            <version>1.5.1</version>
-        </dependency>
     </dependencies>
 
     <build>

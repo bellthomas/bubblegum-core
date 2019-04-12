@@ -46,10 +46,9 @@ public class ProtobufHelper {
         KademliaStoreRequest.Builder storeRequest = KademliaStoreRequest.newBuilder();
         storeRequest.setKey(key);
         storeRequest.setValue(ByteString.copyFrom(payloads));
-        // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setStoreRequest(storeRequest);
-        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
         return message.build();
     }
 
@@ -57,10 +56,9 @@ public class ProtobufHelper {
         KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
         KademliaStoreResponse.Builder storeResponse = KademliaStoreResponse.newBuilder();
         storeResponse.setAccepted(accepted);
-        // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setStoreResponse(storeResponse);
-        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
         return message.build();
     }
 
@@ -88,10 +86,9 @@ public class ProtobufHelper {
             }
         }
 
-        // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setFindValueResponse(findValueResponse);
-        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
         return message.build();
     }
 
@@ -108,10 +105,9 @@ public class ProtobufHelper {
             findNodeResponse.addResults(pbNode);
         }
 
-        // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setFindNodeResponse(findNodeResponse);
-        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
         return message.build();
     }
 
@@ -121,11 +117,9 @@ public class ProtobufHelper {
         findRequest.setSearchHash(searchHash);
         findRequest.setNumberRequested(numRequested);
         findRequest.setReturnValue(returnValue);
-
-        // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setFindRequest(findRequest);
-        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
         return message.build();
     }
 
@@ -135,11 +129,9 @@ public class ProtobufHelper {
         queryRequest.setFromTime(start);
         queryRequest.setToTime(end);
         queryRequest.addAllIdList(ids);
-
-        // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setQueryRequest(queryRequest);
-        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
         return message.build();
     }
 
@@ -148,10 +140,9 @@ public class ProtobufHelper {
         KademliaQueryResponse.Builder queryResponse = KademliaQueryResponse.newBuilder();
         for(Post p : posts) queryResponse.addItems(buildQueryResponseItem(p));
 
-        // TODO encrypt here
         KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
         payload.setQueryResponse(queryResponse);
-        message.setPayload(buildSealedPayload(ByteString.EMPTY, payload.build().toByteString()));
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
         return message.build();
     }
 
@@ -176,11 +167,16 @@ public class ProtobufHelper {
         return message.build();
     }
 
-    public static KademliaSealedPayload buildSealedPayload(ByteString key, ByteString data) {
-        KademliaSealedPayload.Builder payload = KademliaSealedPayload.newBuilder();
-        payload.setKey(key);
-        payload.setData(data);
-        return payload.build();
+    public static KademliaSealedPayload buildSealedPayload(BubblegumNode node, RouterNode dest, byte[] data) {
+        if(Configuration.ENABLE_PGP) {
+            return node.encryptPacket(dest, data);
+        } else {
+            KademliaSealedPayload.Builder payload = KademliaSealedPayload.newBuilder();
+            payload.setData(ByteString.copyFrom(data));
+            payload.setKeyA(ByteString.EMPTY);
+            payload.setKeyB(ByteString.EMPTY);
+            return payload.build();
+        }
     }
 
 }

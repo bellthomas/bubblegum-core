@@ -19,12 +19,17 @@ public final class BgKademliaSealedPayload {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>bytes key = 1;</code>
+     * <code>bytes key_a = 1;</code>
      */
-    com.google.protobuf.ByteString getKey();
+    com.google.protobuf.ByteString getKeyA();
 
     /**
-     * <code>bytes data = 2;</code>
+     * <code>bytes key_b = 2;</code>
+     */
+    com.google.protobuf.ByteString getKeyB();
+
+    /**
+     * <code>bytes data = 3;</code>
      */
     com.google.protobuf.ByteString getData();
   }
@@ -41,7 +46,8 @@ public final class BgKademliaSealedPayload {
       super(builder);
     }
     private KademliaSealedPayload() {
-      key_ = com.google.protobuf.ByteString.EMPTY;
+      keyA_ = com.google.protobuf.ByteString.EMPTY;
+      keyB_ = com.google.protobuf.ByteString.EMPTY;
       data_ = com.google.protobuf.ByteString.EMPTY;
     }
 
@@ -71,10 +77,15 @@ public final class BgKademliaSealedPayload {
               break;
             case 10: {
 
-              key_ = input.readBytes();
+              keyA_ = input.readBytes();
               break;
             }
             case 18: {
+
+              keyB_ = input.readBytes();
+              break;
+            }
+            case 26: {
 
               data_ = input.readBytes();
               break;
@@ -111,19 +122,28 @@ public final class BgKademliaSealedPayload {
               io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload.class, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload.Builder.class);
     }
 
-    public static final int KEY_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString key_;
+    public static final int KEY_A_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString keyA_;
     /**
-     * <code>bytes key = 1;</code>
+     * <code>bytes key_a = 1;</code>
      */
-    public com.google.protobuf.ByteString getKey() {
-      return key_;
+    public com.google.protobuf.ByteString getKeyA() {
+      return keyA_;
     }
 
-    public static final int DATA_FIELD_NUMBER = 2;
+    public static final int KEY_B_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString keyB_;
+    /**
+     * <code>bytes key_b = 2;</code>
+     */
+    public com.google.protobuf.ByteString getKeyB() {
+      return keyB_;
+    }
+
+    public static final int DATA_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString data_;
     /**
-     * <code>bytes data = 2;</code>
+     * <code>bytes data = 3;</code>
      */
     public com.google.protobuf.ByteString getData() {
       return data_;
@@ -143,11 +163,14 @@ public final class BgKademliaSealedPayload {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!key_.isEmpty()) {
-        output.writeBytes(1, key_);
+      if (!keyA_.isEmpty()) {
+        output.writeBytes(1, keyA_);
+      }
+      if (!keyB_.isEmpty()) {
+        output.writeBytes(2, keyB_);
       }
       if (!data_.isEmpty()) {
-        output.writeBytes(2, data_);
+        output.writeBytes(3, data_);
       }
       unknownFields.writeTo(output);
     }
@@ -158,13 +181,17 @@ public final class BgKademliaSealedPayload {
       if (size != -1) return size;
 
       size = 0;
-      if (!key_.isEmpty()) {
+      if (!keyA_.isEmpty()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, key_);
+          .computeBytesSize(1, keyA_);
+      }
+      if (!keyB_.isEmpty()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, keyB_);
       }
       if (!data_.isEmpty()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, data_);
+          .computeBytesSize(3, data_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -181,8 +208,10 @@ public final class BgKademliaSealedPayload {
       }
       io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload other = (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload) obj;
 
-      if (!getKey()
-          .equals(other.getKey())) return false;
+      if (!getKeyA()
+          .equals(other.getKeyA())) return false;
+      if (!getKeyB()
+          .equals(other.getKeyB())) return false;
       if (!getData()
           .equals(other.getData())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -196,8 +225,10 @@ public final class BgKademliaSealedPayload {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + KEY_FIELD_NUMBER;
-      hash = (53 * hash) + getKey().hashCode();
+      hash = (37 * hash) + KEY_A_FIELD_NUMBER;
+      hash = (53 * hash) + getKeyA().hashCode();
+      hash = (37 * hash) + KEY_B_FIELD_NUMBER;
+      hash = (53 * hash) + getKeyB().hashCode();
       hash = (37 * hash) + DATA_FIELD_NUMBER;
       hash = (53 * hash) + getData().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
@@ -333,7 +364,9 @@ public final class BgKademliaSealedPayload {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        key_ = com.google.protobuf.ByteString.EMPTY;
+        keyA_ = com.google.protobuf.ByteString.EMPTY;
+
+        keyB_ = com.google.protobuf.ByteString.EMPTY;
 
         data_ = com.google.protobuf.ByteString.EMPTY;
 
@@ -363,7 +396,8 @@ public final class BgKademliaSealedPayload {
       @java.lang.Override
       public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload buildPartial() {
         io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload result = new io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload(this);
-        result.key_ = key_;
+        result.keyA_ = keyA_;
+        result.keyB_ = keyB_;
         result.data_ = data_;
         onBuilt();
         return result;
@@ -413,8 +447,11 @@ public final class BgKademliaSealedPayload {
 
       public Builder mergeFrom(io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload other) {
         if (other == io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload.getDefaultInstance()) return this;
-        if (other.getKey() != com.google.protobuf.ByteString.EMPTY) {
-          setKey(other.getKey());
+        if (other.getKeyA() != com.google.protobuf.ByteString.EMPTY) {
+          setKeyA(other.getKeyA());
+        }
+        if (other.getKeyB() != com.google.protobuf.ByteString.EMPTY) {
+          setKeyB(other.getKeyB());
         }
         if (other.getData() != com.google.protobuf.ByteString.EMPTY) {
           setData(other.getData());
@@ -448,44 +485,73 @@ public final class BgKademliaSealedPayload {
         return this;
       }
 
-      private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString keyA_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>bytes key = 1;</code>
+       * <code>bytes key_a = 1;</code>
        */
-      public com.google.protobuf.ByteString getKey() {
-        return key_;
+      public com.google.protobuf.ByteString getKeyA() {
+        return keyA_;
       }
       /**
-       * <code>bytes key = 1;</code>
+       * <code>bytes key_a = 1;</code>
        */
-      public Builder setKey(com.google.protobuf.ByteString value) {
+      public Builder setKeyA(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   
-        key_ = value;
+        keyA_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>bytes key = 1;</code>
+       * <code>bytes key_a = 1;</code>
        */
-      public Builder clearKey() {
+      public Builder clearKeyA() {
         
-        key_ = getDefaultInstance().getKey();
+        keyA_ = getDefaultInstance().getKeyA();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString keyB_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>bytes key_b = 2;</code>
+       */
+      public com.google.protobuf.ByteString getKeyB() {
+        return keyB_;
+      }
+      /**
+       * <code>bytes key_b = 2;</code>
+       */
+      public Builder setKeyB(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        keyB_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>bytes key_b = 2;</code>
+       */
+      public Builder clearKeyB() {
+        
+        keyB_ = getDefaultInstance().getKeyB();
         onChanged();
         return this;
       }
 
       private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>bytes data = 2;</code>
+       * <code>bytes data = 3;</code>
        */
       public com.google.protobuf.ByteString getData() {
         return data_;
       }
       /**
-       * <code>bytes data = 2;</code>
+       * <code>bytes data = 3;</code>
        */
       public Builder setData(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -497,7 +563,7 @@ public final class BgKademliaSealedPayload {
         return this;
       }
       /**
-       * <code>bytes data = 2;</code>
+       * <code>bytes data = 3;</code>
        */
       public Builder clearData() {
         
@@ -573,9 +639,9 @@ public final class BgKademliaSealedPayload {
   static {
     java.lang.String[] descriptorData = {
       "\n\035BgKademliaSealedPayload.proto\022\'io.hbt." +
-      "bubblegum.core.kademlia.protobuf\"2\n\025Kade" +
-      "mliaSealedPayload\022\013\n\003key\030\001 \001(\014\022\014\n\004data\030\002" +
-      " \001(\014b\006proto3"
+      "bubblegum.core.kademlia.protobuf\"C\n\025Kade" +
+      "mliaSealedPayload\022\r\n\005key_a\030\001 \001(\014\022\r\n\005key_" +
+      "b\030\002 \001(\014\022\014\n\004data\030\003 \001(\014b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -594,7 +660,7 @@ public final class BgKademliaSealedPayload {
     internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaSealedPayload_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaSealedPayload_descriptor,
-        new java.lang.String[] { "Key", "Data", });
+        new java.lang.String[] { "KeyA", "KeyB", "Data", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

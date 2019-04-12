@@ -45,12 +45,12 @@ public class KademliaServerWorker {
 
         else {
             // These methods are embedded in the binary payload.
-            KademliaBinaryPayload binaryPayload = KademliaServerWorker.extractPayload(message);
+            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+            KademliaBinaryPayload binaryPayload = KademliaServerWorker.extractPayload(node, sender, message);
             if(binaryPayload != null) {
 
                 // FIND RPC received.
                 if (binaryPayload.hasFindRequest()) {
-                    RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
                     if (sender != null) {
                         node.getRoutingTable().insert(sender);
 
@@ -67,7 +67,6 @@ public class KademliaServerWorker {
 
                 // STORE RPC received.
                 else if (binaryPayload.hasStoreRequest()) {
-                    RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
                     if (sender != null) {
                         node.getRoutingTable().insert(sender);
 
@@ -84,7 +83,6 @@ public class KademliaServerWorker {
 
                 // QUERY RPC received.
                 else if (binaryPayload.hasQueryRequest()) {
-                    RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
                     if (sender != null) {
                         node.getRoutingTable().insert(sender);
 
@@ -120,21 +118,26 @@ public class KademliaServerWorker {
     }
 
 
-    public static KademliaBinaryPayload extractPayload(KademliaMessage message) {
+    public static KademliaBinaryPayload extractPayload(BubblegumNode node, RouterNode sender, KademliaMessage message) {
 
         if(message.getPayload() != null) {
-            byte[] payload = message.getPayload().getData().toByteArray();
 
-            // TODO decrypt here
+            byte[] payload;
             if (Configuration.ENABLE_PGP) {
-
+                payload = node.decryptPacket(sender, message.getPayload());
+            } else {
+                payload = message.getPayload().getData().toByteArray();
             }
 
-            try {
-                return KademliaBinaryPayload.parseFrom(payload);
-            } catch (InvalidProtocolBufferException e) {
-                System.out.println("Failed to parse");
-                return null;
+            if(payload != null) {
+                try {
+                    return KademliaBinaryPayload.parseFrom(payload);
+                } catch (InvalidProtocolBufferException e) {
+                    System.out.println("Failed to parse");
+                    return null;
+                }
+            } else {
+                System.out.println("Packet decryption failed. Dropping.");
             }
         }
 

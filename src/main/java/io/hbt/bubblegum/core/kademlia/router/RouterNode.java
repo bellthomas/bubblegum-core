@@ -80,6 +80,10 @@ public class RouterNode implements Comparable<RouterNode> {
         return (override && System.currentTimeMillis() - this.getLatestResponse() < Configuration.ROUTER_NODE_FRESH_EXPIRY);
     }
 
+    public String toPGPUID() {
+        return String.join(":", this.ipAddress.getHostAddress(), this.port+"", this.node.toString());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if(obj instanceof RouterNode) {

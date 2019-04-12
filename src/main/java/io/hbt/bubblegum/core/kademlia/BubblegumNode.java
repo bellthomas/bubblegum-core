@@ -11,6 +11,7 @@ import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
 import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
 import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
 import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.simulator.Simulator;
@@ -302,6 +303,14 @@ public class BubblegumNode {
     //region PGP
     public boolean ensurePGPKeyIsLocal(String keyID, String pgpID) {
        return this.keyManager.ensurePGPKeyIsLocal(keyID, pgpID);
+    }
+
+    public KademliaSealedPayload encryptPacket(RouterNode node, byte[] payload) {
+        return this.keyManager.encryptPacket(node, payload);
+    }
+
+    public byte[] decryptPacket(RouterNode node, KademliaSealedPayload sealed) {
+        return this.keyManager.decryptPacket(node, sealed);
     }
     //endregion
 
