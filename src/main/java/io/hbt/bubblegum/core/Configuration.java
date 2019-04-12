@@ -53,6 +53,8 @@ public class Configuration {
     public static final int RSA_KEY_LENGTH = 2048; // bits
     public static final int PGP_SYM_ENC_GENERATOR = PGPEncryptedData.AES_256;
     public static final long KEY_CACHE_EXPIRY = 60 * 60 * 1000; // ms
+    public static final int KEY_CACHE_SIZE = 3000; // public keys
+    public static final int KEY_CACHE_PURGE_NUMBER = 500; // public keys
     public static final String OPENPGP_KEY_SERVER_URL = "https://keyserver.ubuntu.com";
     //endregion Encryption
 

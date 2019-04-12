@@ -51,9 +51,13 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 class KeyManager {
@@ -315,16 +319,11 @@ class KeyManager {
     }
 
     private boolean verifyKey(String keyID, String expectedUID) throws Exception {
-
         String url = this.keyServerRetrieveURL + keyID;
 
         URL obj = new URL(url);
         HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
-
-        // optional default is GET
         con.setRequestMethod("GET");
-
-        //add request header
         con.setRequestProperty("User-Agent", "Mozilla/5.0");
 
         int responseCode = con.getResponseCode();
@@ -357,6 +356,7 @@ class KeyManager {
                             if(users.next().equals(expectedUID)) {
                                 System.out.println(expectedUID);
                                 this.keyCache.put(expectedUID, new Pair<>(nextKey, System.currentTimeMillis()));
+                                this.cacheMaintenance();
                                 found = true;
                             }
                         }
@@ -370,7 +370,20 @@ class KeyManager {
         }
     }
 
-    static class AES {
+    public void cacheMaintenance() {
+        if(this.keyCache.size() > Configuration.KEY_CACHE_SIZE) {
+            // Cut down by KEY_CACHE_PURGE_NUMBER
+            List<String> keysToPurge = this.keyCache.entrySet().parallelStream()
+                .sorted(Comparator.comparing(e -> e.getValue().getSecond()))
+                .limit(Configuration.KEY_CACHE_PURGE_NUMBER)
+                .map(e -> e.getKey())
+                .collect(Collectors.toList());
+
+            keysToPurge.stream().forEach(k -> this.keyCache.remove(k));
+        }
+    }
+
+    private static class AES {
         static SecureRandom random = new SecureRandom();
         static byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         static IvParameterSpec ivspec = new IvParameterSpec(iv);
@@ -407,53 +420,4 @@ class KeyManager {
             }
         }
     }
-
-    public static void main(String[] args) {
-        KeyManager km = new KeyManager(null);
-
-
-        System.out.println("Starting");
-        StringBuilder sb = new StringBuilder();
-        long a, b;
-        for(int j = 0; j < 1000; j++) {
-            for (int i = 0; i < 100; i++) sb.append("a");
-
-//            a = System.currentTimeMillis();
-//            byte[] result = km.encryptWithPublic(km.pgpKey.getPublicKey(), sb.toString().getBytes());
-//            b = System.currentTimeMillis();
-//            String s = new String(Base64.getEncoder().encode(result));
-
-            // Encrypt packet
-            a = System.currentTimeMillis();
-            byte[] key_a = AES.generateKey();
-            byte[] key_b = AES.generateKey();
-
-            String plaintext = sb.toString();
-            byte[] cipher = AES.encrypt(plaintext.getBytes(), key_a);
-            cipher = AES.encrypt(cipher, key_b);
-
-            byte[] inner = km.encryptWithPrivate(key_a);
-            byte[] outer = km.encryptWithPublic(km.pgpKey.getPublicKey(), key_b);
-            b = System.currentTimeMillis();
-            System.out.println((b-a) + "ms");
-
-            // Decrypt packet phase
-            a = System.currentTimeMillis();
-            byte[] unwrapOuter = km.decryptWithPrivate(outer);
-            byte[] unwrapInner = km.decryptWithPublic(km.pgpKey.getPublicKey(), inner);
-
-            byte[] unwrapCipher = AES.decrypt(cipher, unwrapOuter);
-            unwrapCipher = AES.decrypt(unwrapCipher, unwrapInner);
-            b = System.currentTimeMillis();
-            System.out.println((b-a) + "ms");
-
-            System.out.println(new String(unwrapCipher));
-
-
-
-
-            System.out.println("Plaintext: " + plaintext.length() + " bytes \n\n");
-        }
-    }
-
 }
