@@ -51,7 +51,6 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -71,6 +70,7 @@ class KeyManager {
 
     private BubblegumNode node;
     private HashMap<String, Pair<PGPPublicKey, Long>> keyCache = new HashMap<>();
+    private HashMap<String, Long> impersonatorCache = new HashMap<>();
 
     private Cipher rsa;
 
@@ -79,9 +79,10 @@ class KeyManager {
             Security.addProvider(provider);
             this.node = node;
             try {
-                this.reKey(false);
-                this.rsa = Cipher.getInstance("RSA");
-                this.initialised = true;
+                if(this.reKey(Configuration.VERIFY_KEY_LIVE_ON_CREATION)) {
+                    this.rsa = Cipher.getInstance("RSA");
+                    this.initialised = true;
+                }
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
@@ -89,11 +90,11 @@ class KeyManager {
     }
 
     public String getPGPKeyID() {
-        return "0x" + Long.toHexString(this.pgpKey.getPublicKey().getKeyID());
+        if(this.initialised) return "0x" + Long.toHexString(this.pgpKey.getPublicKey().getKeyID());
+        else return "";
     }
 
-    void reKey(boolean verifyKey) throws NoSuchAlgorithmException, NoSuchProviderException, PGPException, IOException, ProtocolException {
-
+    boolean reKey(boolean verifyKey) throws NoSuchAlgorithmException, NoSuchProviderException, PGPException, IOException, ProtocolException {
         if(Configuration.ENABLE_PGP) {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
             kpg.initialize(Configuration.RSA_KEY_LENGTH);
@@ -119,21 +120,23 @@ class KeyManager {
                             Thread.sleep(2000);
                             retries++;
                         }
-
-                        if (retries < 15) {
-                            this.pgpKey = key;
-    //                        this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
-                        }
+                        this.pgpKey = key;
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                    return true;
                 } else {
                     this.pgpKey = key;
-    //                this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
+                    return true;
+                    // this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
                 }
+            } else {
+                System.out.println("Failed to publish key");
+                return false;
             }
         }
+        return false;
     }
 
     boolean ensurePGPKeyIsLocal(String keyID, String pgpID) {
@@ -205,7 +208,7 @@ class KeyManager {
                 }
             }
         } catch (BadPaddingException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
@@ -354,7 +357,7 @@ class KeyManager {
                         Iterator<String> users = nextKey.getUserIDs();
                         while(users.hasNext() && !found) {
                             if(users.next().equals(expectedUID)) {
-                                System.out.println(expectedUID);
+                                System.out.println("Verified -> " + expectedUID + "  (I am "+this.node.getServer().getPort()+")");
                                 this.keyCache.put(expectedUID, new Pair<>(nextKey, System.currentTimeMillis()));
                                 this.cacheMaintenance();
                                 found = true;
@@ -370,7 +373,7 @@ class KeyManager {
         }
     }
 
-    public void cacheMaintenance() {
+    private void cacheMaintenance() {
         if(this.keyCache.size() > Configuration.KEY_CACHE_SIZE) {
             // Cut down by KEY_CACHE_PURGE_NUMBER
             List<String> keysToPurge = this.keyCache.entrySet().parallelStream()
@@ -380,6 +383,27 @@ class KeyManager {
                 .collect(Collectors.toList());
 
             keysToPurge.stream().forEach(k -> this.keyCache.remove(k));
+        }
+    }
+
+    void declareSybilImpersonator(String pgpID) {
+        this.impersonatorCache.put(pgpID, System.currentTimeMillis());
+        this.impersonatorCacheMaintenance();
+    }
+
+    boolean checkForSybilImpersonator(String pgpID) {
+        return this.impersonatorCache.containsKey(pgpID);
+    }
+
+    void impersonatorCacheMaintenance() {
+        if(impersonatorCache.size() > 500) {
+            List<String> keysToPurge = this.impersonatorCache.entrySet().parallelStream()
+                .sorted(Comparator.comparing(e -> e.getValue()))
+                .limit(100)
+                .map(e -> e.getKey())
+                .collect(Collectors.toList());
+
+            keysToPurge.stream().forEach(k -> this.impersonatorCache.remove(k));
         }
     }
 

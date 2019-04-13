@@ -56,6 +56,8 @@ public class Configuration {
     public static final int KEY_CACHE_SIZE = 3000; // public keys
     public static final int KEY_CACHE_PURGE_NUMBER = 500; // public keys
     public static final String OPENPGP_KEY_SERVER_URL = "https://keyserver.ubuntu.com";
+	public static final boolean VERIFY_KEY_LIVE_ON_CREATION = true;
+	public static final boolean ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION = true;
     //endregion Encryption
 
     public static Random rand = new Random();

@@ -25,8 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * This is local node
- * One per social network a part of
+ * Representation of a virtual Kademlia node.
  */
 public class BubblegumNode {
     private String identifier, networkIdentifier;
@@ -43,8 +42,7 @@ public class BubblegumNode {
     private BubblegumNode(
         String identifier, String networkIdentifier,
         ActivityExecutionContext context, BubblegumCellServer server,
-        NodeID nid)
-    {
+        NodeID nid) {
         this.identifier = identifier;
         this.networkIdentifier = networkIdentifier;
         this.nodeIdentifier = nid;
@@ -105,13 +103,23 @@ public class BubblegumNode {
     }
 
     public boolean sync(RouterNode node) {
-        SyncActivity syncActivity = new SyncActivity(this, node);
-        syncActivity.run();
-        return (syncActivity.getComplete() && syncActivity.getSuccess());
+        if(Configuration.ENABLE_PGP) {
+            SyncActivity syncActivity = new SyncActivity(this, node);
+            syncActivity.run();
+            if(syncActivity.getComplete() && !syncActivity.getSuccess()) {
+                if(syncActivity.getFailedWebOfTrustVerification()) {
+                    System.err.println("SYNC rejected: failed WoT verification.");
+                }
+            }
+            return (syncActivity.getComplete() && syncActivity.getSuccess());
+        }
+        else return true;
     }
 
     public void requestSync(RouterNode node) {
-        this.executionContext.addCallbackActivity("system", () -> this.sync(node));
+        if(Configuration.ENABLE_PGP) {
+            this.executionContext.addCallbackActivity("system", () -> this.sync(node));
+        }
     }
     //endregion
 
@@ -349,10 +357,23 @@ public class BubblegumNode {
     }
 
     public boolean syncIfRequired(RouterNode node) {
-        if(this.keyManager.getPublicKey(node.toPGPUID()) == null) {
-            return this.sync(node);
+        if(Configuration.ENABLE_PGP) {
+            if (this.keyManager.getPublicKey(node.toPGPUID()) == null) {
+                return this.sync(node);
+            }
         }
         return true;
+    }
+
+    public boolean haveKeyForPGPID(String pgpID) {
+        return (this.keyManager.getPublicKey(pgpID) != null);
+    }
+
+    public void declareSybilImpersonator(String pgpID) {
+        this.keyManager.declareSybilImpersonator(pgpID);
+    }
+    public boolean checkForSybilImpersonator(String pgpID) {
+        return this.keyManager.checkForSybilImpersonator(pgpID);
     }
     //endregion
 

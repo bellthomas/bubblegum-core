@@ -44,13 +44,16 @@ public class BootstrapActivity extends NetworkActivity {
                 this.print("Network ID from PING null");
             }
 
-            RouterNode node = KademliaServerWorker.getFromOriginHash(this.localNode, ping.getPing());
+            RouterNode node = KademliaServerWorker.messageToRouterNode(ping.getPing());
             if(node != null && this.localNode.sync(node)) {
                 this.print("Starting lookup");
                 LookupActivity lookupActivity = new LookupActivity(this.localNode, this.localNode.getNodeIdentifier(), 10, false);
                 lookupActivity.run();
                 if (lookupActivity.getComplete() && lookupActivity.getSuccess()) this.onSuccess();
                 else this.onFail();
+            } else {
+                this.print("Failed sync");
+                this.onFail();
             }
         }
 

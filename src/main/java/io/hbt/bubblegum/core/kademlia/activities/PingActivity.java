@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core.kademlia.activities;
 
+import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
@@ -32,9 +33,9 @@ public class PingActivity extends NetworkActivity {
         this.originalPing = originalPing;
     }
 
-
     @Override
     public void run() {
+        this.print("PING: response " + this.isResponse);
         super.run();
         if(this.aborted) {
             this.onFail();
@@ -42,26 +43,26 @@ public class PingActivity extends NetworkActivity {
         }
 
         // Get real RouterNode if we have one
-        RouterNode destination = this.routingTable.getRouterNodeForID(this.to.getNode());
-        if(destination == null) destination = this.to;
-
-        // dest and to with different ip/port?
-
+        RouterNode destination = this.to;
+        if(!Configuration.ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION || !Configuration.ENABLE_PGP) {
+            destination = this.routingTable.getRouterNodeForID(this.to.getNode());
+            if (destination == null) destination = this.to;
+        }
 
         if(this.isResponse) {
-            this.onSuccess("["+this.exchangeID+"] Replying to PING from " + this.networkID + ":" + destination.getNode());
+            this.onSuccess("Replying to PING from " + this.foreignRecipient);
         }
         else if(destination.isFresh()) {
             this.onSuccess("Node fresh, PING not required for " + this.networkID + ":" + destination.getNode());
-//            return;
+            return;
         }
         else {
-            this.print("Starting PING to " + this.networkID + ":" + destination.getNode());
+            this.print("Starting PING to " + this.foreignRecipient);
         }
 
 
         Consumer<KademliaMessage> response = this.isResponse ? null : (kademliaMessage -> {
-            // TODO Verify IP/Port
+            this.print("PING response got");
             try {
                 RouterNode responder = this.routingTable.getRouterNodeForID(new NodeID(kademliaMessage.getOriginHash()));
                 if(responder == null) responder = new RouterNode(
@@ -75,7 +76,9 @@ public class PingActivity extends NetworkActivity {
                 if(newNetworkID != null && newNetworkID.length() > 0) this.networkID = newNetworkID;
 
                 responder.hasResponded();
-                this.routingTable.insert(responder);
+                if(!Configuration.ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION || !Configuration.ENABLE_PGP) {
+                    this.routingTable.insert(responder);
+                }
                 this.originalPing = kademliaMessage;
                 this.onSuccess("PING response from " + responder.getNode().toString());
 
@@ -86,12 +89,6 @@ public class PingActivity extends NetworkActivity {
             }
 
         });
-
-//        final NodeID destinationID = destination.getNode();
-//        Runnable onTimeout = () -> {
-//            RouterNode responder = this.routingTable.getRouterNodeForID(destinationID);
-//            if(responder != null) responder.hasFailedToRespond();
-//        };
 
         String originHash = (this.originalPing == null) ? this.to.getNode().toString() : this.originalPing.getOriginHash();
 

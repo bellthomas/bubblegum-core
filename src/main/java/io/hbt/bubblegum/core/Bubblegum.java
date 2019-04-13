@@ -152,6 +152,21 @@ public class Bubblegum {
 
     /** EXPERIMENTAL **/
 
+    public BubblegumNode createNode(NodeID id) {
+        BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
+        newNodeBuilder.setNodeIdentifier(id);
+        newNodeBuilder.setExecutionContext(this.executionContext);
+        BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
+        newNodeBuilder = null;
+        this.executionContext.newProcessInContext();
+
+        if(newNode != null) {
+            this.nodes.put(newNode.getIdentifier(), newNode);
+        }
+        // Database.getInstance().updateNodeInDatabase(newNode);
+        return newNode;
+    }
+
     private void loadNodes() {
         // TODO assert nodes and cells empty
         Map<Integer, List<NetworkDetails>> networks = Database.getInstance().loadNetworksFromDatabase();

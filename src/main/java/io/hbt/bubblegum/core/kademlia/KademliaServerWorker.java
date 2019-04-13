@@ -1,8 +1,10 @@
 package io.hbt.bubblegum.core.kademlia;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.hbt.bubblegum.core.Configuration;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
+import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
@@ -30,9 +32,13 @@ public class KademliaServerWorker {
 
         // PING RPC received.
         if(message.hasPingMessage() && !message.getPingMessage().getReply()) {
-            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
+            RouterNode sender = KademliaServerWorker.messageToRouterNode(message);
             if(sender != null) {
-                node.getRoutingTable().insert(sender);
+                if(!Configuration.ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION || !Configuration.ENABLE_PGP) {
+                    // SYNC manages this if PGP w. web of trust is enabled.
+                    sender = KademliaServerWorker.getFromOriginHash(node, message);
+                    node.getRoutingTable().insert(sender);
+                }
 
                 PingActivity pingReply = new PingActivity(
                     node,
@@ -44,13 +50,25 @@ public class KademliaServerWorker {
             }
         }
 
-        // TODO check
+        // SYNC RPC received.
         else if(message.hasSyncMessage()) {
-            RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
-            if(sender != null) {
-                SyncActivity syncActivity = new SyncActivity(node, sender);
-                syncActivity.setResponse(message);
-                node.getExecutionContext().addCallbackActivity(node.getIdentifier(), syncActivity);
+            if(Configuration.ENABLE_PGP) {
+                RouterNode sender = KademliaServerWorker.messageToRouterNode(message);
+                if(node.checkForSybilImpersonator(sender.toPGPUID())) {
+                    // An impersonator, reject.
+                    KademliaMessage rejection = ProtobufHelper.buildSyncMessage(
+                        node, sender, message.getExchangeID(),
+                        -1, "", ByteString.EMPTY, ByteString.EMPTY
+                    );
+
+                    node.getServer().sendDatagram(node, sender, rejection, null);
+                    System.out.println("Rejected impersonator from cache.");
+                }
+                else if (sender != null) {
+                    SyncActivity syncActivity = new SyncActivity(node, sender);
+                    syncActivity.setResponse(message);
+                    node.getExecutionContext().addCallbackActivity(node.getIdentifier(), syncActivity);
+                }
             }
         }
 
@@ -115,12 +133,20 @@ public class KademliaServerWorker {
     public static RouterNode getFromOriginHash(BubblegumNode node, KademliaMessage message) {
         try {
             RouterNode sender = node.getRoutingTable().getRouterNodeForID(new NodeID(message.getOriginHash()));
-            if (sender == null) sender = new RouterNode(
+            if (sender == null) sender = messageToRouterNode(message);
+            return sender;
+        } catch (MalformedKeyException e) {
+            return null;
+        }
+    }
+
+    public static RouterNode messageToRouterNode(KademliaMessage message) {
+        try {
+            return new RouterNode(
                 new NodeID(message.getOriginHash()),
                 NetworkingHelper.getInetAddress(message.getOriginIP()),
                 message.getOriginPort()
             );
-            return sender;
         } catch (MalformedKeyException e) {
             return null;
         } catch (UnknownHostException e) {
