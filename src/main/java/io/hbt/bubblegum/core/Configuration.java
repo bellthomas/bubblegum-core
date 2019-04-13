@@ -60,6 +60,10 @@ public class Configuration {
 	public static final boolean ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION = true;
     //endregion Encryption
 
+    //region Object Resolver
+    public static final boolean ENABLE_OBJECT_RESOLVER = true;
+    //endregion
+
     public static Random rand = new Random();
 
     private Configuration() { /* Non instantiatable */ }
