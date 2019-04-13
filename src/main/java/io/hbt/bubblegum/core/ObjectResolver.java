@@ -1,6 +1,7 @@
 package io.hbt.bubblegum.core;
 
 import com.google.common.base.Charsets;
+import io.hbt.bubblegum.core.auxiliary.BufferPool;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
 import javax.crypto.Cipher;
@@ -29,12 +30,12 @@ public class ObjectResolver {
     ObjectResolver() {
         if(Configuration.ENABLE_OBJECT_RESOLVER) {
             System.out.println("ObjectResolver started");
-            new Thread(() -> CapitalizeServer.main()).start();
-            try {
-                CapitalizeClient.main();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            CapitalizeServer.main();
+//            try {
+//                CapitalizeClient.main();
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
 //            while(true) {
 //                try {
 //                    Thread.sleep(1000);
@@ -90,7 +91,7 @@ public class ObjectResolver {
                     if(in.hasNextLine()) {
                         byte[] key = in.nextLine().getBytes(Charsets.US_ASCII);
                         System.out.println("Key: " + new String(key, Charsets.US_ASCII));
-//                        FileInputStream fileInput = new FileInputStream("simulation.yml"));
+                        FileInputStream fileInput = new FileInputStream("cl.jpg");
                         byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                         IvParameterSpec ivspec = new IvParameterSpec(iv);
 
@@ -98,7 +99,12 @@ public class ObjectResolver {
                         SecretKey originalKey = new SecretKeySpec(key, "AES");
                         c2.init(Cipher.ENCRYPT_MODE, originalKey, ivspec);
                         CipherOutputStream os = new CipherOutputStream(socket.getOutputStream(), c2);
-                        os.write("hello!testasdaaaasdasdasdasasdasdasdasdasd".getBytes(Charsets.US_ASCII));
+                        byte[] buffer = BufferPool.getOrCreateBuffer();
+                        int i;
+                        while((i = fileInput.read(buffer)) != -1) {
+                            os.write(buffer, 0, i);
+                        }
+                        BufferPool.release(buffer);
                         os.flush();
                         os.close();
                     }
@@ -116,7 +122,6 @@ public class ObjectResolver {
     public static class CapitalizeClient {
         public static void main() throws Exception {
             try (var socket = new Socket("localhost", 59898)) {
-                System.out.println("Enter lines of text then Ctrl+D or Ctrl+C to quit");
 
                 var out = new PrintWriter(socket.getOutputStream(), true);
                 out.println("qwertyuiopasdfgh"); // 16 bytes in ascii
