@@ -58,9 +58,6 @@ public class FindActivity extends NetworkActivity {
         KademliaMessage message = null;
 
         if(this.isResponse) {
-//            this.print("Replying to " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + " from "
-//                    + this.to.getIPAddress().getHostAddress() + ":" + this.to.getPort());
-
             if(this.returnValue && this.localNode.databaseHasKey(this.request.getSearchHash())) {
 
                 // TODO validate
@@ -92,9 +89,6 @@ public class FindActivity extends NetworkActivity {
             }
         }
         else {
-//            this.print("Starting " + (this.returnValue ? "FIND_VALUE" : "FIND_NODE") + "(" + this.search + ") activity to "
-//                    + this.localNode.getNetworkIdentifier() + ":" + this.to.getNode());
-
 
             message = ProtobufHelper.buildFindRequest(
                 this.localNode,
@@ -111,31 +105,27 @@ public class FindActivity extends NetworkActivity {
             if(payload != null) {
                 if (payload.hasFindNodeResponse()) {
                     KademliaFindNodeResponse response = payload.getFindNodeResponse();
-//                StringBuilder logMessage = new StringBuilder();
-//                logMessage.append(kademliaMessage.getOriginHash() + " returned " + response.getResultsCount() + " results:\n");
-                    for (KademliaNode node : response.getResultsList()) {
-//                    logMessage.append("- " + node.getHash() + " @ " + node.getIpAddress() + ":" + node.getPort() + "\n");
 
+                    for (KademliaNode node : response.getResultsList()) {
                         // Only ping if not found or stale
                         RouterNode destination = this.routingTable.fromKademliaNode(node);
                         this.resultNodes.add(destination);
                     }
 
-//                this.print(logMessage.toString());
-                    this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
+                    this.routingTable.insert(KademliaServerWorker.getFromOriginHash(this.localNode, kademliaMessage));
                     this.onSuccess();
 
                     // TODO handle response?
                 } else if (payload.hasFindValueResponse()) {
+
                     KademliaFindValueResponse findValueResponse = payload.getFindValueResponse();
                     List<ByteString> byteStringValues = findValueResponse.getValueList();
                     List<byte[]> byteArrayValues = byteStringValues.stream().map((bs) -> bs.toByteArray()).collect(Collectors.toList());
                     this.values = byteArrayValues;
-//                this.print("FIND_VALUE on " + findValueResponse.getRequest().getSearchHash() + " returned " + this.values.size() + " elements");
-                    this.insertSenderNode(kademliaMessage.getOriginHash(), kademliaMessage.getOriginIP(), kademliaMessage.getOriginPort());
+
+                    this.routingTable.insert(KademliaServerWorker.getFromOriginHash(this.localNode, kademliaMessage));
                     this.onSuccess();
                 } else {
-//                this.print("Invalid");
                     this.onFail();
                 }
             }
