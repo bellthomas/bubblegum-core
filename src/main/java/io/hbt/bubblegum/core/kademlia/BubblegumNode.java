@@ -2,22 +2,30 @@ package io.hbt.bubblegum.core.kademlia;
 
 import io.hbt.bubblegum.core.BubblegumCellServer;
 import io.hbt.bubblegum.core.Configuration;
+import io.hbt.bubblegum.core.ObjectResolver;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
+import io.hbt.bubblegum.core.auxiliary.ObjectResolutionDetails;
+import io.hbt.bubblegum.core.auxiliary.Pair;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.Post;
 import io.hbt.bubblegum.core.databasing.SnapshotDatabase;
+import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 import io.hbt.bubblegum.core.kademlia.activities.BootstrapActivity;
 import io.hbt.bubblegum.core.kademlia.activities.LookupActivity;
 import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
+import io.hbt.bubblegum.core.kademlia.activities.ResourceRequestActivity;
 import io.hbt.bubblegum.core.kademlia.activities.StoreActivity;
 import io.hbt.bubblegum.core.kademlia.activities.SyncActivity;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 import io.hbt.bubblegum.simulator.Simulator;
 
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -35,6 +43,7 @@ public class BubblegumNode {
     private ActivityExecutionContext executionContext;
     private Database db;
     private KeyManager keyManager;
+    private ObjectResolver objectResolver;
     private int numberOfPosts = 0;
     private boolean setupPostRefreshing = false;
 
@@ -42,7 +51,7 @@ public class BubblegumNode {
     private BubblegumNode(
         String identifier, String networkIdentifier,
         ActivityExecutionContext context, BubblegumCellServer server,
-        NodeID nid) {
+        NodeID nid, ObjectResolver objectResolver) {
         this.identifier = identifier;
         this.networkIdentifier = networkIdentifier;
         this.nodeIdentifier = nid;
@@ -53,6 +62,7 @@ public class BubblegumNode {
         this.db = Database.getInstance();
         this.db.saveUserMeta(this, "username", this.nodeIdentifier.toString());
         this.keyManager = new KeyManager(this);
+        this.objectResolver = objectResolver;
         this.setupInternalScheduling();
 
         this.log("Constructed BubblegumNode: " + this.nodeIdentifier.toString());
@@ -186,6 +196,32 @@ public class BubblegumNode {
     public List<Post> queryMeta(NodeID id, List<String> keys) {
         List<String> metakeys = keys.stream().map((k) -> "_" + k + "_" + id.toString()).collect(Collectors.toList());
         return this.query(id, -1, -1, metakeys);
+    }
+
+    public ObjectResolutionDetails requestResource(String hash, String uri) {
+        try {
+            NodeID nid = new NodeID(hash);
+            LookupActivity lookupActivity = new LookupActivity(this, nid, 1, false);
+            lookupActivity.run();
+            if(lookupActivity.getComplete() && lookupActivity.getSuccess()) {
+                Set<RouterNode> nodes = lookupActivity.getClosestNodes();
+                RouterNode to = null;
+                for(RouterNode found : nodes) {
+                    if(found.getNode().equals(nid)) to = found;
+                }
+
+                if(to != null) {
+                    ResourceRequestActivity resourceRequestActivity = new ResourceRequestActivity(this, to, uri);
+                    resourceRequestActivity.run();
+                    if(resourceRequestActivity.getComplete() && resourceRequestActivity.getSuccess()) {
+                        return resourceRequestActivity.getResolutionDetails();
+                    }
+                }
+            }
+        } catch (MalformedKeyException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
     //endregion
 
@@ -384,6 +420,7 @@ public class BubblegumNode {
         private NodeID nodeIdentifier;
         private ActivityExecutionContext executionContext;
         private BubblegumCellServer server;
+        private ObjectResolver objectResolver;
         private int port = 0;
 
         public Builder setIdentifier(String identifier) {
@@ -416,6 +453,11 @@ public class BubblegumNode {
             return this;
         }
 
+        public Builder setObjectResolver(ObjectResolver objectResolver) {
+            this.objectResolver = objectResolver;
+            return this;
+        }
+
         public BubblegumNode build() {
             // Check required
             if(this.executionContext == null || this.server == null)
@@ -428,13 +470,22 @@ public class BubblegumNode {
             if(!NetworkingHelper.validPort(this.port)) this.port = 0;
 
             return new BubblegumNode (
-                this.identifier, this.networkIdentifier, this.executionContext, this.server, this.nodeIdentifier
+                this.identifier, this.networkIdentifier, this.executionContext,
+                this.server, this.nodeIdentifier, this.objectResolver
             );
         }
     }
     //endregion
 
     //region Misc
+    public Pair<Socket, InputStream> getResourceClient(ObjectResolutionDetails details) {
+        return this.objectResolver.client(details);
+    }
+
+    public BgKademliaMessage.KademliaMessage newResourceRequest(RouterNode to, String eid, String origin, String uri) {
+        return this.objectResolver.newRequest(this, to, eid, origin, uri);
+    }
+
     public String toPGPUID() {
         return String.join(":", this.server.getLocal().getHostAddress(), this.server.getPort()+"", this.nodeIdentifier.toString());
     }

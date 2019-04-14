@@ -22,6 +22,7 @@ public class Bubblegum {
     private ActivityExecutionContext executionContext;
     private ArrayList<BubblegumCell> cells;
     private HashMap<String, BubblegumNode> nodes;
+    private ObjectResolver objectResolver;
 
     /**
      * Constructor.
@@ -34,6 +35,8 @@ public class Bubblegum {
 
         if(reload) this.loadNodes();
         Database.getInstance().initialiseExpiryScheduler(this.executionContext);
+
+        if(Configuration.ENABLE_OBJECT_RESOLVER) this.objectResolver = new ObjectResolver();
     }
 
 
@@ -47,6 +50,7 @@ public class Bubblegum {
         this.executionContext.newProcessInContext();
         BubblegumNode.Builder newNodeBuilder = new BubblegumNode.Builder();
         newNodeBuilder.setExecutionContext(this.executionContext);
+        newNodeBuilder.setObjectResolver(this.objectResolver);
         BubblegumNode newNode = this.insertIntoCell(newNodeBuilder);
         newNodeBuilder = null;
 
@@ -225,6 +229,11 @@ public class Bubblegum {
         }
 
         return result;
+    }
+
+    // Expose for testing
+    public ObjectResolver getObjectResolver() {
+        return this.objectResolver;
     }
 
     //endregion

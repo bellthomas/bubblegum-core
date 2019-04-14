@@ -62,6 +62,8 @@ public class Configuration {
 
     //region Object Resolver
     public static final boolean ENABLE_OBJECT_RESOLVER = true;
+    public static final int RESOLVER_SERVER_THREADS = 5;
+    public static final String RESOLVER_ASSETS_FOLDER = ".assets/";
     //endregion
 
     public static Random rand = new Random();

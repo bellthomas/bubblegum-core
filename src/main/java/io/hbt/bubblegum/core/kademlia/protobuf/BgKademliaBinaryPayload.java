@@ -109,6 +109,32 @@ public final class BgKademliaBinaryPayload {
      */
     io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.KademliaQueryResponseOrBuilder getQueryResponseOrBuilder();
 
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+     */
+    boolean hasResourceRequest();
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+     */
+    io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest getResourceRequest();
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+     */
+    io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequestOrBuilder getResourceRequestOrBuilder();
+
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+     */
+    boolean hasResourceResponse();
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+     */
+    io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse getResourceResponse();
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+     */
+    io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponseOrBuilder getResourceResponseOrBuilder();
+
     public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload.MessageCase getMessageCase();
   }
   /**
@@ -248,6 +274,34 @@ public final class BgKademliaBinaryPayload {
               messageCase_ = 7;
               break;
             }
+            case 66: {
+              io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.Builder subBuilder = null;
+              if (messageCase_ == 8) {
+                subBuilder = ((io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_).toBuilder();
+              }
+              message_ =
+                  input.readMessage(io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_);
+                message_ = subBuilder.buildPartial();
+              }
+              messageCase_ = 8;
+              break;
+            }
+            case 74: {
+              io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.Builder subBuilder = null;
+              if (messageCase_ == 9) {
+                subBuilder = ((io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_).toBuilder();
+              }
+              message_ =
+                  input.readMessage(io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_);
+                message_ = subBuilder.buildPartial();
+              }
+              messageCase_ = 9;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -291,6 +345,8 @@ public final class BgKademliaBinaryPayload {
       STORERESPONSE(5),
       QUERYREQUEST(6),
       QUERYRESPONSE(7),
+      RESOURCEREQUEST(8),
+      RESOURCERESPONSE(9),
       MESSAGE_NOT_SET(0);
       private final int value;
       private MessageCase(int value) {
@@ -313,6 +369,8 @@ public final class BgKademliaBinaryPayload {
           case 5: return STORERESPONSE;
           case 6: return QUERYREQUEST;
           case 7: return QUERYRESPONSE;
+          case 8: return RESOURCEREQUEST;
+          case 9: return RESOURCERESPONSE;
           case 0: return MESSAGE_NOT_SET;
           default: return null;
         }
@@ -510,6 +568,58 @@ public final class BgKademliaBinaryPayload {
       return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.KademliaQueryResponse.getDefaultInstance();
     }
 
+    public static final int RESOURCEREQUEST_FIELD_NUMBER = 8;
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+     */
+    public boolean hasResourceRequest() {
+      return messageCase_ == 8;
+    }
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+     */
+    public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest getResourceRequest() {
+      if (messageCase_ == 8) {
+         return (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_;
+      }
+      return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.getDefaultInstance();
+    }
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+     */
+    public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequestOrBuilder getResourceRequestOrBuilder() {
+      if (messageCase_ == 8) {
+         return (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_;
+      }
+      return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.getDefaultInstance();
+    }
+
+    public static final int RESOURCERESPONSE_FIELD_NUMBER = 9;
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+     */
+    public boolean hasResourceResponse() {
+      return messageCase_ == 9;
+    }
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+     */
+    public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse getResourceResponse() {
+      if (messageCase_ == 9) {
+         return (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_;
+      }
+      return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.getDefaultInstance();
+    }
+    /**
+     * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+     */
+    public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponseOrBuilder getResourceResponseOrBuilder() {
+      if (messageCase_ == 9) {
+         return (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_;
+      }
+      return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -544,6 +654,12 @@ public final class BgKademliaBinaryPayload {
       }
       if (messageCase_ == 7) {
         output.writeMessage(7, (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.KademliaQueryResponse) message_);
+      }
+      if (messageCase_ == 8) {
+        output.writeMessage(8, (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_);
+      }
+      if (messageCase_ == 9) {
+        output.writeMessage(9, (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_);
       }
       unknownFields.writeTo(output);
     }
@@ -581,6 +697,14 @@ public final class BgKademliaBinaryPayload {
       if (messageCase_ == 7) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.KademliaQueryResponse) message_);
+      }
+      if (messageCase_ == 8) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(8, (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_);
+      }
+      if (messageCase_ == 9) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -627,6 +751,14 @@ public final class BgKademliaBinaryPayload {
           if (!getQueryResponse()
               .equals(other.getQueryResponse())) return false;
           break;
+        case 8:
+          if (!getResourceRequest()
+              .equals(other.getResourceRequest())) return false;
+          break;
+        case 9:
+          if (!getResourceResponse()
+              .equals(other.getResourceResponse())) return false;
+          break;
         case 0:
         default:
       }
@@ -669,6 +801,14 @@ public final class BgKademliaBinaryPayload {
         case 7:
           hash = (37 * hash) + QUERYRESPONSE_FIELD_NUMBER;
           hash = (53 * hash) + getQueryResponse().hashCode();
+          break;
+        case 8:
+          hash = (37 * hash) + RESOURCEREQUEST_FIELD_NUMBER;
+          hash = (53 * hash) + getResourceRequest().hashCode();
+          break;
+        case 9:
+          hash = (37 * hash) + RESOURCERESPONSE_FIELD_NUMBER;
+          hash = (53 * hash) + getResourceResponse().hashCode();
           break;
         case 0:
         default:
@@ -883,6 +1023,20 @@ public final class BgKademliaBinaryPayload {
             result.message_ = queryResponseBuilder_.build();
           }
         }
+        if (messageCase_ == 8) {
+          if (resourceRequestBuilder_ == null) {
+            result.message_ = message_;
+          } else {
+            result.message_ = resourceRequestBuilder_.build();
+          }
+        }
+        if (messageCase_ == 9) {
+          if (resourceResponseBuilder_ == null) {
+            result.message_ = message_;
+          } else {
+            result.message_ = resourceResponseBuilder_.build();
+          }
+        }
         result.messageCase_ = messageCase_;
         onBuilt();
         return result;
@@ -959,6 +1113,14 @@ public final class BgKademliaBinaryPayload {
           }
           case QUERYRESPONSE: {
             mergeQueryResponse(other.getQueryResponse());
+            break;
+          }
+          case RESOURCEREQUEST: {
+            mergeResourceRequest(other.getResourceRequest());
+            break;
+          }
+          case RESOURCERESPONSE: {
+            mergeResourceResponse(other.getResourceResponse());
             break;
           }
           case MESSAGE_NOT_SET: {
@@ -1960,6 +2122,278 @@ public final class BgKademliaBinaryPayload {
         onChanged();;
         return queryResponseBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.Builder, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequestOrBuilder> resourceRequestBuilder_;
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      public boolean hasResourceRequest() {
+        return messageCase_ == 8;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest getResourceRequest() {
+        if (resourceRequestBuilder_ == null) {
+          if (messageCase_ == 8) {
+            return (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_;
+          }
+          return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.getDefaultInstance();
+        } else {
+          if (messageCase_ == 8) {
+            return resourceRequestBuilder_.getMessage();
+          }
+          return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      public Builder setResourceRequest(io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest value) {
+        if (resourceRequestBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          message_ = value;
+          onChanged();
+        } else {
+          resourceRequestBuilder_.setMessage(value);
+        }
+        messageCase_ = 8;
+        return this;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      public Builder setResourceRequest(
+          io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.Builder builderForValue) {
+        if (resourceRequestBuilder_ == null) {
+          message_ = builderForValue.build();
+          onChanged();
+        } else {
+          resourceRequestBuilder_.setMessage(builderForValue.build());
+        }
+        messageCase_ = 8;
+        return this;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      public Builder mergeResourceRequest(io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest value) {
+        if (resourceRequestBuilder_ == null) {
+          if (messageCase_ == 8 &&
+              message_ != io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.getDefaultInstance()) {
+            message_ = io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.newBuilder((io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            message_ = value;
+          }
+          onChanged();
+        } else {
+          if (messageCase_ == 8) {
+            resourceRequestBuilder_.mergeFrom(value);
+          }
+          resourceRequestBuilder_.setMessage(value);
+        }
+        messageCase_ = 8;
+        return this;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      public Builder clearResourceRequest() {
+        if (resourceRequestBuilder_ == null) {
+          if (messageCase_ == 8) {
+            messageCase_ = 0;
+            message_ = null;
+            onChanged();
+          }
+        } else {
+          if (messageCase_ == 8) {
+            messageCase_ = 0;
+            message_ = null;
+          }
+          resourceRequestBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.Builder getResourceRequestBuilder() {
+        return getResourceRequestFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequestOrBuilder getResourceRequestOrBuilder() {
+        if ((messageCase_ == 8) && (resourceRequestBuilder_ != null)) {
+          return resourceRequestBuilder_.getMessageOrBuilder();
+        } else {
+          if (messageCase_ == 8) {
+            return (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_;
+          }
+          return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceRequest resourceRequest = 8;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.Builder, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequestOrBuilder> 
+          getResourceRequestFieldBuilder() {
+        if (resourceRequestBuilder_ == null) {
+          if (!(messageCase_ == 8)) {
+            message_ = io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.getDefaultInstance();
+          }
+          resourceRequestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest.Builder, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequestOrBuilder>(
+                  (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest) message_,
+                  getParentForChildren(),
+                  isClean());
+          message_ = null;
+        }
+        messageCase_ = 8;
+        onChanged();;
+        return resourceRequestBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.Builder, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponseOrBuilder> resourceResponseBuilder_;
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      public boolean hasResourceResponse() {
+        return messageCase_ == 9;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse getResourceResponse() {
+        if (resourceResponseBuilder_ == null) {
+          if (messageCase_ == 9) {
+            return (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_;
+          }
+          return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.getDefaultInstance();
+        } else {
+          if (messageCase_ == 9) {
+            return resourceResponseBuilder_.getMessage();
+          }
+          return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      public Builder setResourceResponse(io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse value) {
+        if (resourceResponseBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          message_ = value;
+          onChanged();
+        } else {
+          resourceResponseBuilder_.setMessage(value);
+        }
+        messageCase_ = 9;
+        return this;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      public Builder setResourceResponse(
+          io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.Builder builderForValue) {
+        if (resourceResponseBuilder_ == null) {
+          message_ = builderForValue.build();
+          onChanged();
+        } else {
+          resourceResponseBuilder_.setMessage(builderForValue.build());
+        }
+        messageCase_ = 9;
+        return this;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      public Builder mergeResourceResponse(io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse value) {
+        if (resourceResponseBuilder_ == null) {
+          if (messageCase_ == 9 &&
+              message_ != io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.getDefaultInstance()) {
+            message_ = io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.newBuilder((io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            message_ = value;
+          }
+          onChanged();
+        } else {
+          if (messageCase_ == 9) {
+            resourceResponseBuilder_.mergeFrom(value);
+          }
+          resourceResponseBuilder_.setMessage(value);
+        }
+        messageCase_ = 9;
+        return this;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      public Builder clearResourceResponse() {
+        if (resourceResponseBuilder_ == null) {
+          if (messageCase_ == 9) {
+            messageCase_ = 0;
+            message_ = null;
+            onChanged();
+          }
+        } else {
+          if (messageCase_ == 9) {
+            messageCase_ = 0;
+            message_ = null;
+          }
+          resourceResponseBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.Builder getResourceResponseBuilder() {
+        return getResourceResponseFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      public io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponseOrBuilder getResourceResponseOrBuilder() {
+        if ((messageCase_ == 9) && (resourceResponseBuilder_ != null)) {
+          return resourceResponseBuilder_.getMessageOrBuilder();
+        } else {
+          if (messageCase_ == 9) {
+            return (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_;
+          }
+          return io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.io.hbt.bubblegum.core.kademlia.protobuf.KademliaResourceResponse resourceResponse = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.Builder, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponseOrBuilder> 
+          getResourceResponseFieldBuilder() {
+        if (resourceResponseBuilder_ == null) {
+          if (!(messageCase_ == 9)) {
+            message_ = io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.getDefaultInstance();
+          }
+          resourceResponseBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse.Builder, io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponseOrBuilder>(
+                  (io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse) message_,
+                  getParentForChildren(),
+                  isClean());
+          message_ = null;
+        }
+        messageCase_ = 9;
+        onChanged();;
+        return resourceResponseBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -2034,24 +2468,30 @@ public final class BgKademliaBinaryPayload {
       "onse.proto\032\034BgKademliaStoreRequest.proto" +
       "\032\035BgKademliaStoreResponse.proto\032\034BgKadem" +
       "liaQueryRequest.proto\032\035BgKademliaQueryRe" +
-      "sponse.proto\"\227\005\n\025KademliaBinaryPayload\022S" +
-      "\n\013findRequest\030\001 \001(\0132<.io.hbt.bubblegum.c" +
-      "ore.kademlia.protobuf.KademliaFindReques" +
-      "tH\000\022]\n\020findNodeResponse\030\002 \001(\0132A.io.hbt.b" +
-      "ubblegum.core.kademlia.protobuf.Kademlia" +
-      "FindNodeResponseH\000\022_\n\021findValueResponse\030" +
-      "\003 \001(\0132B.io.hbt.bubblegum.core.kademlia.p" +
-      "rotobuf.KademliaFindValueResponseH\000\022U\n\014s" +
-      "toreRequest\030\004 \001(\0132=.io.hbt.bubblegum.cor" +
-      "e.kademlia.protobuf.KademliaStoreRequest" +
-      "H\000\022W\n\rstoreResponse\030\005 \001(\0132>.io.hbt.bubbl" +
-      "egum.core.kademlia.protobuf.KademliaStor" +
-      "eResponseH\000\022U\n\014queryRequest\030\006 \001(\0132=.io.h" +
-      "bt.bubblegum.core.kademlia.protobuf.Kade" +
-      "mliaQueryRequestH\000\022W\n\rqueryResponse\030\007 \001(" +
-      "\0132>.io.hbt.bubblegum.core.kademlia.proto" +
-      "buf.KademliaQueryResponseH\000B\t\n\007messageb\006" +
-      "proto3"
+      "sponse.proto\032\037BgKademliaResourceRequest." +
+      "proto\032 BgKademliaResourceResponse.proto\"" +
+      "\323\006\n\025KademliaBinaryPayload\022S\n\013findRequest" +
+      "\030\001 \001(\0132<.io.hbt.bubblegum.core.kademlia." +
+      "protobuf.KademliaFindRequestH\000\022]\n\020findNo" +
+      "deResponse\030\002 \001(\0132A.io.hbt.bubblegum.core" +
+      ".kademlia.protobuf.KademliaFindNodeRespo" +
+      "nseH\000\022_\n\021findValueResponse\030\003 \001(\0132B.io.hb" +
+      "t.bubblegum.core.kademlia.protobuf.Kadem" +
+      "liaFindValueResponseH\000\022U\n\014storeRequest\030\004" +
+      " \001(\0132=.io.hbt.bubblegum.core.kademlia.pr" +
+      "otobuf.KademliaStoreRequestH\000\022W\n\rstoreRe" +
+      "sponse\030\005 \001(\0132>.io.hbt.bubblegum.core.kad" +
+      "emlia.protobuf.KademliaStoreResponseH\000\022U" +
+      "\n\014queryRequest\030\006 \001(\0132=.io.hbt.bubblegum." +
+      "core.kademlia.protobuf.KademliaQueryRequ" +
+      "estH\000\022W\n\rqueryResponse\030\007 \001(\0132>.io.hbt.bu" +
+      "bblegum.core.kademlia.protobuf.KademliaQ" +
+      "ueryResponseH\000\022[\n\017resourceRequest\030\010 \001(\0132" +
+      "@.io.hbt.bubblegum.core.kademlia.protobu" +
+      "f.KademliaResourceRequestH\000\022]\n\020resourceR" +
+      "esponse\030\t \001(\0132A.io.hbt.bubblegum.core.ka" +
+      "demlia.protobuf.KademliaResourceResponse" +
+      "H\000B\t\n\007messageb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2071,13 +2511,15 @@ public final class BgKademliaBinaryPayload {
           io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreResponse.getDescriptor(),
           io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryRequest.getDescriptor(),
           io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.getDescriptor(),
+          io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.getDescriptor(),
+          io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.getDescriptor(),
         }, assigner);
     internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaBinaryPayload_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaBinaryPayload_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_hbt_bubblegum_core_kademlia_protobuf_KademliaBinaryPayload_descriptor,
-        new java.lang.String[] { "FindRequest", "FindNodeResponse", "FindValueResponse", "StoreRequest", "StoreResponse", "QueryRequest", "QueryResponse", "Message", });
+        new java.lang.String[] { "FindRequest", "FindNodeResponse", "FindValueResponse", "StoreRequest", "StoreResponse", "QueryRequest", "QueryResponse", "ResourceRequest", "ResourceResponse", "Message", });
     io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindRequest.getDescriptor();
     io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindNodeResponse.getDescriptor();
     io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaFindValueResponse.getDescriptor();
@@ -2085,6 +2527,8 @@ public final class BgKademliaBinaryPayload {
     io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreResponse.getDescriptor();
     io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryRequest.getDescriptor();
     io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.getDescriptor();
+    io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.getDescriptor();
+    io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

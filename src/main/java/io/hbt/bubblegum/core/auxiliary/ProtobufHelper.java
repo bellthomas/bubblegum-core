@@ -14,6 +14,8 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaPing.KademliaPing;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryRequest.KademliaQueryRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponse.KademliaQueryResponse;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaQueryResponseItem.KademliaQueryResponseItem;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceRequest.KademliaResourceRequest;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaResourceResponse.KademliaResourceResponse;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaSealedPayload.KademliaSealedPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreRequest.KademliaStoreRequest;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaStoreResponse.KademliaStoreResponse;
@@ -178,6 +180,37 @@ public class ProtobufHelper {
             payload.setKeyB(ByteString.EMPTY);
             return payload.build();
         }
+    }
+
+    public static KademliaMessage buildResourceRequest(BubblegumNode localNode, RouterNode to, String exchangeID, String uri) {
+        KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
+
+        KademliaResourceRequest.Builder resourceRequest = KademliaResourceRequest.newBuilder();
+        resourceRequest.setUri(uri);
+
+        KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
+        payload.setResourceRequest(resourceRequest);
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
+        return message.build();
+    }
+
+    public static KademliaMessage buildResourceResponse(
+        BubblegumNode localNode, RouterNode to, String exchangeID,
+        String server, int port, String requestKey, String encryptionKey, String mimeType) {
+
+        KademliaMessage.Builder message = constructKademliaMessage(localNode, to.getNode().toString(), exchangeID);
+
+        KademliaResourceResponse.Builder resourceResponse = KademliaResourceResponse.newBuilder();
+        resourceResponse.setServer(server);
+        resourceResponse.setPort(port);
+        resourceResponse.setRequestKey(requestKey);
+        resourceResponse.setEncryptionKey(encryptionKey);
+        resourceResponse.setMimeType(mimeType);
+
+        KademliaBinaryPayload.Builder payload = KademliaBinaryPayload.newBuilder();
+        payload.setResourceResponse(resourceResponse);
+        message.setPayload(buildSealedPayload(localNode, to, payload.build().toByteArray()));
+        return message.build();
     }
 
 }

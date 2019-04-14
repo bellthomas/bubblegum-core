@@ -10,6 +10,7 @@ import io.hbt.bubblegum.core.kademlia.activities.FindActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PingActivity;
 import io.hbt.bubblegum.core.kademlia.activities.PrimitiveStoreActivity;
 import io.hbt.bubblegum.core.kademlia.activities.QueryActivity;
+import io.hbt.bubblegum.core.kademlia.activities.ResourceRequestActivity;
 import io.hbt.bubblegum.core.kademlia.activities.SyncActivity;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaBinaryPayload;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
@@ -118,6 +119,18 @@ public class KademliaServerWorker {
                         QueryActivity queryActivity = new QueryActivity(node, sender, 0, 0, null);
                         queryActivity.setResponse(message.getExchangeID(), binaryPayload.getQueryRequest());
                         node.getExecutionContext().addCallbackActivity(node.getIdentifier(), queryActivity);
+                    }
+                }
+
+                else if (binaryPayload.hasResourceRequest()) {
+                    if (sender != null) {
+                        node.getRoutingTable().insert(sender);
+
+                        ResourceRequestActivity resourceRequestActivity = new ResourceRequestActivity(
+                            node, sender, binaryPayload.getResourceRequest().getUri()
+                        );
+                        resourceRequestActivity.setResponse(message.getExchangeID(), message.getOriginIP());
+                        node.getExecutionContext().addCallbackActivity(node.getIdentifier(), resourceRequestActivity);
                     }
                 }
             }

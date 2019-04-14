@@ -1,0 +1,10 @@
+syntax = "proto3";
+package io.hbt.bubblegum.core.kademlia.protobuf;
+
+message KademliaResourceResponse {
+    string server = 1;
+    int32 port = 2;
+    string requestKey = 3;
+    string encryptionKey = 4;
+    string mimeType = 5;
+}

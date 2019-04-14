@@ -2,7 +2,14 @@ package io.hbt.bubblegum.core;
 
 import com.google.common.base.Charsets;
 import io.hbt.bubblegum.core.auxiliary.BufferPool;
+import io.hbt.bubblegum.core.auxiliary.MIMEHelper;
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
+import io.hbt.bubblegum.core.auxiliary.ObjectResolutionDetails;
+import io.hbt.bubblegum.core.auxiliary.Pair;
+import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
+import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage;
+import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -10,50 +17,117 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.Date;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ObjectResolver {
 
+    private boolean running = false;
+    private int currentPort = -1;
+    private HashMap<String, ObjectResolutionRequestRecord> activeRequests = new HashMap<>();
+    private Random r = new Random();
+    private Path assetsFolder;
+
     ObjectResolver() {
         if(Configuration.ENABLE_OBJECT_RESOLVER) {
-            System.out.println("ObjectResolver started");
-            CapitalizeServer.main();
-//            try {
-//                CapitalizeClient.main();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            while(true) {
-//                try {
-//                    Thread.sleep(1000);
-//                    DateClient.main();
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            new Thread(() -> AsyncEchoServer.go()).start();
-//            try {
-//                AsyncEchoClient.go();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
+            this.assetsFolder = Paths.get(Configuration.RESOLVER_ASSETS_FOLDER);
+            if(this.prepareAssetsFolder()) {
+                this.running = true;
+                new Thread(() -> {
+                    while (this.running) {
+                        try (var listener = new ServerSocket(0)) {
+                            this.currentPort = listener.getLocalPort();
+                            System.out.println("OR started on port " + this.currentPort);
+                            ObjectResolutionServer.run(Configuration.RESOLVER_SERVER_THREADS, listener, this.activeRequests);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            System.err.println("ObjectResolutionServer restarted");
+                            //e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
         }
     }
 
-    public static class CapitalizeServer {
+    private boolean prepareAssetsFolder() {
+        if(Files.exists(this.assetsFolder)) return true;
+        else {
+            try {
+                Files.createDirectory(this.assetsFolder);
+                return true;
+            } catch (IOException e) {
+                System.err.println("Couldn't create assets folder!");
+                return false;
+            }
+        }
+    }
+
+    public boolean declareNewResource(String uri) {
+        if(ObjectResolver.hasResource(uri)) {
+
+        }
+        return false;
+    }
+
+    public static boolean hasResource(String uri) {
+        return Files.exists(Paths.get(Configuration.RESOLVER_ASSETS_FOLDER + uri));
+    }
+
+    public BgKademliaMessage.KademliaMessage newRequest(BubblegumNode local, RouterNode to, String eid, String hostname, String uri) {
+        if(ObjectResolver.hasResource(uri)) {
+            byte[] array = new byte[16];
+            r.nextBytes(array);
+            String encryptionKey = "qwertyuiopasdfgh";//new String(array, Charsets.US_ASCII);
+            String requestKey = UUID.randomUUID().toString();
+            System.out.println(String.join(", ", hostname, uri, encryptionKey, requestKey));
+            this.activeRequests.put(
+                requestKey,
+                new ObjectResolutionRequestRecord(hostname, uri, requestKey, encryptionKey)
+            );
+            return ProtobufHelper.buildResourceResponse(
+                local, to, eid, NetworkingHelper.getLocalInetAddress().getHostAddress(),
+                this.currentPort, requestKey, encryptionKey, MIMEHelper.fileNameToMimeType(uri));
+        }
+        return ProtobufHelper.buildResourceResponse(
+            local, to, eid, "", -1, "", "", "");
+    }
+
+
+    public Pair<Socket, InputStream> client(ObjectResolutionDetails details) {
+        try {
+            Socket socket = new Socket(details.hostname, details.port);
+            var out = new PrintWriter(socket.getOutputStream(), true);
+            out.println(details.requestKey); // 16 bytes in ascii
+
+            byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+            final Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            SecretKey originalKey = new SecretKeySpec(details.encryptionKey.getBytes(Charsets.US_ASCII), "AES");
+            c.init(Cipher.DECRYPT_MODE, originalKey, ivspec);
+            CipherInputStream in = new CipherInputStream(socket.getInputStream(), c);
+            return new Pair<>(socket, in);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    private static class ObjectResolutionServer {
 
         /**
          * Runs the server. When a client connects, the server spawns a new thread to do
@@ -61,23 +135,20 @@ public class ObjectResolver {
          * number of threads via a thread pool (otherwise millions of clients could cause
          * the server to run out of resources by allocating too many threads).
          */
-        public static void main() {
-            try (var listener = new ServerSocket(59898)) {
-                System.out.println("The capitalization server is running...");
-                var pool = Executors.newFixedThreadPool(5);
-                while (true) {
-                    pool.execute(new Capitalizer(listener.accept()));
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+        public static void run(int threads, ServerSocket listener, HashMap<String, ObjectResolutionRequestRecord> requests) throws IOException {
+            ExecutorService pool = Executors.newFixedThreadPool(threads);
+            while (true) {
+                pool.execute(new ObjectResolutionHandler(listener.accept(), requests));
             }
         }
 
-        private static class Capitalizer implements Runnable  {
+        private static class ObjectResolutionHandler implements Runnable  {
             private Socket socket;
+            private HashMap<String, ObjectResolutionRequestRecord> requests;
 
-            Capitalizer(Socket socket) {
+            ObjectResolutionHandler(Socket socket, HashMap<String, ObjectResolutionRequestRecord> requests) {
                 this.socket = socket;
+                this.requests = requests;
             }
 
             @Override
@@ -89,28 +160,38 @@ public class ObjectResolver {
                     StringBuilder sb = new StringBuilder();
 
                     if(in.hasNextLine()) {
-                        byte[] key = in.nextLine().getBytes(Charsets.US_ASCII);
-                        System.out.println("Key: " + new String(key, Charsets.US_ASCII));
-                        FileInputStream fileInput = new FileInputStream("cl.jpg");
-                        byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                        IvParameterSpec ivspec = new IvParameterSpec(iv);
+                        String requestKey = in.nextLine();
+                        if(this.requests.containsKey(requestKey)) {
+                            // TODO remove
+                            ObjectResolutionRequestRecord record = this.requests.get(requestKey);
+                            System.out.println(socket.getInetAddress().getHostAddress());
+                            if(record.hostname.equals(socket.getInetAddress().getHostAddress())) {
+                                if(ObjectResolver.hasResource(record.uri)) {
+                                    byte[] key = record.encryptionKey.getBytes(Charsets.US_ASCII);
+                                    FileInputStream fileInput = new FileInputStream(Configuration.RESOLVER_ASSETS_FOLDER + record.uri);
+                                    byte[] iv = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                                    IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-                        final Cipher c2 = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                        SecretKey originalKey = new SecretKeySpec(key, "AES");
-                        c2.init(Cipher.ENCRYPT_MODE, originalKey, ivspec);
-                        CipherOutputStream os = new CipherOutputStream(socket.getOutputStream(), c2);
-                        byte[] buffer = BufferPool.getOrCreateBuffer();
-                        int i;
-                        while((i = fileInput.read(buffer)) != -1) {
-                            os.write(buffer, 0, i);
+                                    final Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                                    SecretKey originalKey = new SecretKeySpec(key, "AES");
+                                    c.init(Cipher.ENCRYPT_MODE, originalKey, ivspec);
+                                    CipherOutputStream os = new CipherOutputStream(socket.getOutputStream(), c);
+
+                                    byte[] buffer = BufferPool.getOrCreateBuffer();
+                                    int i;
+                                    while ((i = fileInput.read(buffer)) != -1) os.write(buffer, 0, i);
+                                    BufferPool.release(buffer);
+
+                                    os.flush();
+                                    os.close();
+                                }
+                            }
                         }
-                        BufferPool.release(buffer);
-                        os.flush();
-                        os.close();
                     }
 
                 } catch (Exception e) {
-                    System.out.println("Error:" + socket);
+                    System.out.println("Error: " + socket);
+                    e.printStackTrace();
                 } finally {
                     try { socket.close(); } catch (IOException e) {}
                     System.out.println("Server Closed: " + socket);
@@ -119,174 +200,19 @@ public class ObjectResolver {
         }
     }
 
-    public static class CapitalizeClient {
-        public static void main() throws Exception {
-            try (var socket = new Socket("localhost", 59898)) {
-
-                var out = new PrintWriter(socket.getOutputStream(), true);
-                out.println("qwertyuiopasdfgh"); // 16 bytes in ascii
-
-                byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                IvParameterSpec ivspec = new IvParameterSpec(iv);
-
-                final Cipher c2 = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                SecretKey originalKey = new SecretKeySpec("qwertyuiopasdfgh".getBytes(Charsets.US_ASCII), "AES");
-                c2.init(Cipher.DECRYPT_MODE, originalKey, ivspec);
-                CipherInputStream in = new CipherInputStream(socket.getInputStream(), c2);
-
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                byte[] b = new byte[256];
-                int numberOfBytedRead;
-                while ((numberOfBytedRead = in.read(b)) >= 0) {
-                    baos.write(b, 0, numberOfBytedRead);
-                }
-                System.out.println(new String(baos.toByteArray(), Charsets.US_ASCII));
-
-                out.close();
-            }
+    private class ObjectResolutionRequestRecord {
+        public final String hostname, uri, requestKey, encryptionKey;
+        public ObjectResolutionRequestRecord(String hostname, String uri, String requestKey, String encryptionKey) {
+            this.hostname = hostname;
+            this.uri = uri;
+            this.requestKey = requestKey;
+            this.encryptionKey = encryptionKey;
         }
     }
 
-//
-//    public static class AsyncEchoServer {
-//        private AsynchronousServerSocketChannel serverChannel;
-//        private Future<AsynchronousSocketChannel> acceptResult;
-//        private AsynchronousSocketChannel clientChannel;
-//
-//        public AsyncEchoServer() {
-//            try {
-//                serverChannel = AsynchronousServerSocketChannel.open();
-//                InetSocketAddress hostAddress = new InetSocketAddress("127.0.0.1", 4999);
-//                serverChannel.bind(hostAddress);
-//                acceptResult = serverChannel.accept();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        public void runServer() {
-//            try {
-//                clientChannel = acceptResult.get();
-//                if ((clientChannel != null) && (clientChannel.isOpen())) {
-//                    while (true) {
-//
-//                        ByteBuffer buffer = ByteBuffer.allocate(320);
-//                        Future<Integer> readResult = clientChannel.read(buffer);
-//
-//                        // do some computation
-//
-//                        readResult.get();
-//
-//                        buffer.flip();
-//                        String message = "Hi there!";//new String(buffer.array()).trim();
-//                        if (message.equals("bye")) {
-//                            break; // while loop
-//                        }
-//                        buffer = ByteBuffer.wrap(new String(message).getBytes());
-//                        Future<Integer> writeResult = clientChannel.write(buffer);
-//
-//                        // do some computation
-//                        writeResult.get();
-//                        buffer.clear();
-//
-//                    } // while()
-//
-//                    clientChannel.close();
-//                    serverChannel.close();
-//
-//                }
-//            } catch (InterruptedException | ExecutionException | IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//        }
-//
-//        public static void go() {
-//            AsyncEchoServer server = new AsyncEchoServer();
-//            server.runServer();
-//        }
-//    }
-//
-//    public static class AsyncEchoClient {
-//
-//        private AsynchronousSocketChannel client;
-//        private Future<Void> future;
-//        private static AsyncEchoClient instance;
-//
-//        private AsyncEchoClient() {
-//            try {
-//                client = AsynchronousSocketChannel.open();
-//                InetSocketAddress hostAddress = new InetSocketAddress("127.0.0.1", 4999);
-//                future = client.connect(hostAddress);
-//                start();
-//
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        public static AsyncEchoClient getInstance() {
-//            if (instance == null)
-//                instance = new AsyncEchoClient();
-//            return instance;
-//        }
-//
-//        private void start() {
-//            try {
-//                future.get();
-//            } catch (InterruptedException | ExecutionException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        public String sendMessage(String message) {
-//            byte[] byteMsg = message.getBytes();
-//            ByteBuffer buffer = ByteBuffer.wrap(byteMsg);
-//            Future<Integer> writeResult = client.write(buffer);
-//
-//            try {
-//                writeResult.get();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            buffer.flip();
-//            Future<Integer> readResult = client.read(buffer);
-//            try {
-//                readResult.get();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            String echo = new String(buffer.array()).trim();
-//            buffer.clear();
-//            return echo;
-//        }
-//
-//        public void stop() {
-//            try {
-//                client.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        public static void go() throws Exception {
-//            AsyncEchoClient client = AsyncEchoClient.getInstance();
-//            client.start();
-//            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//            String line;
-//            System.out.println("Message to server:");
-//            while ((line = br.readLine()) != null) {
-//                String response = client.sendMessage(line);
-//                System.out.println("response from server: " + response);
-//                System.out.println("Message to server:");
-//            }
-//        }
-//
-//    }
-
     public static void main(String[] args) {
-        new ObjectResolver();
+        ObjectResolver or = new ObjectResolver();
+//        or.newRequest("127.0.0.1", "cl.jpg");
     }
 }
 

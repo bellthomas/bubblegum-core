@@ -8,6 +8,8 @@ import "BgKademliaStoreRequest.proto";
 import "BgKademliaStoreResponse.proto";
 import "BgKademliaQueryRequest.proto";
 import "BgKademliaQueryResponse.proto";
+import "BgKademliaResourceRequest.proto";
+import "BgKademliaResourceResponse.proto";
 
 message KademliaBinaryPayload {
 
@@ -20,5 +22,7 @@ message KademliaBinaryPayload {
         KademliaStoreResponse storeResponse = 5;
         KademliaQueryRequest queryRequest = 6;
         KademliaQueryResponse queryResponse = 7;
+        KademliaResourceRequest resourceRequest = 8;
+        KademliaResourceResponse resourceResponse = 9;
     }
 }
