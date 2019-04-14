@@ -1,5 +1,8 @@
 package io.hbt.bubblegum.core.auxiliary;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class MIMEHelper {
     private MIMEHelper() { /* Non instantiable */ }
 

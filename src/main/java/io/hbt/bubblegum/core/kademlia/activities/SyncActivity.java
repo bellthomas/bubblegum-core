@@ -236,7 +236,7 @@ public class SyncActivity extends NetworkActivity {
             return WoTVerificationOutcome.FAILED;
         }
 
-        if(this.localNode.getRoutingTable().getSize() > 0) {
+        if(this.localNode.getRoutingTable().getSize() > 1) {
 
             if(this.localNode.haveKeyForPGPID(destination.toPGPUID())) {
                 System.out.println("WoT validation unnecessary, I have " + destination.toPGPUID());
@@ -244,6 +244,7 @@ public class SyncActivity extends NetworkActivity {
             }
 
             // Perform FIND_NODE to validate unique identity.
+            // TODO check for loops here
             LookupActivity lookupActivity = new LookupActivity(this.localNode, this.to.getNode(), 2, false);
             lookupActivity.run();
             if (lookupActivity.getComplete() && lookupActivity.getSuccess()) {

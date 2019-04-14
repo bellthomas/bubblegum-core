@@ -98,12 +98,16 @@ class KeyManager {
         if(Configuration.ENABLE_PGP) {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
             kpg.initialize(Configuration.RSA_KEY_LENGTH);
-            KeyPair kp = kpg.generateKeyPair();
-            keyPair = kp;
 
+            String keyID = "";
             String uid = this.node.toPGPUID();
-            PGPSecretKey key = this.generateKey(kp, uid, this.node.getIdentifier().toCharArray());
-            String keyID = Long.toHexString(key.getPublicKey().getKeyID());
+            PGPSecretKey key = null;
+            while(keyID.length() != 16) {
+                KeyPair kp = kpg.generateKeyPair();
+                this.keyPair = kp;
+                key = this.generateKey(kp, uid, this.node.getIdentifier().toCharArray());
+                keyID = Long.toHexString(key.getPublicKey().getKeyID());
+            }
             System.out.println("Generated PGP Key: 0x" + keyID);
 
             // Convert PGP public key to String

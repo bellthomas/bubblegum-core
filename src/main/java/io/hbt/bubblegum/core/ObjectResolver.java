@@ -50,7 +50,7 @@ public class ObjectResolver {
                     while (this.running) {
                         try (var listener = new ServerSocket(0)) {
                             this.currentPort = listener.getLocalPort();
-                            System.out.println("OR started on port " + this.currentPort);
+                            System.out.println("ObjectResolver started on port " + this.currentPort);
                             ObjectResolutionServer.run(Configuration.RESOLVER_SERVER_THREADS, listener, this.activeRequests);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -76,6 +76,19 @@ public class ObjectResolver {
         }
     }
 
+    boolean prepareForNewNode(String id) {
+        if(Files.exists(Paths.get(Configuration.RESOLVER_ASSETS_FOLDER, id))) return true;
+        else {
+            try {
+                Files.createDirectory(Paths.get(Configuration.RESOLVER_ASSETS_FOLDER, id));
+                return true;
+            } catch (IOException e) {
+                System.err.println("Couldn't create node's folder!");
+                return false;
+            }
+        }
+    }
+
     public boolean declareNewResource(String uri) {
         if(ObjectResolver.hasResource(uri)) {
 
@@ -84,23 +97,25 @@ public class ObjectResolver {
     }
 
     public static boolean hasResource(String uri) {
-        return Files.exists(Paths.get(Configuration.RESOLVER_ASSETS_FOLDER + uri));
+        return Files.exists(Paths.get(Configuration.RESOLVER_ASSETS_FOLDER, uri));
     }
 
     public BgKademliaMessage.KademliaMessage newRequest(BubblegumNode local, RouterNode to, String eid, String hostname, String uri) {
-        if(ObjectResolver.hasResource(uri)) {
+        this.prepareForNewNode(local.getIdentifier());
+        String nodePrefixedURI = local.getIdentifier() + "/" + uri;
+        if(ObjectResolver.hasResource(nodePrefixedURI) && this.currentPort > -1) {
             byte[] array = new byte[16];
             r.nextBytes(array);
-            String encryptionKey = "qwertyuiopasdfgh";//new String(array, Charsets.US_ASCII);
+            String encryptionKey = new String(array, Charsets.US_ASCII);
             String requestKey = UUID.randomUUID().toString();
-            System.out.println(String.join(", ", hostname, uri, encryptionKey, requestKey));
+            System.out.println(String.join(", ", hostname, nodePrefixedURI, encryptionKey, requestKey));
             this.activeRequests.put(
                 requestKey,
-                new ObjectResolutionRequestRecord(hostname, uri, requestKey, encryptionKey)
+                new ObjectResolutionRequestRecord(hostname, nodePrefixedURI, requestKey, encryptionKey)
             );
             return ProtobufHelper.buildResourceResponse(
                 local, to, eid, NetworkingHelper.getLocalInetAddress().getHostAddress(),
-                this.currentPort, requestKey, encryptionKey, MIMEHelper.fileNameToMimeType(uri));
+                this.currentPort, requestKey, encryptionKey, prefixedURIToMIMEType(nodePrefixedURI));
         }
         return ProtobufHelper.buildResourceResponse(
             local, to, eid, "", -1, "", "", "");
@@ -126,6 +141,32 @@ public class ObjectResolver {
         }
     }
 
+    public ObjectResolutionDetails getLocalResource(BubblegumNode local, String uri) {
+        this.prepareForNewNode(local.getIdentifier());
+        String nodePrefixedURI = local.getIdentifier() + "/" + uri;
+        if(ObjectResolver.hasResource(nodePrefixedURI) && this.currentPort > -1) {
+            String requestKey = UUID.randomUUID().toString();
+            byte[] array = new byte[16];
+            r.nextBytes(array);
+            String encryptionKey = new String(array, Charsets.US_ASCII);
+            System.out.println(String.join(", ", "127.0.0.1", nodePrefixedURI, encryptionKey, requestKey));
+            this.activeRequests.put(
+                requestKey,
+                new ObjectResolutionRequestRecord("127.0.0.1", nodePrefixedURI, requestKey, encryptionKey)
+            );
+            return new ObjectResolutionDetails("127.0.0.1", this.currentPort, requestKey, encryptionKey, prefixedURIToMIMEType(nodePrefixedURI));
+        }
+        return null;
+    }
+
+    public String prefixedURIToMIMEType(String uri) {
+        try {
+            return Files.probeContentType(Path.of(Configuration.RESOLVER_ASSETS_FOLDER, uri));
+        } catch (IOException e) {
+            return "text/plain";
+        }
+
+    }
 
     private static class ObjectResolutionServer {
 
@@ -157,18 +198,17 @@ public class ObjectResolver {
                 try {
                     var in = new Scanner(socket.getInputStream());
 //                    var out = new PrintWriter(socket.getOutputStream(), true);
-                    StringBuilder sb = new StringBuilder();
 
                     if(in.hasNextLine()) {
                         String requestKey = in.nextLine();
                         if(this.requests.containsKey(requestKey)) {
-                            // TODO remove
-                            ObjectResolutionRequestRecord record = this.requests.get(requestKey);
-                            System.out.println(socket.getInetAddress().getHostAddress());
+                            ObjectResolutionRequestRecord record = this.requests.remove(requestKey);
+                            System.out.println("Declared: " + socket.getInetAddress().getHostAddress() + " (expected "+record.hostname+")");
                             if(record.hostname.equals(socket.getInetAddress().getHostAddress())) {
                                 if(ObjectResolver.hasResource(record.uri)) {
                                     byte[] key = record.encryptionKey.getBytes(Charsets.US_ASCII);
-                                    FileInputStream fileInput = new FileInputStream(Configuration.RESOLVER_ASSETS_FOLDER + record.uri);
+                                    Path file = Paths.get(Configuration.RESOLVER_ASSETS_FOLDER, record.uri);
+                                    FileInputStream fileInput = new FileInputStream(file.toFile());
                                     byte[] iv = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
                                     IvParameterSpec ivspec = new IvParameterSpec(iv);
 
@@ -190,8 +230,7 @@ public class ObjectResolver {
                     }
 
                 } catch (Exception e) {
-                    System.out.println("Error: " + socket);
-                    e.printStackTrace();
+                    System.out.println("Error: " + socket + ": " + e.getMessage());
                 } finally {
                     try { socket.close(); } catch (IOException e) {}
                     System.out.println("Server Closed: " + socket);

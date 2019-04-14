@@ -199,6 +199,10 @@ public class BubblegumNode {
     }
 
     public ObjectResolutionDetails requestResource(String hash, String uri) {
+        if(hash.equals(this.getNodeIdentifier().toString())) {
+            // Local file, no need to request
+            return this.objectResolver.getLocalResource(this, uri);
+        }
         try {
             NodeID nid = new NodeID(hash);
             LookupActivity lookupActivity = new LookupActivity(this, nid, 1, false);
