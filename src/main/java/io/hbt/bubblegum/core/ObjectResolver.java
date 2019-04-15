@@ -136,6 +136,7 @@ public class ObjectResolver {
             CipherInputStream in = new CipherInputStream(socket.getInputStream(), c);
             return new Pair<>(socket, in);
         } catch (Exception e) {
+            System.out.println("Client Exception: " + e.getMessage());
             return null;
         }
     }
