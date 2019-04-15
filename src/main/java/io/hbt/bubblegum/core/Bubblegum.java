@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core;
 
+import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.databasing.Database;
 import io.hbt.bubblegum.core.databasing.NetworkDetails;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
@@ -19,6 +20,19 @@ import java.util.Set;
  * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 public class Bubblegum {
+
+    static {
+        System.out.println("Working Directory = " + System.getProperty("user.dir"));
+        String useExternalAddresses = System.getProperty("useExternalAddresses");
+        if(useExternalAddresses != null && useExternalAddresses.equals("false")) {
+            System.out.println("Running in localhost mode.");
+            NetworkingHelper.setLookupExternalIP(false);
+        } else {
+            System.out.println("Running in external mode.");
+            NetworkingHelper.setLookupExternalIP(true);
+        }
+    }
+
     private ActivityExecutionContext executionContext;
     private ArrayList<BubblegumCell> cells;
     private HashMap<String, BubblegumNode> nodes;

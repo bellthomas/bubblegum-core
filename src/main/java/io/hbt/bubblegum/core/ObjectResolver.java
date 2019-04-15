@@ -2,7 +2,6 @@ package io.hbt.bubblegum.core;
 
 import com.google.common.base.Charsets;
 import io.hbt.bubblegum.core.auxiliary.BufferPool;
-import io.hbt.bubblegum.core.auxiliary.MIMEHelper;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.ObjectResolutionDetails;
 import io.hbt.bubblegum.core.auxiliary.Pair;
@@ -207,7 +206,9 @@ public class ObjectResolver {
                             if(record.hostname.equals(socket.getInetAddress().getHostAddress())) {
                                 if(ObjectResolver.hasResource(record.uri)) {
                                     byte[] key = record.encryptionKey.getBytes(Charsets.US_ASCII);
-                                    Path file = Paths.get(Configuration.RESOLVER_ASSETS_FOLDER, record.uri);
+                                    Path file = Paths.get(System.getProperty("user.dir"), Configuration.RESOLVER_ASSETS_FOLDER, record.uri);
+                                    System.out.println("Trying to retrieve file: " + file.toFile().getAbsolutePath());
+
                                     FileInputStream fileInput = new FileInputStream(file.toFile());
                                     byte[] iv = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
                                     IvParameterSpec ivspec = new IvParameterSpec(iv);
@@ -231,6 +232,7 @@ public class ObjectResolver {
 
                 } catch (Exception e) {
                     System.out.println("Error: " + socket + ": " + e.getMessage());
+                    e.printStackTrace();
                 } finally {
                     try { socket.close(); } catch (IOException e) {}
                     System.out.println("Server Closed: " + socket);
