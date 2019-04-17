@@ -1,5 +1,6 @@
 package io.hbt.bubblegum.core;
 
+import io.hbt.bubblegum.core.auxiliary.SocketUtils;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
@@ -17,6 +18,21 @@ class BubblegumCell {
 
     private BubblegumCellServer server;
     private HashSet<BubblegumNode> nodes;
+
+    /**
+     * Constructor.
+     * @param executionContext The ActivityExecutionContext to bind the cell's server to.
+     * @throws BubblegumException
+     */
+    public BubblegumCell(ActivityExecutionContext executionContext) throws BubblegumException {
+        int port = SocketUtils.findAvailableUdpPort(
+            Configuration.UDP_PORT_RANGE_MIN,
+            Configuration.UDP_PORT_RANGE_MAX
+        );
+        System.out.println("Build cell on port " + port);
+        this.server = new BubblegumCellServer(port, executionContext);
+        this.nodes = new HashSet<>();
+    }
 
     /**
      * Constructor.

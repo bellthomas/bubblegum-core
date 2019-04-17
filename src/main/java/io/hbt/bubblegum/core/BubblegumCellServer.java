@@ -3,6 +3,7 @@ package io.hbt.bubblegum.core;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.hbt.bubblegum.core.auxiliary.BufferPool;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
+import io.hbt.bubblegum.core.auxiliary.SocketUtils;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
 import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -52,7 +54,9 @@ public class BubblegumCellServer {
             this.listeningSocket = new DatagramSocket(port);
         } catch (SocketException e) {
             try {
-                this.listeningSocket = new DatagramSocket(0);
+                this.listeningSocket = new DatagramSocket(
+                    SocketUtils.findAvailableUdpPort(Configuration.UDP_PORT_RANGE_MIN, Configuration.UDP_PORT_RANGE_MAX)
+                );
                 System.out.println("[BubblegumCellServer] Forced to change port from " + port + " to " + this.listeningSocket.getPort());
             } catch (SocketException e1) {
                 e1.printStackTrace();
@@ -123,8 +127,11 @@ public class BubblegumCellServer {
                     try {
                         KademliaMessage message = KademliaMessage.parseFrom(data);
 
+                        // System.out.println("Received from "+packet.getAddress().getHostAddress());
                         // Only acknowledge packets that declare the correct origin.
-                        if(packet.getAddress().getHostAddress().equals(message.getOriginIP())) {
+                        if (packet.getAddress().getHostAddress().equals(message.getOriginIP()) ||
+                            packet.getAddress().getHostAddress().equals(message.getOriginLocal()) ||
+                            packet.getAddress().getHostAddress().equals(Configuration.PROXY_LOCAL_ADDRESS_UDP)) {
 
                             // Pass the message to the node the message is addressed to or drop if recipient unknown.
                             if (this.recipients.containsKey(message.getRecipient())) {
@@ -147,6 +154,10 @@ public class BubblegumCellServer {
                             // else {
                             //     System.out.println("Dropped message to " + message.getRecipient());
                             // }
+
+                        } else {
+                            System.out.println("Differing IP Addresses!");
+                            System.out.println("Expected: " + message.getOriginIP() + ", Actual: " + packet.getAddress().getHostAddress());
                         }
 
                     } catch (InvalidProtocolBufferException ipbe) {
@@ -174,6 +185,7 @@ public class BubblegumCellServer {
                 this.responses.put(localNode.getIdentifier() + ":" + payload.getExchangeID(), callback);
             }
 
+            // System.out.println("Sending to " + node.getIPAddress().getHostAddress());
             DatagramPacket packet = new DatagramPacket(payload.toByteArray(), payload.toByteArray().length, node.getIPAddress(), node.getPort());
             if (this.sendingSocket == null) {
                 synchronized (this.sendingSocket) {

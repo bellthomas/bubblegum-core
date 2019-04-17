@@ -10,8 +10,7 @@ import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
 public class ResourceRequestActivity extends NetworkActivity {
 
-    private String uri;
-    private String origin;
+    private String uri, origin, originLocal;
     private ObjectResolutionDetails details;
     public ResourceRequestActivity(BubblegumNode localNode, RouterNode to, String uri) {
         super(localNode, to);
@@ -19,9 +18,10 @@ public class ResourceRequestActivity extends NetworkActivity {
     }
 
 
-    public void setResponse(String responseID, String origin) {
+    public void setResponse(String responseID, String origin, String originLocal) {
         super.setResponse(responseID);
         this.origin = origin;
+        this.originLocal = originLocal;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class ResourceRequestActivity extends NetworkActivity {
         }
 
         if(this.isResponse && this.uri.length() > 0) {
-            KademliaMessage message = this.localNode.newResourceRequest(this.to, this.exchangeID, this.origin, this.uri);
+            KademliaMessage message = this.localNode.newResourceRequest(this.to, this.exchangeID, this.origin, this.originLocal, this.uri);
             this.localNode.getServer().sendDatagram(this.localNode, this.to, message, null);
             this.onSuccess();
         }

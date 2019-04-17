@@ -9,6 +9,8 @@ import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +26,18 @@ public class Bubblegum {
     static {
         System.out.println("Working Directory = " + System.getProperty("user.dir"));
         String useExternalAddresses = System.getProperty("useExternalAddresses");
-        if(useExternalAddresses != null && useExternalAddresses.equals("false")) {
+        String bubblegumProxy = System.getProperty("bubblegumProxy");
+
+        if(bubblegumProxy != null && bubblegumProxy.length() > 0) {
+            try {
+                InetAddress proxy = InetAddress.getByName(bubblegumProxy);
+                System.out.println("Running in proxy mode ("+ bubblegumProxy +")");
+                NetworkingHelper.setProxy(proxy);
+            } catch (UnknownHostException e) {
+                System.err.println("Invalid proxy address. Running natively...");
+            }
+        }
+        else if(useExternalAddresses != null && useExternalAddresses.equals("false")) {
             System.out.println("Running in localhost mode.");
             NetworkingHelper.setLookupExternalIP(false);
         } else {
@@ -154,7 +167,7 @@ public class Bubblegum {
         if(result == null) {
             // Need to create new cell
             try {
-                BubblegumCell newCell = new BubblegumCell(0, this.executionContext);
+                BubblegumCell newCell = new BubblegumCell(this.executionContext);
                 this.cells.add(newCell);
                 result = newCell.registerNode(node);
 

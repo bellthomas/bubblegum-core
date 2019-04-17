@@ -16,11 +16,12 @@ message KademliaMessage {
     string originHash = 4;
     string originIP = 5;
     int32 originPort = 6;
+    string originLocal = 7;
 
     // Message content
     oneof message {
-        KademliaPing pingMessage = 7;
-        KademliaSync syncMessage = 8;
-        KademliaSealedPayload payload = 9;
+        KademliaPing pingMessage = 8;
+        KademliaSync syncMessage = 9;
+        KademliaSealedPayload payload = 10;
     }
 }

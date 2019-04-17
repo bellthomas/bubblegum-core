@@ -78,7 +78,6 @@ public class KademliaServerWorker {
             RouterNode sender = KademliaServerWorker.getFromOriginHash(node, message);
             KademliaBinaryPayload binaryPayload = KademliaServerWorker.extractPayload(node, sender, message);
             if(binaryPayload != null) {
-
                 // FIND RPC received.
                 if (binaryPayload.hasFindRequest()) {
                     if (sender != null) {
@@ -129,7 +128,7 @@ public class KademliaServerWorker {
                         ResourceRequestActivity resourceRequestActivity = new ResourceRequestActivity(
                             node, sender, binaryPayload.getResourceRequest().getUri()
                         );
-                        resourceRequestActivity.setResponse(message.getExchangeID(), message.getOriginIP());
+                        resourceRequestActivity.setResponse(message.getExchangeID(), message.getOriginIP(), message.getOriginLocal());
                         node.getExecutionContext().addCallbackActivity(node.getIdentifier(), resourceRequestActivity);
                     }
                 }

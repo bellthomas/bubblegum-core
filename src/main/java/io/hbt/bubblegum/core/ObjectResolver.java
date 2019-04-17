@@ -6,6 +6,7 @@ import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.ObjectResolutionDetails;
 import io.hbt.bubblegum.core.auxiliary.Pair;
 import io.hbt.bubblegum.core.auxiliary.ProtobufHelper;
+import io.hbt.bubblegum.core.auxiliary.SocketUtils;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
@@ -47,7 +48,8 @@ public class ObjectResolver {
                 this.running = true;
                 new Thread(() -> {
                     while (this.running) {
-                        try (var listener = new ServerSocket(0)) {
+                        int port = SocketUtils.findAvailableTcpPort(Configuration.TCP_PORT_RANGE_MIN, Configuration.TCP_PORT_RANGE_MAX);
+                        try (var listener = new ServerSocket(port)) {
                             this.currentPort = listener.getLocalPort();
                             System.out.println("ObjectResolver started on port " + this.currentPort);
                             ObjectResolutionServer.run(Configuration.RESOLVER_SERVER_THREADS, listener, this.activeRequests);
@@ -99,7 +101,7 @@ public class ObjectResolver {
         return Files.exists(Paths.get(Configuration.RESOLVER_ASSETS_FOLDER, uri));
     }
 
-    public BgKademliaMessage.KademliaMessage newRequest(BubblegumNode local, RouterNode to, String eid, String hostname, String uri) {
+    public BgKademliaMessage.KademliaMessage newRequest(BubblegumNode local, RouterNode to, String eid, String hostname, String originLocal, String uri) {
         this.prepareForNewNode(local.getIdentifier());
         String nodePrefixedURI = local.getIdentifier() + "/" + uri;
         if(ObjectResolver.hasResource(nodePrefixedURI) && this.currentPort > -1) {
@@ -110,7 +112,7 @@ public class ObjectResolver {
             System.out.println(String.join(", ", hostname, nodePrefixedURI, encryptionKey, requestKey));
             this.activeRequests.put(
                 requestKey,
-                new ObjectResolutionRequestRecord(hostname, nodePrefixedURI, requestKey, encryptionKey)
+                new ObjectResolutionRequestRecord(hostname, originLocal, nodePrefixedURI, requestKey, encryptionKey)
             );
             return ProtobufHelper.buildResourceResponse(
                 local, to, eid, NetworkingHelper.getLocalInetAddress().getHostAddress(),
@@ -152,7 +154,7 @@ public class ObjectResolver {
             System.out.println(String.join(", ", "127.0.0.1", nodePrefixedURI, encryptionKey, requestKey));
             this.activeRequests.put(
                 requestKey,
-                new ObjectResolutionRequestRecord("127.0.0.1", nodePrefixedURI, requestKey, encryptionKey)
+                new ObjectResolutionRequestRecord("127.0.0.1", NetworkingHelper.getProxyLocalAddress().getHostAddress(), nodePrefixedURI, requestKey, encryptionKey)
             );
             return new ObjectResolutionDetails("127.0.0.1", this.currentPort, requestKey, encryptionKey, prefixedURIToMIMEType(nodePrefixedURI));
         }
@@ -203,8 +205,11 @@ public class ObjectResolver {
                         String requestKey = in.nextLine();
                         if(this.requests.containsKey(requestKey)) {
                             ObjectResolutionRequestRecord record = this.requests.remove(requestKey);
-                            System.out.println("Declared: " + socket.getInetAddress().getHostAddress() + " (expected "+record.hostname+")");
-                            if(record.hostname.equals(socket.getInetAddress().getHostAddress())) {
+                            System.out.println("Declared: " + socket.getInetAddress().getHostAddress() + " (expected "+record.hostname+" | "+record.originLocal+")");
+                            if (record.hostname.equals(socket.getInetAddress().getHostAddress()) ||
+                                record.originLocal.equals(socket.getInetAddress().getHostAddress()) ||
+                                Configuration.PROXY_LOCAL_ADDRESS_TCP.equals(socket.getInetAddress().getHostAddress())) {
+
                                 if(ObjectResolver.hasResource(record.uri)) {
                                     byte[] key = record.encryptionKey.getBytes(Charsets.US_ASCII);
                                     Path file = Paths.get(System.getProperty("user.dir"), Configuration.RESOLVER_ASSETS_FOLDER, record.uri);
@@ -243,12 +248,13 @@ public class ObjectResolver {
     }
 
     private class ObjectResolutionRequestRecord {
-        public final String hostname, uri, requestKey, encryptionKey;
-        public ObjectResolutionRequestRecord(String hostname, String uri, String requestKey, String encryptionKey) {
+        public final String hostname, uri, requestKey, encryptionKey, originLocal;
+        public ObjectResolutionRequestRecord(String hostname, String originLocal, String uri, String requestKey, String encryptionKey) {
             this.hostname = hostname;
             this.uri = uri;
             this.requestKey = requestKey;
             this.encryptionKey = encryptionKey;
+            this.originLocal = originLocal;
         }
     }
 

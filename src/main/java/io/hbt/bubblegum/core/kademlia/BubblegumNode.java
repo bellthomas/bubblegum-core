@@ -486,8 +486,8 @@ public class BubblegumNode {
         return this.objectResolver.client(details);
     }
 
-    public BgKademliaMessage.KademliaMessage newResourceRequest(RouterNode to, String eid, String origin, String uri) {
-        return this.objectResolver.newRequest(this, to, eid, origin, uri);
+    public BgKademliaMessage.KademliaMessage newResourceRequest(RouterNode to, String eid, String origin, String originLocal, String uri) {
+        return this.objectResolver.newRequest(this, to, eid, origin, originLocal, uri);
     }
 
     public String toPGPUID() {

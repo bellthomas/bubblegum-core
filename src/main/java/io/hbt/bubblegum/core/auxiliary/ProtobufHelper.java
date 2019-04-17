@@ -38,6 +38,7 @@ public class ProtobufHelper {
         message.setOriginHash(localNode.getNodeIdentifier().toString());
         message.setOriginIP(localNode.getServer().getLocal().getHostAddress());
         message.setOriginPort(localNode.getServer().getPort());
+        message.setOriginLocal(NetworkingHelper.getProxyLocalAddress().getHostAddress());
         message.setExchangeID(exchangeID);
         message.setRecipient(foreignRecipient);
         return message;
