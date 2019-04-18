@@ -38,7 +38,7 @@ public class SocketUtils {
         return SocketType.UDP.findAvailablePort(minPort, maxPort);
     }
 
-    
+
     private enum SocketType {
 
         TCP {
