@@ -23,11 +23,16 @@ import java.util.Set;
  */
 public class Bubblegum {
 
+    /**
+     * Static initialisation.
+     * Bubblegum's networking mode configuration is passed in via JVM arguments.
+     */
     static {
         System.out.println("Working Directory = " + System.getProperty("user.dir"));
         String useExternalAddresses = System.getProperty("useExternalAddresses");
         String bubblegumProxy = System.getProperty("bubblegumProxy");
 
+        // If there is a defined proxy address use it.
         if(bubblegumProxy != null && bubblegumProxy.length() > 0) {
             try {
                 InetAddress proxy = InetAddress.getByName(bubblegumProxy);
@@ -37,10 +42,15 @@ public class Bubblegum {
                 System.err.println("Invalid proxy address. Running natively...");
             }
         }
+
+        // External address explicitly disabled.
         else if(useExternalAddresses != null && useExternalAddresses.equals("false")) {
             System.out.println("Running in localhost mode.");
             NetworkingHelper.setLookupExternalIP(false);
-        } else {
+        }
+
+        // Default: lookup the instance's external IP.
+        else {
             System.out.println("Running in external mode.");
             NetworkingHelper.setLookupExternalIP(true);
         }

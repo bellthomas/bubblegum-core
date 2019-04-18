@@ -35,7 +35,7 @@ public class KademliaServerWorker {
         if(message.hasPingMessage() && !message.getPingMessage().getReply()) {
             RouterNode sender = KademliaServerWorker.messageToRouterNode(message);
             if(sender != null) {
-                if(!Configuration.ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION || !Configuration.ENABLE_PGP) {
+                if(!Configuration.ENABLE_IMPERSONATION_WoT_PROTECTION || !Configuration.ENABLE_PGP) {
                     // SYNC manages this if PGP w. web of trust is enabled.
                     sender = KademliaServerWorker.getFromOriginHash(node, message);
                     node.getRoutingTable().insert(sender);
@@ -193,7 +193,7 @@ public class KademliaServerWorker {
     }
 
     public static String kademliaMessagesToPGPID(KademliaMessage message) {
-        return String.join(":", message.getOriginIP(), message.getOriginPort()+"", message.getOriginHash());
+        return String.join(";", message.getOriginIP(), message.getOriginPort()+"", message.getOriginHash());
     }
 
 } // end KademliaServerWorker class

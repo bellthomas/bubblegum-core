@@ -53,18 +53,22 @@ public class BubblegumNode {
         ActivityExecutionContext context, BubblegumCellServer server,
         NodeID nid, ObjectResolver objectResolver) {
         this.identifier = identifier;
-        this.networkIdentifier = networkIdentifier;
         this.nodeIdentifier = nid;
+        this.networkIdentifier = networkIdentifier;
         this.executionContext = context;
         this.server = server;
-        this.server.registerNewLocalNode(this);
         this.routingTable = new RoutingTable(this);
         this.db = Database.getInstance();
         this.db.saveUserMeta(this, "username", this.nodeIdentifier.toString());
-        this.keyManager = new KeyManager(this);
         this.objectResolver = objectResolver;
-        this.setupInternalScheduling();
+        this.keyManager = new KeyManager(this, (publicKeyBytes) -> {
+            if(Configuration.NODE_ID_FROM_PUBLIC_KEY) {
+                this.nodeIdentifier = NodeID.hash(new String(publicKeyBytes));
+            }
+        });
+        this.server.registerNewLocalNode(this);
 
+        this.setupInternalScheduling();
         this.log("Constructed BubblegumNode: " + this.nodeIdentifier.toString());
     }
 
@@ -491,7 +495,7 @@ public class BubblegumNode {
     }
 
     public String toPGPUID() {
-        return String.join(":", this.server.getLocal().getHostAddress(), this.server.getPort()+"", this.nodeIdentifier.toString());
+        return String.join(";", this.server.getLocal().getHostAddress(), this.server.getPort()+"", this.nodeIdentifier.toString());
     }
 
     @Override

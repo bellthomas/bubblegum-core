@@ -81,7 +81,7 @@ public class RouterNode implements Comparable<RouterNode> {
     }
 
     public String toPGPUID() {
-        return String.join(":", this.ipAddress.getHostAddress(), this.port+"", this.node.toString());
+        return String.join(";", this.ipAddress.getHostAddress(), this.port+"", this.node.toString());
     }
 
     @Override

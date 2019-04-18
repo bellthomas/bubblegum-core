@@ -44,7 +44,7 @@ public class PingActivity extends NetworkActivity {
 
         // Get real RouterNode if we have one
         RouterNode destination = this.to;
-        if(!Configuration.ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION || !Configuration.ENABLE_PGP) {
+        if(!Configuration.ENABLE_IMPERSONATION_WoT_PROTECTION || !Configuration.ENABLE_PGP) {
             destination = this.routingTable.getRouterNodeForID(this.to.getNode());
             if (destination == null) destination = this.to;
         }
@@ -76,7 +76,7 @@ public class PingActivity extends NetworkActivity {
                 if(newNetworkID != null && newNetworkID.length() > 0) this.networkID = newNetworkID;
 
                 responder.hasResponded();
-                if(!Configuration.ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION || !Configuration.ENABLE_PGP) {
+                if(!Configuration.ENABLE_IMPERSONATION_WoT_PROTECTION || !Configuration.ENABLE_PGP) {
                     this.routingTable.insert(responder);
                 }
                 this.originalPing = kademliaMessage;

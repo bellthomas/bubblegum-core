@@ -19,11 +19,6 @@ public class BootstrapActivity extends NetworkActivity {
     }
 
     @Override
-    public void print(String msg) {
-        System.out.println(msg);
-    }
-
-    @Override
     public void run() {
         super.run();
         if(this.aborted) {

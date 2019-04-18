@@ -56,6 +56,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
@@ -74,12 +76,12 @@ class KeyManager {
 
     private Cipher rsa;
 
-    KeyManager(BubblegumNode node) {
+    KeyManager(BubblegumNode node, Consumer<byte[]> hashUpdate) {
         if(Configuration.ENABLE_PGP) {
             Security.addProvider(provider);
             this.node = node;
             try {
-                if(this.reKey(Configuration.VERIFY_KEY_LIVE_ON_CREATION)) {
+                if(this.reKey(Configuration.VERIFY_KEY_LIVE_ON_CREATION, hashUpdate)) {
                     this.rsa = Cipher.getInstance("RSA");
                     this.initialised = true;
                 }
@@ -94,17 +96,23 @@ class KeyManager {
         else return "";
     }
 
-    boolean reKey(boolean verifyKey) throws NoSuchAlgorithmException, NoSuchProviderException, PGPException, IOException, ProtocolException {
+    boolean reKey(boolean verifyKey, Consumer<byte[]> hashUpdate) throws NoSuchAlgorithmException, NoSuchProviderException, PGPException, IOException {
         if(Configuration.ENABLE_PGP) {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
             kpg.initialize(Configuration.RSA_KEY_LENGTH);
 
             String keyID = "";
-            String uid = this.node.toPGPUID();
+            String uid = "";
             PGPSecretKey key = null;
             while(keyID.length() != 16) {
                 KeyPair kp = kpg.generateKeyPair();
                 this.keyPair = kp;
+
+                if(Configuration.NODE_ID_FROM_PUBLIC_KEY && hashUpdate != null) {
+                    hashUpdate.accept(this.keyPair.getPublic().getEncoded());
+                }
+
+                uid = this.node.toPGPUID();
                 key = this.generateKey(kp, uid, this.node.getIdentifier().toCharArray());
                 keyID = Long.toHexString(key.getPublicKey().getKeyID());
             }
@@ -361,10 +369,20 @@ class KeyManager {
                         Iterator<String> users = nextKey.getUserIDs();
                         while(users.hasNext() && !found) {
                             if(users.next().equals(expectedUID)) {
-                                System.out.println("Verified -> " + expectedUID + "  (I am "+this.node.getServer().getPort()+")");
-                                this.keyCache.put(expectedUID, new Pair<>(nextKey, System.currentTimeMillis()));
-                                this.cacheMaintenance();
-                                found = true;
+                                boolean valid = true;
+                                if(Configuration.NODE_ID_FROM_PUBLIC_KEY) {
+                                    PublicKey pk = new JcaPGPKeyConverter().getPublicKey(nextKey);
+                                    NodeID expected = NodeID.hash(new String(pk.getEncoded()));
+                                    String[] expectedParts = expectedUID.split(";");
+                                    valid = (expected.toString().equals(expectedParts[expectedParts.length - 1]));
+                                }
+
+                                if(valid) {
+                                    System.out.println("Verified -> " + expectedUID + "  (I am " + this.node.getServer().getPort() + ")");
+                                    this.keyCache.put(expectedUID, new Pair<>(nextKey, System.currentTimeMillis()));
+                                    this.cacheMaintenance();
+                                    found = true;
+                                }
                             }
                         }
                     }

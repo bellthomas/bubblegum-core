@@ -66,7 +66,7 @@ public class SyncActivity extends NetworkActivity {
         else {
             // Send stage 2.
 
-            if(Configuration.ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION) {
+            if(Configuration.ENABLE_IMPERSONATION_WoT_PROTECTION) {
                 WoTVerificationOutcome outcome = this.webOfTrustVerification(destination, this.originalSync);
                 switch (outcome) {
                     case PASSED:
@@ -87,7 +87,7 @@ public class SyncActivity extends NetworkActivity {
 
             if(!valid) {
                 // Suspected MITM / Keyserver down.
-                System.err.println(label + ": Key retrieval failed");
+                this.print(label + ": Key retrieval failed");
                 this.onFail();
                 return;
             }
@@ -151,7 +151,7 @@ public class SyncActivity extends NetworkActivity {
         if(kademliaMessage.getSyncMessage().getStage() == 2) {
 
             // If we're here then we've been accepted into the Web of Trust.
-            if(Configuration.ENABLE_SYBIL_WEB_OF_TRUST_PROTECTION) {
+            if(Configuration.ENABLE_IMPERSONATION_WoT_PROTECTION) {
                 this.localNode.getRoutingTable().insert(this.to);
             }
 
@@ -174,7 +174,7 @@ public class SyncActivity extends NetworkActivity {
 
                         if (!valid) {
                             // Suspected MITM / Keyserver down.
-                            System.err.println(label + ": Key retrieval failed");
+                            this.print(label + ": Key retrieval failed");
                             this.onFail();
                             return;
                         }
@@ -220,7 +220,7 @@ public class SyncActivity extends NetworkActivity {
     }
 
     private WoTVerificationOutcome webOfTrustVerification(RouterNode destination, KademliaMessage message) {
-        System.out.println("\nPerforming Web of Trust Validation ("+this.localNode.getServer().getPort()+" -> "+destination.toPGPUID()+")");
+        this.print("\nPerforming Web of Trust Validation ("+this.localNode.getServer().getPort()+" -> "+destination.toPGPUID()+")");
 
         // Perform check against own node first.
         if(this.localNode.getNodeIdentifier().equals(destination.getNode())) {
@@ -231,7 +231,7 @@ public class SyncActivity extends NetworkActivity {
             );
 
             this.server.sendDatagram(localNode, destination, rejection, null);
-            System.out.println("Failed (Same as Local ID)\n");
+            this.print("Failed (Same as Local ID)\n");
             this.localNode.declareSybilImpersonator(destination.toPGPUID());
             return WoTVerificationOutcome.FAILED;
         }
@@ -239,7 +239,7 @@ public class SyncActivity extends NetworkActivity {
         if(this.localNode.getRoutingTable().getSize() > 1) {
 
             if(this.localNode.haveKeyForPGPID(destination.toPGPUID())) {
-                System.out.println("WoT validation unnecessary, I have " + destination.toPGPUID());
+                this.print("WoT validation unnecessary, I have " + destination.toPGPUID());
                 return WoTVerificationOutcome.PASSED;
             }
 
@@ -253,7 +253,7 @@ public class SyncActivity extends NetworkActivity {
                 for (RouterNode routerNode : closest) {
                     if (routerNode.getNode().equals(this.to.getNode())) {
                         if (!routerNode.toPGPUID().equals(destination.toPGPUID())) {
-                            System.out.println(routerNode.getIPAddress().getHostAddress() + ":" + routerNode.getPort() + " already has " + routerNode.getNode());
+                            this.print(routerNode.getIPAddress().getHostAddress() + ":" + routerNode.getPort() + " already has " + routerNode.getNode());
                             collision = true;
                         }
                     }
@@ -267,7 +267,7 @@ public class SyncActivity extends NetworkActivity {
                     );
 
                     this.server.sendDatagram(localNode, destination, rejection, null);
-                    System.out.println("Failed\n");
+                    this.print("Failed\n");
                     this.localNode.declareSybilImpersonator(destination.toPGPUID());
                     return WoTVerificationOutcome.FAILED;
 
@@ -275,19 +275,19 @@ public class SyncActivity extends NetworkActivity {
                     // Verified, so add it to the Routing Table
                     destination = KademliaServerWorker.getFromOriginHash(this.localNode, message);
                     this.localNode.getRoutingTable().insert(destination);
-                    System.out.println("Passed\n");
+                    this.print("Passed\n");
                     return WoTVerificationOutcome.PASSED;
                 }
             } else {
                 // Can't verify so fail normally.
-                System.out.println("Error\n");
+                this.print("Error\n");
                 return WoTVerificationOutcome.ERROR;
             }
         } else {
             // Singleton node, so no we to verify against.
             destination = KademliaServerWorker.getFromOriginHash(this.localNode, message);
             this.localNode.getRoutingTable().insert(destination);
-            System.out.println("Passed (Singleton)\n");
+            this.print("Passed (Singleton)\n");
             return WoTVerificationOutcome.PASSED;
         }
     }
