@@ -52,6 +52,7 @@ public class BubblegumNode {
         String identifier, String networkIdentifier,
         ActivityExecutionContext context, BubblegumCellServer server,
         NodeID nid, ObjectResolver objectResolver) {
+        System.out.println("Instantiating BubblegumNode...");
         this.identifier = identifier;
         this.nodeIdentifier = nid;
         this.networkIdentifier = networkIdentifier;
@@ -69,7 +70,7 @@ public class BubblegumNode {
         this.server.registerNewLocalNode(this);
 
         this.setupInternalScheduling();
-        this.log("Constructed BubblegumNode: " + this.nodeIdentifier.toString());
+        System.out.println("Constructed BubblegumNode: " + this.nodeIdentifier.toString());
     }
 
     private void setupInternalScheduling() {

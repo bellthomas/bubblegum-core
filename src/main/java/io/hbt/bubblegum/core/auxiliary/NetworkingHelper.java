@@ -15,6 +15,8 @@ public class NetworkingHelper {
     private static final Set<InetAddress> inetAddressRepository = new HashSet<>();
     private static boolean lookupExternalIP = true;
     private static InetAddress proxy;
+    private static String externalIP;
+
 
     private NetworkingHelper() { }
 
@@ -29,6 +31,12 @@ public class NetworkingHelper {
             return null;
         }
     }
+
+    public static void setLookupExternalIP(boolean external) {
+        NetworkingHelper.lookupExternalIP = external;
+    }
+
+    public static void setProxy(InetAddress address) { NetworkingHelper.proxy = address; }
 
 
     public static InetAddress getInetAddress(InetAddress addr) {
@@ -49,7 +57,7 @@ public class NetworkingHelper {
             if(NetworkingHelper.proxy != null) return NetworkingHelper.proxy;
 
             // Using a native address, check for localhost mode.
-            String externalIP = lookupExternalIP ? NetworkingHelper.lookupExternalIP() : null;
+            String externalIP = lookupExternalIP ? NetworkingHelper.getExternalIP() : null;
             if(externalIP == null) return NetworkingHelper.getInetAddress(InetAddress.getLocalHost());
             else return NetworkingHelper.getInetAddress(externalIP);
         } catch (UnknownHostException e) {
@@ -57,20 +65,21 @@ public class NetworkingHelper {
         }
     }
 
-    public static void setLookupExternalIP(boolean external) {
-        NetworkingHelper.lookupExternalIP = external;
-    }
-
-    public static void setProxy(InetAddress address) { NetworkingHelper.proxy = address; }
 
     public static InetAddress getProxyLocalAddress() {
         try {
-            String externalIP = NetworkingHelper.lookupExternalIP();
+            String externalIP = NetworkingHelper.getExternalIP();
             if(externalIP == null) return NetworkingHelper.getInetAddress(InetAddress.getLocalHost());
             else return NetworkingHelper.getInetAddress(externalIP);
         } catch (UnknownHostException e) {
             return null;
         }
+    }
+
+
+    private static String getExternalIP() {
+        if(NetworkingHelper.externalIP == null) NetworkingHelper.externalIP = NetworkingHelper.lookupExternalIP();
+        return NetworkingHelper.externalIP;
     }
 
     private static String lookupExternalIP() {

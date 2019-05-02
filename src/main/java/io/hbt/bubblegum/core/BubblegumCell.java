@@ -29,9 +29,10 @@ class BubblegumCell {
             Configuration.UDP_PORT_RANGE_MIN,
             Configuration.UDP_PORT_RANGE_MAX
         );
-        System.out.println("Build cell on port " + port);
+        System.out.println("Building cell on port " + port);
         this.server = new BubblegumCellServer(port, executionContext);
         this.nodes = new HashSet<>();
+        System.out.println("Built.");
     }
 
     /**
