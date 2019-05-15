@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
 public class SnapshotDatabase {
 
     protected static final String DB_FOLDER_PATH = Configuration.DB_FOLDER_PATH + "snapshots/";

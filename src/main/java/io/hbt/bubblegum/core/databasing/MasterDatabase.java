@@ -14,6 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Bubblegum state persistence to SQLite files.
+ */
 public class MasterDatabase {
 
     private static final String MASTER_DB_NAME = "_master.db";

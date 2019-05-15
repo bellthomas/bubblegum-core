@@ -19,7 +19,6 @@ import java.util.Set;
 
 /**
  * The core Bubblegum management class.
- * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 public class Bubblegum {
 

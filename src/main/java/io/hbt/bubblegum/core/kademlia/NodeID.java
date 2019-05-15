@@ -14,7 +14,6 @@ import static io.hbt.bubblegum.core.Configuration.KEY_BIT_LENGTH;
 
 /**
  * Definition class for DHT node identifiers.
- * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 public class NodeID {
 

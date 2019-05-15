@@ -9,7 +9,6 @@ import java.util.HashSet;
 
 /**
  * Internal class for managing the cell groupings of BubblegumNode instances.
- * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 class BubblegumCell {
 

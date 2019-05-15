@@ -12,17 +12,29 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+
+/**
+ * Implementation of the SYNC RPC activity.
+ */
 public class SyncActivity extends NetworkActivity {
 
     private KademliaMessage originalSync;
     private boolean failedWebOfTrustVerification = false;
-    private enum WoTVerificationOutcome { PASSED, FAILED, ERROR  }
+    private enum WoTVerificationOutcome { PASSED, FAILED, ERROR }
 
+    /**
+     * Constructor.
+     * @param self The owning BubblegumNode.
+     * @param to The peer to sync with.
+     */
     public SyncActivity(BubblegumNode self, RouterNode to) {
         super(self, to);
     }
 
-
+    /**
+     * Declare that this activity was created in response to another message.
+     * @param originalSync The original message.
+     */
     public void setResponse(KademliaMessage originalSync) {
         super.setResponse(originalSync.getExchangeID());
         if(originalSync.hasSyncMessage() && originalSync.getSyncMessage().getStage() == 1) {
@@ -32,7 +44,9 @@ public class SyncActivity extends NetworkActivity {
         }
     }
 
-
+    /**
+     * Execute the RPC logic.
+     */
     @Override
     public void run() {
         super.run();
@@ -126,6 +140,12 @@ public class SyncActivity extends NetworkActivity {
         this.timeoutOnComplete();
     }
 
+    /**
+     * Execute stage 2 in response to the originating node.
+     * @param kademliaMessage The original message.
+     * @param myNonce The locally generated nonce.
+     * @param label A helper label for logging.
+     */
     private void responderSendStageTwo(KademliaMessage kademliaMessage, byte[] myNonce, String label) {
         // Received stage one, sent stage two, and now receiving stage 3.
         this.print(label + ": Received stage 3");
@@ -146,6 +166,12 @@ public class SyncActivity extends NetworkActivity {
         }
     }
 
+    /**
+     * Execute stage 3 in response to the recipient node.
+     * @param kademliaMessage The reply message.
+     * @param myNonce The locally generated nonce.
+     * @param label A helper label for logging.
+     */
     private void originatorSendStageThree(KademliaMessage kademliaMessage, RouterNode destination, byte[] myNonce, String label) {
         // Sent stage one, received stage two, now sending stage 3.
         if(kademliaMessage.getSyncMessage().getStage() == 2) {
@@ -219,6 +245,12 @@ public class SyncActivity extends NetworkActivity {
         }
     }
 
+    /**
+     * Perform the Web of Trust lookup verification.
+     * @param destination The peer being synchronised with.
+     * @param message The original message.
+     * @return The validation outcome.
+     */
     private WoTVerificationOutcome webOfTrustVerification(RouterNode destination, KademliaMessage message) {
         this.print("\nPerforming Web of Trust Validation ("+this.localNode.getServer().getPort()+" -> "+destination.toPGPUID()+")");
 
@@ -244,7 +276,6 @@ public class SyncActivity extends NetworkActivity {
             }
 
             // Perform FIND_NODE to validate unique identity.
-            // TODO check for loops here
             LookupActivity lookupActivity = new LookupActivity(this.localNode, this.to.getNode(), 2, false);
             lookupActivity.run();
             if (lookupActivity.getComplete() && lookupActivity.getSuccess()) {
@@ -292,7 +323,12 @@ public class SyncActivity extends NetworkActivity {
         }
     }
 
+    /**
+     * Retrieve whether the peer failed WoT verification.
+     * @return Verification status.
+     */
     public boolean getFailedWebOfTrustVerification() {
         return this.failedWebOfTrustVerification;
     }
-}
+
+} // end SyncActivity class

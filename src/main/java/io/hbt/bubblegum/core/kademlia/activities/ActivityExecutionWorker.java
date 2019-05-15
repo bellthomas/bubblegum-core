@@ -6,6 +6,10 @@ import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionManager.WorkIt
 
 import java.util.UUID;
 
+
+/**
+ * Single activity execution thread pool worker.
+ */
 public class ActivityExecutionWorker {
 
     private final ActivityExecutionManager manager;
@@ -14,6 +18,12 @@ public class ActivityExecutionWorker {
     private final int id;
     private boolean alive = true;
 
+    /**
+     * Constructor.
+     * @param manager The owning ActivityExecutionManager.
+     * @param id The worker's ID.
+     * @param queue The shared work queue instance.
+     */
     public ActivityExecutionWorker(ActivityExecutionManager manager, int id, ConcurrentBlockingQueue<WorkItem> queue) {
         this.manager = manager;
         this.id = id;
@@ -23,6 +33,9 @@ public class ActivityExecutionWorker {
         this.executionContext.start();
     }
 
+    /**
+     * start executing activities.
+     */
     private void start() {
         WorkItem item;
         while(this.alive) {
@@ -42,7 +55,6 @@ public class ActivityExecutionWorker {
 
             } catch (InterruptedException e) {
                 this.alive = false;
-                this.print("ActivityExecutionWorker interrupted");
             } catch (Exception e) {
                 this.executionContext = new Thread(() -> this.start());
                 this.executionContext.setDaemon(true);
@@ -51,12 +63,20 @@ public class ActivityExecutionWorker {
         }
     }
 
+    /**
+     * Stop the worker thread.
+     */
     public void kill() {
         this.alive = false;
         this.executionContext.interrupt();
     }
 
+    /**
+     * Log a message.
+     * @param msg Message.
+     */
     private void print(String msg) {
         System.out.println("[ActivityExecutionWorker #"+ this.id +"] " + msg);
     }
-}
+
+} // end ActivityExecutionWorker class

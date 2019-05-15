@@ -10,6 +10,10 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
+
+/**
+ * Helper methods for Networking.
+ */
 public class NetworkingHelper {
 
     private static final Set<InetAddress> inetAddressRepository = new HashSet<>();
@@ -17,28 +21,42 @@ public class NetworkingHelper {
     private static InetAddress proxy;
     private static String externalIP;
 
-
+    /**
+     * Constructor.
+     * non-instantiable.
+     */
     private NetworkingHelper() { }
 
+    /**
+     * Simple check for a valid port range.
+     * @param port Port to check.
+     * @return Whether it is valid.
+     */
     public static boolean validPort(int port) {
         return (port > -1 && port < 65536);
     }
 
-    public static InetAddress nameToInetAddress(String host) {
-        try {
-            return InetAddress.getByName(host);
-        } catch (UnknownHostException e) {
-            return null;
-        }
-    }
-
+    /**
+     * Set whether to lookup the machine's external IP address.
+     * @param external
+     */
     public static void setLookupExternalIP(boolean external) {
         NetworkingHelper.lookupExternalIP = external;
     }
 
+    /**
+     * Set whether the instance is using a proxy.
+     * @param address The proxy's address.
+     */
     public static void setProxy(InetAddress address) { NetworkingHelper.proxy = address; }
 
 
+    /**
+     * Retrieve a cached instance of an InetAddress instance if found.
+     * The eases some memory churn.
+     * @param addr The address to find.
+     * @return The address to use.
+     */
     public static InetAddress getInetAddress(InetAddress addr) {
         for(InetAddress repoAddr : NetworkingHelper.inetAddressRepository) {
             if(repoAddr.equals(addr)) return repoAddr;
@@ -46,11 +64,22 @@ public class NetworkingHelper {
         return addr;
     }
 
+    /**
+     * etrieve a cached instance of an InetAddress instance if found.
+     * @param hostname The string hostname to get.
+     * @return The address to use.
+     * @throws UnknownHostException
+     */
     public static InetAddress getInetAddress(String hostname) throws UnknownHostException {
         InetAddress actual = InetAddress.getByName(hostname);
         return NetworkingHelper.getInetAddress(actual);
     }
 
+    /**
+     * Get the machine's local address.
+     * Tweaked depending on proxy/external mode settings.
+     * @return The local InetAddress to use.
+     */
     public static InetAddress getLocalInetAddress() {
         try {
             // Proxy mode, so declare self as the proxy's address.
@@ -65,7 +94,10 @@ public class NetworkingHelper {
         }
     }
 
-
+    /**
+     * Force external IP lookup if required.
+     * @return The machine's external IP.
+     */
     public static InetAddress getProxyLocalAddress() {
         try {
             String externalIP = NetworkingHelper.getExternalIP();
@@ -76,12 +108,19 @@ public class NetworkingHelper {
         }
     }
 
-
+    /**
+     * Fetch the external IP if not previously checked.
+     * @return The external IP.
+     */
     private static String getExternalIP() {
         if(NetworkingHelper.externalIP == null) NetworkingHelper.externalIP = NetworkingHelper.lookupExternalIP();
         return NetworkingHelper.externalIP;
     }
 
+    /**
+     * Lookup the machine's external IP using the Amazon Check IP tool.
+     * @return The machine's external IP.
+     */
     private static String lookupExternalIP() {
         BufferedReader in = null;
         try {
@@ -104,4 +143,5 @@ public class NetworkingHelper {
             }
         }
     }
-}
+
+} // end NetworkingHelper class

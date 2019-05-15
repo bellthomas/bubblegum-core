@@ -8,22 +8,30 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+
+/**
+ * The implementation of a RoutingTable's bucket.
+ */
 public final class RouterBucket {
     protected final int prefixLength;
     protected ConcurrentSkipListSet<RouterNode> activeBucket;
     protected ConcurrentSkipListSet<RouterNode> replacements;
-
     protected int activeNodes, replacementNodes = 0;
 
+    /**
+     * Constructor.
+     * @param prefix The prefix length this bucket represents.
+     */
     public RouterBucket(int prefix) {
         this.prefixLength = prefix;
-//        this.activeBucket = new ConcurrentSkipListSet<>();
-//        this.replacements = new ConcurrentSkipListSet<>();
     }
 
+    /**
+     * Add a peer to the bucket, replacing failed/stale peers if required.
+     * @param node The peer to add.
+     */
     public synchronized void add(RouterNode node) {
         if(this.activeBucket == null) this.activeBucket = new ConcurrentSkipListSet<>();
         if(this.activeBucket.stream().anyMatch((n) -> n.equals(node))) {
@@ -62,6 +70,11 @@ public final class RouterBucket {
         }
     }
 
+    /**
+     * Remove a peer from the active bucket.
+     * @param node The peer to remove.
+     * @return The removed RouterNode.
+     */
     protected synchronized RouterNode removeFromActiveTable(RouterNode node) {
         if(this.activeBucket == null) return null;
         Optional<RouterNode> activeNode = this.activeBucket.stream().filter((n) -> n.equals(node)).findFirst();
@@ -71,13 +84,15 @@ public final class RouterBucket {
             return activeNode.get();
         }
         else {
-            System.out.println("returned null");
             return null;
         }
     }
 
+    /**
+     * Add a peer to the victim/replacements cache.
+     * @param node The peer to add.
+     */
     protected synchronized void addToReplacements(RouterNode node) {
-        // TODO investigate why this works and contains() doesn't
         if(this.replacements == null) this.replacements = new ConcurrentSkipListSet<>();
         if(this.replacements.stream().anyMatch((n) -> n.equals(node))) {
             this.replacements.remove(node);
@@ -96,6 +111,10 @@ public final class RouterBucket {
         }
     }
 
+    /**
+     * Collect all nodes stored in the active bucket.
+     * @return The set of nodes.
+     */
     public Set<RouterNode> getNodes() {
         if(this.activeBucket == null || this.activeBucket.isEmpty()) return new HashSet<>();
         else {
@@ -106,6 +125,10 @@ public final class RouterBucket {
         }
     }
 
+    /**
+     * Collect all replacement/victim cache nodes.
+     * @return The set of nodes.
+     */
     public Set<RouterNode> getReplacementNodes() {
         if(this.replacements == null || this.replacements.isEmpty()) return new HashSet<>();
         else {
@@ -115,6 +138,11 @@ public final class RouterBucket {
         }
     }
 
+    /**
+     * Find a RouterNode in the bucket with a given ID.
+     * @param id The ID to find.
+     * @return The RouterNode instance or null if not found.
+     */
     public RouterNode getRouterNodeWithID(NodeID id) {
         if(this.activeBucket != null)
             for(RouterNode node : this.activeBucket) if(node.getNode().equals(id)) return node;
@@ -123,14 +151,26 @@ public final class RouterBucket {
         return null;
     }
 
+    /**
+     * Report the number of peers in the bucket.
+     * @return The count.
+     */
     public int getBucketSize() {
         return this.activeNodes + this.replacementNodes;
     }
 
+    /**
+     * retrieve this bucket's prefix length attribute.
+     * @return The prefix length.
+     */
     public int getPrefixLength() {
         return this.prefixLength;
     }
 
+    /**
+     * Initialise the bucket using a snapshot.
+     * @param nodes The snapshot nodes.
+     */
     protected synchronized void loadInSnapshotNodes(List<Set<RouterNode>> nodes) {
         Set<RouterNode> active = nodes.get(0);
         if(active != null) {
@@ -159,4 +199,5 @@ public final class RouterBucket {
     public String toString() {
         return "Depth " + this.prefixLength + ": " + this.activeNodes + " active, " + this.replacementNodes + " replacements";
     }
-}
+
+} // end RouterBucket class

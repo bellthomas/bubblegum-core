@@ -15,17 +15,29 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+
+/**
+ * Implementation of the DHT lookup operation.
+ */
 public class LookupActivity extends SystemActivity {
 
     private final NodeID nodeToLookup;
     private final int numResults;
     private final boolean getValue;
+    private enum FindStatus { IN_TRANSIT, COMPLETE }
 
     private Set<ComparableBytePayload> results;
     private Set<RouterNode> closestNodes;
     private boolean foundFirstValue;
     private int opsSinceFirstFind;
 
+    /**
+     * Constructor.
+     * @param localNode The owning bubblegumNode.
+     * @param lookup The identifier being looked-up.
+     * @param results The number of results to retrieve.
+     * @param getValue Whether we are looking for values or nodes.
+     */
     public LookupActivity(BubblegumNode localNode, NodeID lookup, int results, boolean getValue) {
         super(localNode);
         this.nodeToLookup = lookup;
@@ -38,10 +50,9 @@ public class LookupActivity extends SystemActivity {
         }
     }
 
-    private enum FindStatus {
-        IN_TRANSIT, COMPLETE
-    }
-
+    /**
+     * Execute the activity's logic.
+     */
     @Override
     public void run() {
         super.run();
@@ -57,17 +68,13 @@ public class LookupActivity extends SystemActivity {
             );
         }
 
-        // TODO need verifiedNodes?
-        TreeSet<RouterNode> knownNodes = this.localNode.getRoutingTable().getAllNodesSorted(this.nodeToLookup.getKeyDistanceComparator());
-        TreeSet<RouterNode> verifiedNodes = new TreeSet<>(this.nodeToLookup.getKeyDistanceComparator());
 
+        TreeSet<RouterNode> verifiedNodes = new TreeSet<>(this.nodeToLookup.getKeyDistanceComparator());
         TreeSet<RouterNode> shortlist = new TreeSet<>(this.nodeToLookup.getKeyDistanceComparator());
         shortlist.addAll(this.localNode.getRoutingTable().getNodesClosestToKey(this.nodeToLookup, Configuration.LOOKUP_ALPHA));
 
         HashMap<String, FindStatus> transitMatrix = new HashMap<>();
-
         RouterNode closestNode;
-        RouterNode previousClosestNode = null;
 
         // At this point, shortlist contains the alpha closest nodes
         if(shortlist.isEmpty()) {
@@ -99,18 +106,17 @@ public class LookupActivity extends SystemActivity {
                     if (activity.getSuccess()) {
                         verifiedNodes.add(activity.getDestination());
 
-                        // If this is the new closest, save
+                        // If this is the new closest, save.
                         if (this.nodeToLookup.getKeyDistanceComparator().compare(activity.getDestination(), closestNode) < 0) {
                             closestNode = activity.getDestination();
                             opsWithoutNewClosest = 0;
-                            // TODO meant to set previousClosest?
                         }
 
                         if(this.getValue && this.foundFirstValue) {
                             this.opsSinceFirstFind++;
                         }
 
-                        // FIND_VALUE check
+                        // FIND_VALUE check.
                         value = activity.getFindValueResult();
                         if (this.getValue && value != null) {
                             if(!this.foundFirstValue) this.foundFirstValue = true;
@@ -127,9 +133,9 @@ public class LookupActivity extends SystemActivity {
                         results = activity.getFindNodeResults();
                         if (results != null) {
                             for (RouterNode rNode : results) {
-                                // Exclude fresh nodes as they were already in the routing table and hence already in consideration
+                                // Exclude fresh nodes as they were already in the routing table and hence already in consideration.
                                 if (!transitMatrix.containsKey(rNode.getNode().toString()) && !rNode.isFresh()) {
-                                    // Not yet seen/request in transit
+                                    // Not yet seen/request in transit.
                                     shortlist.add(rNode);
                                 }
                             }
@@ -137,7 +143,7 @@ public class LookupActivity extends SystemActivity {
                         }
                     }
 
-                    // Activity is complete, remove it
+                    // Activity is complete, remove it.
                     activityIterator.remove();
                 }
             }
@@ -145,8 +151,7 @@ public class LookupActivity extends SystemActivity {
 
             if (currentActivities.size() < Configuration.LOOKUP_ALPHA) {
 
-                // start new loop
-                previousClosestNode = closestNode;
+                // Start a new activity.
                 if(currentActivities.isEmpty() && shortlist.isEmpty()) break;
 
                 for (int i = 0; i < (Configuration.LOOKUP_ALPHA - currentActivities.size()); i++) {
@@ -179,67 +184,21 @@ public class LookupActivity extends SystemActivity {
         else this.onFail();
     }
 
+    /**
+     * Collect any found results.
+     * @return The found values.
+     */
     public List<byte[]> getResult() {
         return this.results.stream().distinct().map((cbp) -> cbp.getPayload()).collect(Collectors.toList());
     }
 
+    /**
+     * Collect the closest nodes found to the key.
+     * @return The closest nodes to the key.
+     */
     public Set<RouterNode> getClosestNodes() {
         return this.closestNodes;
     }
-}
 
-/*
+} // end LookupActivity class
 
-shortlist = ...
-transit = <>
-currentActivities = []
-verified = ...
-foundFirstValue = false
-valueResults = []
-sinceNewClosest = 0
-sinceFirstValue = 0
-
-while(sinceNewClosest < 2alpha & !timedout) {
-    for activity in currentActivities {
-        if(activity.complete) {
-            transit[activity.destination] = COMPLETED
-            if(activity.success) {
-                verified.add(activity.destination)
-                sinceNewClosest++
-                if(foundFirstValue) sinceFirstValue++
-
-                if distance(currentClosest, goal) > distance(activity.destination, goal) {
-                    previousClosest = currentClosest
-                    currentClosest = activity.destination
-                    sinceNewClosest = 0
-                }
-
-                if(activity.hasValueResponse) {
-                    foundFirstValue = true
-                    valueResults.append(activity.valueResponses)
-                }
-
-                if(activity.hasNodeResponse) {
-                    for node in activity.nodeResponse {
-                        if(transit[node] undefined) shortlist.add(node)
-                    }
-                }
-            }
-            currentActivities.remove(activity)
-        }
-    }
-
-    if(gettingValue & sinceFirstValue > alpha) {
-        break;
-    }
-
-    while (currentActivities.size < alpha) {
-        newDest = shortlist.pollTop
-        newActivity = dispatch find_activity to newDest
-        transit[newDest] = IN_TRANSIT
-    }
-}
-
-
-
- */

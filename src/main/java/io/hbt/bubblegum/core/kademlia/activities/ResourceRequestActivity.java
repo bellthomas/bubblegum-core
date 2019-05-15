@@ -8,22 +8,41 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaB
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
+
+/**
+ * Implementation of the RESOLVE RPC.
+ */
 public class ResourceRequestActivity extends NetworkActivity {
 
     private String uri, origin, originLocal;
     private ObjectResolutionDetails details;
+
+    /**
+     * Constructor.
+     * @param localNode The owning BubblegumNode.
+     * @param to The pee being asked/asking.
+     * @param uri The file URI.
+     */
     public ResourceRequestActivity(BubblegumNode localNode, RouterNode to, String uri) {
         super(localNode, to);
         this.uri = uri;
     }
 
-
+    /**
+     * Declare that this activity was created in response to another message.
+     * @param responseID The exchangeIdentifier of the message.
+     * @param origin The origin address.
+     * @param originLocal The origin proxy/local address.
+     */
     public void setResponse(String responseID, String origin, String originLocal) {
         super.setResponse(responseID);
         this.origin = origin;
         this.originLocal = originLocal;
     }
 
+    /**
+     * Run the RPC's logic.
+     */
     @Override
     public void run() {
         super.run();
@@ -50,10 +69,18 @@ public class ResourceRequestActivity extends NetworkActivity {
 
     }
 
+    /**
+     * Retrieve the ObjectResolutionDetails instance generates by this activity.
+     * @return
+     */
     public ObjectResolutionDetails getResolutionDetails() {
         return this.details;
     }
 
+    /**
+     * Build the ObjectResolutionDetails instance.
+     * @param message The response message.
+     */
     private void gotResponse(KademliaMessage message) {
         KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(this.localNode, this.to, message);
         if(payload.hasResourceResponse()) {
@@ -72,4 +99,5 @@ public class ResourceRequestActivity extends NetworkActivity {
 
         this.onFail();
     }
-}
+
+} // end ResourceRequestActivity class

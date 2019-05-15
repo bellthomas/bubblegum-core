@@ -5,6 +5,10 @@ import io.hbt.bubblegum.core.Configuration;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+
+/**
+ * The asynchronous execution context of a Bubblegum instance.
+ */
 public class ActivityExecutionContext {
 
     private final ActivityExecutionManager activityManager;
@@ -14,6 +18,10 @@ public class ActivityExecutionContext {
     private final ScheduledThreadPoolExecutor executor;
     private int numProcesses = 0;
 
+    /**
+     * Constructor.
+     * @param numProcesses The number of nodes to initialise the managers for.
+     */
     public ActivityExecutionContext(int numProcesses) {
         this.numProcesses = (numProcesses < 0) ? 0 : numProcesses;
         if(numProcesses < 1) numProcesses = 1;
@@ -42,18 +50,36 @@ public class ActivityExecutionContext {
         );
     }
 
+    /**
+     * New task for class "Activity".
+     * @param owner The owner's identifier.
+     * @param r The executable task.
+     */
     public void addActivity(String owner, Runnable r) {
         this.activityManager.addActivity(owner, r);
     }
 
+    /**
+     * New task for class "Compound".
+     * @param owner The owner's identifier.
+     * @param r The executable task.
+     */
     public void addCompoundActivity(String owner, Runnable r) {
         this.compoundManager.addActivity(owner, r);
     }
 
+    /**
+     * New task for class "Callback".
+     * @param owner The owner's identifier.
+     * @param r The executable task.
+     */
     public void addCallbackActivity(String owner, Runnable r) {
         this.callbackManager.addActivity(owner, r);
     }
 
+    /**
+     * Increase allocations to execution managers.
+     */
     public void newProcessInContext() {
         this.numProcesses++;
         if(this.numProcesses > 1) {
@@ -63,6 +89,10 @@ public class ActivityExecutionContext {
         }
     }
 
+    /**
+     * Increase allocations to execution managers for multiple new processes.
+     * @param numProcesses the number of new processes.
+     */
     public void newProcessesInContext(int numProcesses) {
         if(this.numProcesses == 0) {
             this.numProcesses += numProcesses;
@@ -77,34 +107,48 @@ public class ActivityExecutionContext {
         this.compoundManager.increaseForNewProcesses(numProcesses);
     }
 
+    /**
+     * Schedule a task for periodic execution.
+     * @param owner The owner's identifier.
+     * @param command The executable command.
+     * @param initial The initial delay.
+     * @param period The period between invocations.
+     * @param unit The units of times given.
+     */
     public void scheduleTask(String owner, Runnable command, long initial, long period, TimeUnit unit) {
         this.executor.scheduleAtFixedRate(() -> {
-//            System.out.println("Running scheduled activity for " + owner);
             this.addCompoundActivity(owner, command);
         }, initial, period, unit);
     }
 
+    /**
+     * Format the current states of the execution managers.
+     * @return
+     */
     public String queueStates() {
         return
             "Pending ~ Activities: " + this.activityManager.getQueueSize() +
             ", Compound: " + this.compoundManager.getQueueSize() +
-            ", Callbacks: " + this.callbackManager.getQueueSize(); //+
-//            "  --  Total ~ Activities: " + this.activityManager.getTotalActivities() + " (" + this.activityManager.getAverageExecutionTime() + "ms)" +
-//            ", Compound: " + this.compoundManager.getTotalActivities() + " (" + this.compoundManager.getAverageExecutionTime() + "ms)" +
-//            ", Callback: " + this.callbackManager.getTotalActivities() + " (" + this.callbackManager.getAverageExecutionTime() + "ms)";
+            ", Callbacks: " + this.callbackManager.getQueueSize();
     }
 
-
+    /**
+     * CSV metrics output headers.
+     * @return
+     */
     public String queueLogHeader() {
         return "pendingActivities,pendingCompounds,pendingCallbacks,totalActivities,totalCompounds,totalCallbacks,avgActivityLoad,avgCompoundLoad,avgCallbackLoad,avgLoad";
     }
 
+    /**
+     * CSV metrics output values.
+     * @return
+     */
     public String queueLogInfo() {
         float activityLoad = this.activityManager.flushMetrics();
         float compoundLoad = this.compoundManager.flushMetrics();
         float callbackLoad = this.callbackManager.flushMetrics();
         float systemLoad = Math.max(activityLoad, Math.max(compoundLoad, callbackLoad));
-//        System.out.print(" [Load: " + String.format("%.2f", (systemLoad * 100)) + "%]");
 
         StringBuilder sb = new StringBuilder();
         sb.append(this.activityManager.getQueueSize() + ",");
@@ -119,4 +163,5 @@ public class ActivityExecutionContext {
         sb.append(systemLoad);
         return sb.toString();
     }
-}
+
+} // end ActivityExecutionContext class

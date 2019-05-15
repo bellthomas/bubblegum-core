@@ -12,30 +12,49 @@ import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 import java.net.UnknownHostException;
 import java.util.function.Consumer;
 
+/**
+ * Implementation of the PING RPC.
+ */
 public class PingActivity extends NetworkActivity {
 
     private String networkID, foreignRecipient;
     private KademliaMessage originalPing;
 
+    /**
+     * Constructor.
+     * @param self the owning BubblegumNode.
+     * @param to The peer being pinged.
+     */
     public PingActivity(BubblegumNode self, RouterNode to) {
         this(self, to, self.getNetworkIdentifier());
     }
 
+    /**
+     * Constructor.
+     * @param self The owning BubblegumNode.
+     * @param to The peer being pinged.
+     * @param foreignRecipient The peer's foreignRecipient key.
+     */
     public PingActivity(BubblegumNode self, RouterNode to, String foreignRecipient) {
         super(self, to);
         this.networkID = self.getNetworkIdentifier();
         this.foreignRecipient = foreignRecipient;
     }
 
-
+    /**
+     * Declare that this activity was created in response to another message.
+     * @param originalPing The original ping message.
+     */
     public void setResponse(KademliaMessage originalPing) {
         super.setResponse(originalPing.getExchangeID());
         this.originalPing = originalPing;
     }
 
+    /**
+     * Run the RPC's logic.
+     */
     @Override
     public void run() {
-        this.print("PING: response " + this.isResponse);
         super.run();
         if(this.aborted) {
             this.onFail();
@@ -56,13 +75,9 @@ public class PingActivity extends NetworkActivity {
             this.onSuccess("Node fresh, PING not required for " + this.networkID + ":" + destination.getNode());
             return;
         }
-        else {
-            this.print("Starting PING to " + this.foreignRecipient);
-        }
 
 
         Consumer<KademliaMessage> response = this.isResponse ? null : (kademliaMessage -> {
-            this.print("PING response got");
             try {
                 RouterNode responder = this.routingTable.getRouterNodeForID(new NodeID(kademliaMessage.getOriginHash()));
                 if(responder == null) responder = new RouterNode(
@@ -102,11 +117,20 @@ public class PingActivity extends NetworkActivity {
         if(!this.isResponse) this.timeoutOnComplete();
     }
 
+    /**
+     * Retrieve the networkIdentifier reported by the remote node.
+     * @return the networkIdentifier.
+     */
     public String getNetworkID() {
         return this.networkID;
     }
 
+    /**
+     * Retrieve the original ping message if a response activity.
+     * @return The original ping.
+     */
     public KademliaMessage getPing() {
         return this.originalPing;
     }
-}
+
+} // end PingActivity class

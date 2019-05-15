@@ -8,17 +8,31 @@ import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaBinaryPayload.KademliaB
 import io.hbt.bubblegum.core.kademlia.protobuf.BgKademliaMessage.KademliaMessage;
 import io.hbt.bubblegum.core.kademlia.router.RouterNode;
 
+
+/**
+ * Implementation of the STORE RPC.
+ */
 public class PrimitiveStoreActivity extends NetworkActivity {
 
     private byte[] payload;
     private String key;
 
+    /**
+     * Constructor.
+     * @param localNode The owning BubblegumNode.
+     * @param to The peer being asked to store the entity.
+     * @param key The entity's key.
+     * @param payload the entity value.
+     */
     public PrimitiveStoreActivity(BubblegumNode localNode, RouterNode to, String key, byte[] payload) {
         super(localNode, to);
         this.payload = payload;
         this.key = key;
     }
 
+    /**
+     * Run the RPC's logic.
+     */
     @Override
     public void run() {
         super.run();
@@ -28,14 +42,12 @@ public class PrimitiveStoreActivity extends NetworkActivity {
         }
 
         if(this.isResponse) {
-            this.print("Responding to STORE("+this.key+") request to " + this.to.getNode().toString());
             boolean accepted = Database.getInstance().add(this.localNode.getIdentifier(), this.key, this.payload);
             KademliaMessage message = ProtobufHelper.buildStoreResponse(this.localNode, this.to, this.exchangeID, accepted);
             this.server.sendDatagram(this.localNode, this.to, message, null);
             this.onSuccess();
         }
         else {
-            this.print("Sending STORE("+this.key+") request to " + this.to.getNode().toString());
             KademliaMessage message = ProtobufHelper.buildStoreRequest(this.localNode, this.to, this.exchangeID, this.key, this.payload);
             this.server.sendDatagram(this.localNode, this.to, message, (kademliaMessage -> {
                 KademliaBinaryPayload payload = KademliaServerWorker.extractPayload(this.localNode, this.to, kademliaMessage);
@@ -57,4 +69,5 @@ public class PrimitiveStoreActivity extends NetworkActivity {
 
         this.timeoutOnComplete();
     }
-}
+
+} // end PrimitiveStoreActivity class

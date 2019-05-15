@@ -3,6 +3,11 @@ package io.hbt.bubblegum.core.auxiliary;
 import java.util.LinkedList;
 import java.util.Queue;
 
+
+/**
+ * An indefinitely-blocking concurrent access queue.
+ * @param <T> The queue item type.
+ */
 public class ConcurrentBlockingQueue<T> implements Comparable<ConcurrentBlockingQueue<T>> {
 
     /**

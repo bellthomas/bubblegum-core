@@ -8,6 +8,11 @@ import io.hbt.bubblegum.core.kademlia.router.RoutingTable;
 
 import java.util.UUID;
 
+
+/**
+ * Implementation of a generic UDP-based network activity.
+ * Provides failure detection and automatic retransmission.
+ */
 public abstract class NetworkActivity extends SystemActivity {
 
     private int currentTry;
@@ -18,6 +23,11 @@ public abstract class NetworkActivity extends SystemActivity {
     protected String exchangeID;
     protected boolean isResponse;
 
+    /**
+     * Constructor.
+     * @param self The owning BubblegumNode.
+     * @param to The receiving peer.
+     */
     public NetworkActivity(BubblegumNode self, RouterNode to) {
         super(self);
         this.server = self.getServer();
@@ -28,25 +38,44 @@ public abstract class NetworkActivity extends SystemActivity {
         this.currentTry = 1;
     }
 
+    /**
+     * Run the activity's logic.
+     */
     @Override
     public void run() {
         super.run();
     }
 
+    /**
+     * Print a log message.
+     * @param msg The message.
+     */
     @Override
     protected void print(String msg) {
         if(!isResponse) super.print(msg);
     }
 
+    /**
+     * Declare that this activity was created in response to another message.
+     * @param responseID The original message's exchangeIdentifier.
+     */
     public void setResponse(String responseID) {
         this.isResponse = true;
         this.exchangeID = responseID;
     }
 
+    /**
+     * Check if this activity is a response.
+     * @return Response status.
+     */
     public boolean isResponse() {
         return this.isResponse;
     }
 
+    /**
+     * Wait until the activity either times out or completes.
+     * Retransmissions are automatically handled here.
+     */
     @Override
     protected void timeoutOnComplete() {
         super.timeoutOnComplete();
@@ -65,4 +94,5 @@ public abstract class NetworkActivity extends SystemActivity {
             }
         }
     }
-}
+
+} // end NetworkActivity class

@@ -20,7 +20,6 @@ import java.net.UnknownHostException;
 
 /**
  * Static KademliaMessage acceptor functions.
- * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 public class KademliaServerWorker {
 

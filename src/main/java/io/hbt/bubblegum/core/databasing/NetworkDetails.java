@@ -1,5 +1,8 @@
 package io.hbt.bubblegum.core.databasing;
 
+/**
+ *
+ */
 public class NetworkDetails {
     private final String id, network, hash;
     private final int port;

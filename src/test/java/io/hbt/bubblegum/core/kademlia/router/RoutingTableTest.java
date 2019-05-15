@@ -1,11 +1,8 @@
 package io.hbt.bubblegum.core.kademlia.router;
 
-import io.hbt.bubblegum.core.Bubblegum;
-import io.hbt.bubblegum.core.auxiliary.logging.LoggingManager;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.NodeID;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
-import io.hbt.bubblegum.core.social.SocialIdentity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

@@ -5,7 +5,6 @@ import io.hbt.bubblegum.core.auxiliary.BufferPool;
 import io.hbt.bubblegum.core.auxiliary.NetworkingHelper;
 import io.hbt.bubblegum.core.auxiliary.SocketUtils;
 import io.hbt.bubblegum.core.exceptions.BubblegumException;
-import io.hbt.bubblegum.core.exceptions.MalformedKeyException;
 import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 import io.hbt.bubblegum.core.kademlia.KademliaServerWorker;
 import io.hbt.bubblegum.core.kademlia.activities.ActivityExecutionContext;
@@ -17,16 +16,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
  * Sending/Receiving Server attributed to a BubblegumCell.
- * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 public class BubblegumCellServer {
     private boolean alive;
@@ -37,7 +33,6 @@ public class BubblegumCellServer {
     private Thread listenerThread;
     private static DatagramSocket sendingSocket;
 
-    // TODO Concurrent required? Also other places
     private final ConcurrentHashMap<String, Consumer<KademliaMessage>> responses = new ConcurrentHashMap<>();
     private final HashMap<String, BubblegumNode> recipients = new HashMap<>();
 

@@ -33,6 +33,10 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
+/**
+ * Provides bubblegum-core's large file sharing service.
+ */
 public class ObjectResolver {
 
     private boolean running = false;
@@ -41,6 +45,10 @@ public class ObjectResolver {
     private Random r = new Random();
     private Path assetsFolder;
 
+    /**
+     * Constructor.
+     * If enabled, launches (and relaunches) the main ObjectResolutionServer instance.
+     */
     ObjectResolver() {
         if(Configuration.ENABLE_OBJECT_RESOLVER) {
             this.assetsFolder = Paths.get(Configuration.RESOLVER_ASSETS_FOLDER);
@@ -64,6 +72,10 @@ public class ObjectResolver {
         }
     }
 
+    /**
+     * Creates the assets folder if it doesn't exist.
+     * @return Whether the I/O operation completed successfully.
+     */
     private boolean prepareAssetsFolder() {
         if(Files.exists(this.assetsFolder)) return true;
         else {
@@ -77,6 +89,11 @@ public class ObjectResolver {
         }
     }
 
+    /**
+     * Creates a BubblegumNode's private subfolder in the assets directory.
+     * @param id The node's localIdentifier.
+     * @return Whether the I/O operation was successful.
+     */
     boolean prepareForNewNode(String id) {
         if(Files.exists(Paths.get(Configuration.RESOLVER_ASSETS_FOLDER, id))) return true;
         else {
@@ -90,17 +107,25 @@ public class ObjectResolver {
         }
     }
 
-    public boolean declareNewResource(String uri) {
-        if(ObjectResolver.hasResource(uri)) {
-
-        }
-        return false;
-    }
-
+    /**
+     * Check to see if a URI is available locally.
+     * @param uri The file URI to check for.
+     * @return Whether the file is avaialble.
+     */
     public static boolean hasResource(String uri) {
         return Files.exists(Paths.get(Configuration.RESOLVER_ASSETS_FOLDER, uri));
     }
 
+    /**
+     * Build the correct response to a new RESOLVE RPC message.
+     * @param local The local BubblegumNode sending this.
+     * @param to The requesting node.
+     * @param eid The exchange identifier for the RPC transmission.
+     * @param hostname The declared hostname of the RPC.
+     * @param originLocal The declared proxy/local address of the RPC,
+     * @param uri The requested URI.
+     * @return The build KademliaMessage of the response.
+     */
     public BgKademliaMessage.KademliaMessage newRequest(BubblegumNode local, RouterNode to, String eid, String hostname, String originLocal, String uri) {
         this.prepareForNewNode(local.getIdentifier());
         String nodePrefixedURI = local.getIdentifier() + "/" + uri;
@@ -122,7 +147,11 @@ public class ObjectResolver {
             local, to, eid, "", -1, "", "", "");
     }
 
-
+    /**
+     * Open up a secure TCP stream to a resolved file.
+     * @param details The details returned from the RESOLVE RPC exchange.
+     * @return the TCP stream and the Socket object it is coming through.
+     */
     public Pair<Socket, InputStream> client(ObjectResolutionDetails details) {
         try {
             Socket socket = new Socket(details.hostname, details.port);
@@ -143,6 +172,12 @@ public class ObjectResolver {
         }
     }
 
+    /**
+     * Called to register a local request for a file.
+     * @param local The local BubblegumNode.
+     * @param uri The file being requested.
+     * @return Access details to pass to client() to stream the file.
+     */
     public ObjectResolutionDetails getLocalResource(BubblegumNode local, String uri) {
         this.prepareForNewNode(local.getIdentifier());
         String nodePrefixedURI = local.getIdentifier() + "/" + uri;
@@ -161,6 +196,11 @@ public class ObjectResolver {
         return null;
     }
 
+    /**
+     * Helper method to determine the MIME type of a file.
+     * @param uri The file URI to be determined.
+     * @return The MIME string of the file type.
+     */
     public String prefixedURIToMIMEType(String uri) {
         try {
             return Files.probeContentType(Path.of(Configuration.RESOLVER_ASSETS_FOLDER, uri));
@@ -175,8 +215,7 @@ public class ObjectResolver {
         /**
          * Runs the server. When a client connects, the server spawns a new thread to do
          * the servicing and immediately returns to listening. The application limits the
-         * number of threads via a thread pool (otherwise millions of clients could cause
-         * the server to run out of resources by allocating too many threads).
+         * number of threads via a thread pool.
          */
         public static void run(int threads, ServerSocket listener, HashMap<String, ObjectResolutionRequestRecord> requests) throws IOException {
             ExecutorService pool = Executors.newFixedThreadPool(threads);
@@ -189,17 +228,25 @@ public class ObjectResolver {
             private Socket socket;
             private HashMap<String, ObjectResolutionRequestRecord> requests;
 
+            /**
+             * Constructor.
+             * @param socket The Socket instance the request is coming via.
+             * @param requests
+             */
             ObjectResolutionHandler(Socket socket, HashMap<String, ObjectResolutionRequestRecord> requests) {
                 this.socket = socket;
                 this.requests = requests;
             }
 
+            /**
+             * Receive and check the validity of a client's fetch key.
+             * If valid open a secure TCP socket and stream the file's contents encrypted using AES.
+             */
             @Override
             public void run() {
                 System.out.println("Connected: " + socket);
                 try {
                     var in = new Scanner(socket.getInputStream());
-//                    var out = new PrintWriter(socket.getOutputStream(), true);
 
                     if(in.hasNextLine()) {
                         String requestKey = in.nextLine();
@@ -247,6 +294,10 @@ public class ObjectResolver {
         }
     }
 
+
+    /**
+     * A record of the details returned by the RESOLVE RPC.
+     */
     private class ObjectResolutionRequestRecord {
         public final String hostname, uri, requestKey, encryptionKey, originLocal;
         public ObjectResolutionRequestRecord(String hostname, String originLocal, String uri, String requestKey, String encryptionKey) {
@@ -258,25 +309,4 @@ public class ObjectResolver {
         }
     }
 
-    public static void main(String[] args) {
-        ObjectResolver or = new ObjectResolver();
-//        or.newRequest("127.0.0.1", "cl.jpg");
-    }
-}
-
-
-
-/*
-       RandomAccessFile aFile = new RandomAccessFile
-                ("test.txt", "r");
-        FileChannel inChannel = aFile.getChannel();
-        MappedByteBuffer buffer = inChannel.map(FileChannel.MapMode.READ_ONLY, 0, inChannel.size());
-        buffer.load();
-        for (int i = 0; i < buffer.limit(); i++)
-        {
-            System.out.print((char) buffer.get());
-        }
-        buffer.clear(); // do something with the data and clear/compact it.
-        inChannel.close();
-        aFile.close();
- */
+} // end ObjectResolver class

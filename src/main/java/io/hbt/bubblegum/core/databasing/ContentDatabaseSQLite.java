@@ -13,7 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Alternative ContentDatabase implementation.
+ */
 class ContentDatabaseSQLite implements ContentDatabaseInterface {
+
     private static ContentDatabaseSQLite instance;
     private static Connection connection;
 

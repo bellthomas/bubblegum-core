@@ -26,6 +26,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+
+/**
+ * Helper methods for wrangling Protobuf messages.
+ */
 public class ProtobufHelper {
 
     public static KademliaMessage.Builder constructKademliaMessage(BubblegumNode localNode, String to, String exchangeID) {

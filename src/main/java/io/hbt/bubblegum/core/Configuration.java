@@ -6,7 +6,6 @@ import java.util.Random;
 
 /**
  * System Configuration.
- * @author Harri Bell-Thomas, ahb36@cam.ac.uk
  */
 public class Configuration {
 
@@ -37,7 +36,7 @@ public class Configuration {
 
     //region Server
     public static final int UDP_PORT_RANGE_MIN = 32000;
-    public static final int UDP_PORT_RANGE_MAX = 32090; // TODO investigate crashes here
+    public static final int UDP_PORT_RANGE_MAX = 32090;
     public static final int MAX_BUBBLEGUM_CELLS = 30;
     public static final int DATAGRAM_BUFFER_SIZE = 64 * 1024; // kb
     //endregion
@@ -72,8 +71,8 @@ public class Configuration {
     //endregion
 
     //region Proxy
-    public static String PROXY_LOCAL_ADDRESS_UDP = "127.0.0.1"; //"172.31.255.252";
-    public static String PROXY_LOCAL_ADDRESS_TCP = "127.0.0.1"; //"172.31.255.253";
+    public static String PROXY_LOCAL_ADDRESS_UDP = "127.0.0.1"; // "172.31.255.252";
+    public static String PROXY_LOCAL_ADDRESS_TCP = "127.0.0.1"; // "172.31.255.253";
     //endregion
 
     public static Random rand = new Random();

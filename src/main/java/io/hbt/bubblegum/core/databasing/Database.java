@@ -14,33 +14,43 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+
+/**
+ * The main databse implementation for Bubblegum instances.
+ */
 public class Database {
 
     private HashMap<String, HashMap<String, List<Pair<ComparableBytePayload, Long>>>> db;
-
     private static Database instance;
     private static ContentDatabase cdbInstance;
-//    private static MasterDatabase masterDatabase;
-
     private final HashMap<String, Pair<String, Long>> lastNetworkUpdates;
 
+    /**
+     * Constructor.
+     */
     private Database() {
         this.checkDatabasesDirectory();
         this.db = new HashMap<>();
         this.lastNetworkUpdates = new HashMap<>();
         Database.cdbInstance = ContentDatabase.getInstance();
-//        Database.masterDatabase = MasterDatabase.getInstance();
     }
 
+    /**
+     * Singleton getInstance().
+     * @return The singleton instance.
+     */
     public synchronized static Database getInstance() {
         if(Database.instance == null) Database.instance = new Database();
         return Database.instance;
     }
 
+    /**
+     * Initialise a maintenance task to check for expired posts.
+     * @param context
+     */
     public void initialiseExpiryScheduler(ActivityExecutionContext context) {
         if(context != null) {
             context.scheduleTask("system", () -> {
@@ -50,30 +60,35 @@ public class Database {
         }
     }
 
-
-    public Map<Integer, List<NetworkDetails>> loadNetworksFromDatabase() {
-//        return Database.masterDatabase.loadNetworksFromDatabase();
-        return new HashMap<>();
-    }
-
-    public void updateNodeInDatabase(BubblegumNode node) {
-//        Database.masterDatabase.updateNetwork(node);
-    }
-
-    public void updateNodesInDatabase(List<BubblegumNode> nodes) {
-//        Database.masterDatabase.updateNetworks(nodes);
-    }
-
+    /**
+     * Check if the database holds a particular key.
+     * @param node The owning node's identifier.
+     * @param key The key to check for.
+     * @return The result.
+     */
     public boolean hasKey(String node, String key) {
         if(!this.db.containsKey(node)) return false;
         else return this.db.get(node).containsKey(key);
     }
 
+    /**
+     * Fetch the values stored against a given key.
+     * @param node The owning node's identifier.
+     * @param key The key to retrieve.
+     * @return The found values.
+     */
     public List<byte[]> valueForKey(String node, String key) {
         if(!this.db.containsKey(node)) return null;
         else return this.db.get(node).get(key).stream().map((p) -> p.getFirst().getPayload()).collect(Collectors.toList());
     }
 
+    /**
+     * Store a value in the Database.
+     * @param node The owning node's identifier.
+     * @param key The key.
+     * @param value The value.
+     * @return Whether add was successful.
+     */
     public boolean add(String node, String key, byte[] value) {
         if(!this.db.containsKey(node)) this.db.put(node, new HashMap<>());
         if(!this.db.get(node).containsKey(key)) this.db.get(node).put(key, new ArrayList<>());
@@ -92,11 +107,23 @@ public class Database {
         return true;
     }
 
+    /**
+     * Save a user's meta value.
+     * @param node The user's node's identifier.
+     * @param metaName The meta key.
+     * @param content The meta value.
+     */
     public void saveUserMeta(BubblegumNode node, String metaName, String content) {
         Database.cdbInstance.saveMeta(metaName, node, content);
     }
 
-    // TODO broken
+    /**
+     * Publish/republish post indices to the network.
+     * @param node The owning node's identifier.
+     * @param key The index key.
+     * @param globalPostIdentifier The post's identifier.
+     * @param oldUniquifier Previous data.
+     */
     public void publishEntityMeta(BubblegumNode node, String key, String globalPostIdentifier, String oldUniquifier) {
         node.getExecutionContext().addCompoundActivity(node.getIdentifier(), () -> {
             String uniquifier = oldUniquifier == null ? ":" + UUID.randomUUID().toString() : ":" + oldUniquifier;
@@ -108,37 +135,73 @@ public class Database {
         });
     }
 
+    /**
+     * Save a post.
+     * @param node The publishing node's identifier.
+     * @param content The post's content.
+     * @return Whether the operation was successful.
+     */
     public Post savePost(BubblegumNode node, String content) {
         return this.savePost(node, content, "");
     }
 
+    /**
+     * Save a post.
+     * @param node The publishing node's identifier.
+     * @param content The post's content.
+     * @param inResponseTo The ID of the post this one is in response to.
+     * @return Whether the operation was successful.
+     */
     public Post savePost(BubblegumNode node, String content, String inResponseTo) {
         Post saved = Database.cdbInstance.savePost(node, content, inResponseTo);
         long epochBin = saved.getTimeCreated() / Configuration.BIN_EPOCH_DURATION;
         String globalPostIdentifier = Database.globalIdentifierForPost(node, saved);
         this.publishEntityMeta(node, Long.toString(epochBin), globalPostIdentifier, null);
-
-//        System.out.println(epochBin + " -> " + globalPostIdentifier);
         return saved;
     }
 
+    /**
+     * Fetch a local post.
+     * @param node The owning node's identifier.
+     * @param id The post's identifier.
+     * @return the Post instnace or null if not found.
+     */
     public Post getPost(BubblegumNode node, String id) {
         return Database.cdbInstance.getPost(node, id);
     }
 
+    /**
+     * Fetch all local posts for a node.
+     * @param node The owning node's identifier.
+     * @return The list of all Posts.
+     */
     public List<Post> getAllPosts(BubblegumNode node) {
         return Database.cdbInstance.getPosts(node);
     }
 
+    /**
+     * Query posts.
+     * @param node The local BubblegumNode.
+     * @param from Query: start UNIX time.
+     * @param to Query: end UNIX time.
+     * @param ids Query: the set of post IDs.
+     * @return The found set of Post instances.
+     */
     public List<Post> queryPosts(BubblegumNode node, long from, long to, List<String> ids) {
         return Database.cdbInstance.queryPosts(node, from, to, ids);
     }
 
+    /**
+     * Create the databases directory is required.
+     */
     private void checkDatabasesDirectory() {
         File directory = new File(Configuration.DB_FOLDER_PATH);
         if (!directory.exists()) directory.mkdir();
     }
 
+    /**
+     * Scan the database for expired posts.
+     */
     public void checkForExpiredPosts() {
         long current = System.currentTimeMillis();
         List<Pair<ComparableBytePayload, Long>> toRemove = new ArrayList<>();
@@ -154,20 +217,13 @@ public class Database {
                 toRemove.clear();
             }
         }
-        toRemove = null;
-
-//        this.db.forEach((k1,v1) -> {
-//            v1.forEach((k2,v2) -> {
-//                v2.removeAll(
-//                    v2.stream()
-//                        .filter((p) -> ((p.getSecond() + Configuration.DB_ENTITY_EXPIRY_AGE) < current)) // older than the expiry age
-//                        .collect(Collectors.toList())
-//                );
-//            });
-//        });
     }
 
-    // TODO cleanup
+    /**
+     * Republish persistent keys if they are about to expire.
+     * @param node The owning node's identifier.
+     * @param margin How close to expiration posts need to be to be republished,
+     */
     public static void refreshExpiringPosts(BubblegumNode node, int margin) {
         long cutoff = System.currentTimeMillis() - Configuration.DB_ENTITY_EXPIRY_AGE + margin;
 
@@ -187,34 +243,33 @@ public class Database {
                }
             }
         }
-
-
-//        List<String[]> ids = this.lastNetworkUpdates.entrySet()
-//            .stream()
-//            .filter((e) -> (
-//                e.getValue().getSecond() < cutoff ||
-//                Configuration.random(10000) < (10000.0 / (Configuration.DB_ENTITY_EXPIRY_AGE / Configuration.POST_EXPIRY_REFRESH_CHECK)))
-//                && e.getKey().startsWith(node.getNodeIdentifier().toString())
-//            )
-//            .map((e) -> {
-//                String[] keyParts = e.getKey().split(":");
-//                if (keyParts.length == 3) return new String[] {e.getValue().getFirst(), keyParts[0]+":"+keyParts[1], keyParts[2]};
-//                else return null;
-//            })
-//            .collect(Collectors.toList());
-//
-//        for(String[] p : ids) {
-//            if (p != null && p.length == 3) this.publishEntityMeta(node, p[0], p[1], p[2]);
-//        }
     }
 
+    /**
+     * Calculate the global ID for a Post instance.
+     * @param node The owning node.
+     * @param post The Post instance.
+     * @return
+     */
     public static String globalIdentifierForPost(BubblegumNode node, Post post) {
         return node.getNodeIdentifier().toString() + ":" + post.getID();
     }
 
-    public void reset() {
-        // TODO finish
-//        Database.masterDatabase.resetDatabases();
+    public Map<Integer, List<NetworkDetails>> loadNetworksFromDatabase() {
+        // return Database.masterDatabase.loadNetworksFromDatabase();
+        return new HashMap<>();
     }
 
-}
+    public void updateNodeInDatabase(BubblegumNode node) {
+        // Database.masterDatabase.updateNetwork(node);
+    }
+
+    public void updateNodesInDatabase(List<BubblegumNode> nodes) {
+        // Database.masterDatabase.updateNetworks(nodes);
+    }
+
+    public void reset() {
+        // Database.masterDatabase.resetDatabases();
+    }
+
+} // end Database class

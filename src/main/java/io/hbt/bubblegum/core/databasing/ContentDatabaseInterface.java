@@ -4,6 +4,9 @@ import io.hbt.bubblegum.core.kademlia.BubblegumNode;
 
 import java.util.List;
 
+/**
+ * General interface for the private data store used by Bubblegum.
+ */
 public interface ContentDatabaseInterface {
     Post savePost(BubblegumNode node, String content, String inResponseTo);
     Post saveMeta(String key, BubblegumNode node, String content);

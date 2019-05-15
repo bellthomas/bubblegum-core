@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -135,14 +134,6 @@ public class CLI {
                                 break;
                             case "constructparallel":
                                 this.constructParallel(commandParts);
-                                break;
-                            case "discoveri":
-                                current = this.getCurrentNode();
-                                if(current != null) this.discoverInternal(current, commandParts);
-                                break;
-                            case "discover":
-                                current = this.getCurrentNode();
-                                if(current != null) this.discoverExternal(current, commandParts);
                                 break;
                             case "bucketsize":
                                 this.averageSizeOfBucket();
@@ -365,66 +356,6 @@ public class CLI {
         }
     }
 
-    private void discoverExternal(BubblegumNode current, String[] command) {
-        if(command.length >= 3) {
-            try {
-                InetAddress addr = InetAddress.getByName(command[1]);
-                Integer i = this.toInt(command[2]);
-                if (i != null) {
-                    Set<String> networks = current.discover(addr, i);
-                    if (networks != null && networks.size() > 0) {
-                        this.print("Found: ");
-                        for (String network : networks) this.print(network);
-                    } else {
-                        this.print("No networks found");
-                    }
-                }
-            } catch (UnknownHostException e) {
-                this.print("Invalid InetAddress");
-            }
-        }
-        else {
-            this.print("Invalid number of arguments");
-        }
-    }
-
-    private void discoverInternal(BubblegumNode current, String[] command) {
-        if(command.length >= 2) {
-            Integer i = this.toInt(command[1]);
-            if(i != null) {
-                if(this.networkIndicies.containsKey(i)) {
-                    BubblegumNode toDiscover = this.getNode(this.networkIndicies.get(i));
-                    Set<String> networks = current.discover(toDiscover.getServer().getLocal(), toDiscover.getServer().getPort());
-                    if(networks != null && networks.size() > 0) {
-                        this.print("Found: ");
-                        for(String network : networks) this.print(network);
-                    }
-                    else {
-                        this.print("No networks found");
-                    }
-                }
-                else {
-                    this.print("Invalid network index");
-                }
-            } else {
-                this.print("Invalid arguments");
-            }
-        }
-        else {
-            this.print("Invalid number of arguments");
-        }
-    }
-
-    /*
-    int randomNum = ThreadLocalRandom.current().nextInt(0, currentIndex);
-    BubblegumNode randomNode = this.bb.getNode(this.networkIndicies.get(randomNum));
-    node.bootstrap(
-        randomNode.getServer().getLocal(),
-        randomNode.getServer().getPort(),
-        randomNode.getRecipientID()
-    );
-    this.networkIndicies.put(this.currentIndex++, node.getIdentifier());
-     */
 
     private void constructParallel(String[] command) {
         if(command.length >= 3) {

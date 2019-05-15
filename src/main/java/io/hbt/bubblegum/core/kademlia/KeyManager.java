@@ -38,7 +38,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -56,11 +55,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
+/**
+ * Manages a BubblegumNode's PGP encryption/decryption/verification functionality.
+ */
 class KeyManager {
 
     private boolean initialised = false;
@@ -69,13 +70,16 @@ class KeyManager {
     private BouncyCastleProvider provider = new BouncyCastleProvider();
     private PGPSecretKey pgpKey;
     private KeyPair keyPair;
-
     private BubblegumNode node;
     private HashMap<String, Pair<PGPPublicKey, Long>> keyCache = new HashMap<>();
     private HashMap<String, Long> impersonatorCache = new HashMap<>();
-
     private Cipher rsa;
 
+    /**
+     * Constructor.
+     * @param node The parent BubblegumNode.
+     * @param hashUpdate A consumer method via which the node's NodeID hash can be updated.
+     */
     KeyManager(BubblegumNode node, Consumer<byte[]> hashUpdate) {
         if(Configuration.ENABLE_PGP) {
             Security.addProvider(provider);
@@ -91,11 +95,25 @@ class KeyManager {
         }
     }
 
+    /**
+     * Generate the node's PGP ID.
+     * @return The node's PGP ID.
+     */
     public String getPGPKeyID() {
         if(this.initialised) return "0x" + Long.toHexString(this.pgpKey.getPublicKey().getKeyID());
         else return "";
     }
 
+    /**
+     * Generate an RSA KeyPair and associated PGP key, and publish it to the CA.
+     * @param verifyKey Whether to wait for the new key to be liv eon the CA before returning.
+     * @param hashUpdate The consumer function to update the node's hash, if required.
+     * @return Whether the operation was successful.
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchProviderException
+     * @throws PGPException
+     * @throws IOException
+     */
     boolean reKey(boolean verifyKey, Consumer<byte[]> hashUpdate) throws NoSuchAlgorithmException, NoSuchProviderException, PGPException, IOException {
         if(Configuration.ENABLE_PGP) {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
@@ -141,7 +159,6 @@ class KeyManager {
                 } else {
                     this.pgpKey = key;
                     return true;
-                    // this.node.getDatabase().saveUserMeta(this.node, "pgp", "0x" + keyID);
                 }
             } else {
                 System.out.println("Failed to publish key");
@@ -151,6 +168,12 @@ class KeyManager {
         return false;
     }
 
+    /**
+     * Check whether a PGP key is local and fresh; if not, fetch and verify it.
+     * @param keyID The PGP key's ID.
+     * @param pgpID The expected PGP UID.
+     * @return Whether the operation was successful.
+     */
     boolean ensurePGPKeyIsLocal(String keyID, String pgpID) {
         if(!this.keyCache.containsKey(pgpID) ||
             System.currentTimeMillis() - this.keyCache.get(pgpID).getSecond() > Configuration.KEY_CACHE_EXPIRY) {
@@ -168,6 +191,12 @@ class KeyManager {
         return true;
     }
 
+    /**
+     * Encrypt a packet's payload.
+     * @param node The peer the packet is destined for.
+     * @param payload The byte[] payload to be encrypted.
+     * @return The sealed payload.
+     */
     public KademliaSealedPayload encryptPacket(RouterNode node, byte[] payload) {
         PGPPublicKey publicKey  = this.getPublicKey(node.toPGPUID());
         if(publicKey != null) {
@@ -193,6 +222,12 @@ class KeyManager {
         return null;
     }
 
+    /**
+     * Decrypt a received packet.
+     * @param node The originating node.
+     * @param sealed The sealed payload.
+     * @return The decrypted packet.
+     */
     byte[] decryptPacket(RouterNode node, KademliaSealedPayload sealed) {
         // Remove outer layer and inner one as well
         PGPPublicKey publicKey  = this.getPublicKey(node.toPGPUID());
@@ -211,6 +246,13 @@ class KeyManager {
         return null;
     }
 
+    /**
+     * [En|De]crypt a byte array using a key.
+     * @param k The key to use.
+     * @param mode Use Cipher.DECRYPT_MODE or Cipher.ENCRYPT_MODE.
+     * @param data The data to [en|de]crypt.
+     * @return The resulting byte array.
+     */
     byte[] crypt(Key k, int mode, byte[] data) {
         try {
             if (rsa != null && k != null && data != null) {
@@ -220,17 +262,21 @@ class KeyManager {
                 }
             }
         } catch (BadPaddingException e) {
-//            e.printStackTrace();
+            // e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         } catch (InvalidKeyException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         return null;
     }
 
-
-
+    /**
+     * Decrypt a payload using a PGP public key.
+     * @param key The PGP public key.
+     * @param data The payload to decrypt.
+     * @return The decrypted byte array.
+     */
     byte[] decryptWithPublic(PGPPublicKey key, byte[] data) {
         if(key == null || data == null) return null;
         try {
@@ -242,11 +288,22 @@ class KeyManager {
         }
     }
 
+    /**
+     * Decrypt a payload using the loca PGP private key.
+     * @param data The payload to decrypt.
+     * @return The decrypted byte array.
+     */
     byte[] decryptWithPrivate(byte[] data) {
         if(data == null) return null;
         return crypt(this.keyPair.getPrivate(), Cipher.DECRYPT_MODE, data);
     }
 
+    /**
+     * Encrypt a payload using a PGP public key.
+     * @param key The PGP public key.
+     * @param data The payload to encrypt.
+     * @return The encrypted byte array.
+     */
     byte[] encryptWithPublic(PGPPublicKey key, byte[] data) {
         if(key == null || data == null) return null;
         try {
@@ -258,11 +315,21 @@ class KeyManager {
         }
     }
 
+    /**
+     * Encrypt a payload using the local PGP private key.
+     * @param data The payload to encrypt.
+     * @return The encrypted byte array.
+     */
     byte[] encryptWithPrivate(byte[] data) {
         if(data == null) return null;
         return crypt(this.keyPair.getPrivate(), Cipher.ENCRYPT_MODE, data);
     }
 
+    /**
+     * Get a PGP public key from the cache.
+     * @param id The key ID.
+     * @return The key instance or null if not found.
+     */
     PGPPublicKey getPublicKey(String id) {
         if(id.equals(this.node.toPGPUID()) || id == null) {
             return this.pgpKey.getPublicKey();
@@ -277,7 +344,14 @@ class KeyManager {
         return null;
     }
 
-
+    /**
+     * Build a PGP key from an RSA KeyPair.
+     * @param pair The RSA KeyPair.
+     * @param identity The PGP UID.
+     * @param passphrase A passphrase for the key.
+     * @return The PGP secret key,
+     * @throws PGPException
+     */
     private static PGPSecretKey generateKey(KeyPair pair, String identity, char[] passphrase) throws PGPException {
         PGPDigestCalculator sha1Calc = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
         PGPKeyPair keyPair = new JcaPGPKeyPair(PGPPublicKey.RSA_GENERAL, pair, new Date());
@@ -295,6 +369,12 @@ class KeyManager {
         return secretKey;
     }
 
+    /**
+     * Publish a public key to the OpenPGP keyserver.
+     * @param keytext The text representation of the PGP public key.
+     * @return Whether the operation was successful.
+     * @throws IOException
+     */
     private boolean publishKey(String keytext) throws IOException {
 
         URL obj = new URL(keyServerSubmitURL);
@@ -333,6 +413,13 @@ class KeyManager {
         return false;
     }
 
+    /**
+     * Retrieve a key using its ID and verify that it has the expected UID field.
+     * @param keyID The key's ID.
+     * @param expectedUID The expected UID. If this doesn't match then the found key is deleted from the cache.
+     * @return Whether the key was successfully loaded into the cache and verified.
+     * @throws Exception
+     */
     private boolean verifyKey(String keyID, String expectedUID) throws Exception {
         String url = this.keyServerRetrieveURL + keyID;
 
@@ -395,6 +482,9 @@ class KeyManager {
         }
     }
 
+    /**
+     * Clean up the cache if required.
+     */
     private void cacheMaintenance() {
         if(this.keyCache.size() > Configuration.KEY_CACHE_SIZE) {
             // Cut down by KEY_CACHE_PURGE_NUMBER
@@ -408,15 +498,27 @@ class KeyManager {
         }
     }
 
+    /**
+     * Log a peer impersontaing another's NodeID.
+     * @param pgpID The impersonating peer's PGP ID.
+     */
     void declareSybilImpersonator(String pgpID) {
         this.impersonatorCache.put(pgpID, System.currentTimeMillis());
         this.impersonatorCacheMaintenance();
     }
 
+    /**
+     * Check if a PGP ID has been blacklisted.
+     * @param pgpID The PGP ID to check.
+     * @return Whether the PGP ID has been blacklisted.
+     */
     boolean checkForSybilImpersonator(String pgpID) {
         return this.impersonatorCache.containsKey(pgpID);
     }
 
+    /**
+     * Cache maintenance for the impersonator cache.
+     */
     void impersonatorCacheMaintenance() {
         if(impersonatorCache.size() > 500) {
             List<String> keysToPurge = this.impersonatorCache.entrySet().parallelStream()
@@ -429,17 +531,31 @@ class KeyManager {
         }
     }
 
+
+    /**
+     * AES helper class.
+     */
     private static class AES {
         static SecureRandom random = new SecureRandom();
         static byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         static IvParameterSpec ivspec = new IvParameterSpec(iv);
 
+        /**
+         * Generate a secure random 128-bit key.
+         * @return
+         */
         public static byte[] generateKey() {
             byte[] bytes = new byte[16];
             random.nextBytes(bytes);
             return bytes;
         }
 
+        /**
+         * Encrypt a payload.
+         * @param plainText The payload to encrypt.
+         * @param key The encryption key.
+         * @return The encrypted payload.
+         */
         public static byte[] encrypt (byte[] plainText, byte[] key) {
             if(plainText == null || key == null) return null;
             try {
@@ -453,6 +569,12 @@ class KeyManager {
             }
         }
 
+        /**
+         * Decrypt a payload.
+         * @param cipherText The payload to decrypt.
+         * @param key The decryption key.
+         * @return The decrypted payload.
+         */
         public static byte[] decrypt (byte[] cipherText, byte[] key) {
             if(cipherText == null || key == null) return null;
             try {
@@ -465,5 +587,7 @@ class KeyManager {
                 return null;
             }
         }
-    }
-}
+
+    } // end KeyManager.AES class
+
+} // end KeyManager class
