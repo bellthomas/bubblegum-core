@@ -52,7 +52,7 @@ public class NodeID {
 
     /**
      * Getter for the byte array representation of this key instance.
-     * @return
+     * @return The byte array of the key.
      */
     public byte[] getKey() {
         return this.key.clone();
@@ -101,8 +101,8 @@ public class NodeID {
 
     /**
      * Converts a byte array to its hex representation.
-     * @param bytes
-     * @return
+     * @param bytes The bytes to convert to hex.
+     * @return The hex representation.
      */
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length << 1];
@@ -209,7 +209,7 @@ public class NodeID {
 
     /**
      * Getter for the String representation of this key in hex.
-     * @return
+     * @return The toString representation.
      */
     @Override
     public String toString() {
@@ -231,7 +231,7 @@ public class NodeID {
 
     /**
      * Helper function to generate NodeID instance hash codes.
-     * @return
+     * @return the hashcode.
      */
     @Override
     public int hashCode() {
@@ -240,7 +240,7 @@ public class NodeID {
 
     /**
      * XOR distance (from this key) comparator between two RouterNode instances.
-     * @return
+     * @return A comparator based on the distance from this NodeID instance.
      */
     public Comparator<RouterNode> getKeyDistanceComparator() {
        return (o1, o2) -> {

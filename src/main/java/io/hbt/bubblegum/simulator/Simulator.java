@@ -214,7 +214,7 @@ public class Simulator {
 
     private String randomText(int length) {
         Random r = Configuration.rand;
-        String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@£$%^&*(){}[]?/~-_       ";
+        String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@$%^&*(){}[]?/~-_       ";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
             sb.append(alphabet.charAt(r.nextInt(alphabet.length())));

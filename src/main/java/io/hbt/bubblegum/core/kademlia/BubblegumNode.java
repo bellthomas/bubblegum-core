@@ -116,7 +116,7 @@ public class BubblegumNode {
     }
 
     /**
-     * Perform a store operation for a <key, value> pair.
+     * Perform a store operation for a key-value pair.
      * @param id The pair's key.
      * @param value The pair's value.
      * @return Whether the operation was successful.
@@ -148,7 +148,7 @@ public class BubblegumNode {
 
     /**
      * Schedule sync() for asynchronous operation.
-     * @param node
+     * @param node The peer to queue synchronisation with.
      */
     public void requestSync(RouterNode node) {
         if(Configuration.ENABLE_PGP) {
@@ -377,9 +377,9 @@ public class BubblegumNode {
     }
 
     /**
-     * Check to see if the database has a <key, value> pair.
-     * @param key
-     * @return
+     * Check to see if the database has a key-value pair.
+     * @param key The key to check for.
+     * @return Whether the key is present.
      */
     public boolean databaseHasKey(String key) {
         return this.db.hasKey(this.identifier, key);
@@ -607,7 +607,7 @@ public class BubblegumNode {
 
     /**
      * Get this node's generated PGP ID.
-     * @return
+     * @return The node's PGP ID.
      */
     public String getPGPKeyID() {
         return this.keyManager.getPGPKeyID();

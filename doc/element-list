@@ -1,0 +1,8 @@
+io.hbt.bubblegum.core
+io.hbt.bubblegum.core.auxiliary
+io.hbt.bubblegum.core.databasing
+io.hbt.bubblegum.core.exceptions
+io.hbt.bubblegum.core.kademlia
+io.hbt.bubblegum.core.kademlia.activities
+io.hbt.bubblegum.core.kademlia.protobuf
+io.hbt.bubblegum.core.kademlia.router

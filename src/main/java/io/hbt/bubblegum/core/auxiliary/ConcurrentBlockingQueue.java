@@ -41,7 +41,7 @@ public class ConcurrentBlockingQueue<T> implements Comparable<ConcurrentBlocking
      * Getter function.
      * Sleeps consumer threads if the are no items to consume, otherwise pops and returns the head of the list.
      *
-     * @note The docs are unclear about whether the .size() method is O(1) for a LinkedList object. If this operation
+     * NB: The docs are unclear about whether the .size() method is O(1) for a LinkedList object. If this operation
      * is O(n) then it will probably be beneficial to remove the debug call.
      *
      * @return The item at the head of the list or null on erroneous interruption of a sleeping thread.
